@@ -51,33 +51,32 @@
 }
 
 :root {
-  /* Jeton — warm light: white/cream canvas, coral accent, brandwood text. */
-  --brand: #f73b20; /* coral flame */
-  --brand-foreground: #ffffff;
-  --background: #fef5f3; /* sunset-fade warm canvas */
-  --foreground: #360802; /* brandwood deep text */
-  --card: #ffffff;
-  --card-foreground: #360802;
-  --popover: #ffffff;
-  --popover-foreground: #360802;
-  --primary: #f73b20; /* coral primary action */
-  --primary-foreground: #ffffff;
-  --secondary: #fbdfd9; /* blush mist */
-  --secondary-foreground: #360802;
-  --muted: #fdeee9;
-  --muted-foreground: #93726b; /* warm taupe secondary text */
-  --accent: #fbdfd9;
-  --accent-foreground: #360802;
-  --destructive: #fb2d54; /* magenta spark */
-  --border: #f4ddd6;
-  --input: #ecd5cd;
-  --ring: #f73b20;
+  --brand: oklch(0.66 0.16 152);
+  --brand-foreground: oklch(0.99 0 0);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 1rem;
+  --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -89,17 +88,17 @@
 }
 
 .dark {
-  /* Linear "midnight command deck" (see docs/DESIGN.md). CN-KZ green kept as the single rationed accent. */
-  --brand: oklch(0.74 0.17 152);
-  --brand-foreground: oklch(0.2 0.03 152);
+  /* Linear "midnight command deck" (see docs/DESIGN.md). acid-lime #e4f222 as the single rationed accent. */
+  --brand: #e4f222;
+  --brand-foreground: #030404;
   --background: #08090a; /* onyx canvas */
   --foreground: #f7f8f8; /* snow */
   --card: #0f1011; /* charcoal */
   --card-foreground: #f7f8f8;
   --popover: #161718; /* obsidian */
   --popover-foreground: #f7f8f8;
-  --primary: oklch(0.74 0.17 152);
-  --primary-foreground: oklch(0.2 0.03 152);
+  --primary: #e4f222;
+  --primary-foreground: #030404;
   --secondary: #161718;
   --secondary-foreground: #f7f8f8;
   --muted: #161718;
@@ -109,7 +108,7 @@
   --destructive: oklch(0.65 0.2 25);
   --border: #23252a; /* graphite */
   --input: #23252a;
-  --ring: oklch(0.74 0.17 152);
+  --ring: #e4f222;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -138,47 +137,42 @@
 }
 
 @layer utilities {
-  /* ===== Jeton surfaces — white cards on warm canvas, soft coral-tinted floating shadows ===== */
+  /* ===== Linear surfaces — depth via 1px inset borders + soft shadows, never fills/gradients ===== */
 
-  /* Card: white, lifting off the warm canvas with a soft warm shadow + hairline. */
+  /* Card: charcoal sitting on onyx, defined by an inset graphite border + soft drop shadow. */
   .surface-glass {
     background: var(--card);
     box-shadow:
-      inset 0 0 0 1px #f4ddd6,
-      0 6px 20px -6px rgba(247, 59, 32, 0.1),
-      0 2px 6px -2px rgba(54, 8, 2, 0.06);
+      inset 0 0 0 1px #23252a,
+      0 2px 4px 0 rgba(0, 0, 0, 0.4);
   }
-  /* Active / your-offer surface — coral outline (Jeton's chromatic edge). */
+  /* Active / your-offer surface — same depth, brand-tinted hairline (the only chromatic edge). */
   .surface-glass-brand {
     background: var(--card);
     box-shadow:
-      inset 0 0 0 1.5px rgba(247, 59, 32, 0.6),
-      0 8px 24px -6px rgba(247, 59, 32, 0.18);
+      inset 0 0 0 1px rgba(228, 242, 34, 0.55),
+      0 2px 4px 0 rgba(0, 0, 0, 0.4);
   }
-  /* Warm tinted nested surface (Sunset Fade) for rows inside a card. */
+  /* Inset row inside a card (Obsidian) — for nested list rows. */
   .surface-inset {
-    background: #fef5f3;
-    box-shadow: inset 0 0 0 1px #f4ddd6;
+    background: var(--popover);
+    box-shadow: inset 0 0 0 1px #23252a;
   }
   .shadow-card {
     box-shadow:
-      inset 0 0 0 1px #f4ddd6,
-      0 6px 20px -6px rgba(247, 59, 32, 0.1),
-      0 2px 6px -2px rgba(54, 8, 2, 0.06);
+      inset 0 0 0 1px #23252a,
+      0 2px 4px 0 rgba(0, 0, 0, 0.4);
   }
-  /* Coral CTA / floating pill — warm coral glow. */
+  /* Subtle pressable depth for buttons/FAB (Linear depth stack, not a chunky keycap). */
   .shadow-key {
     box-shadow:
-      0 8px 20px -4px rgba(247, 59, 32, 0.35),
-      0 2px 6px -1px rgba(247, 59, 32, 0.2);
+      0 1px 2px 0 rgba(0, 0, 0, 0.4),
+      0 2px 6px -1px rgba(0, 0, 0, 0.3);
   }
-  /* Warm coral gradient — hero banner / logo (Jeton signature). */
-  .bg-coral-gradient {
-    background: linear-gradient(135deg, #f8a4a4 0%, #f73b20 100%);
-  }
-  /* Tabular figures for prices/counts (kept the class name; now plain sans). */
+  /* Monospace technical metadata — IDs, codes (Linear's "this is a tool" signal). */
   .font-mono-tech {
+    font-family: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
     font-feature-settings: "tnum" on;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
 }
