@@ -290,23 +290,21 @@ function Shell({
   onBack?: () => void
 }) {
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-neutral-900 to-black p-0 sm:p-6">
-      <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2.5rem] sm:border-8 sm:border-neutral-800 sm:shadow-2xl">
-        <StatusBar />
-        <header className="flex h-12 shrink-0 items-center gap-1 border-b border-border px-3">
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label="Назад"
-            >
-              <ChevronLeft className="size-5" />
-            </button>
-          )}
-        </header>
-        <main className="flex-1 overflow-y-auto">{children}</main>
-      </div>
-    </div>
+    <Frame>
+      <StatusBar />
+      <header className="flex h-12 shrink-0 items-center gap-1 border-b border-border px-3">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="Назад"
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+        )}
+      </header>
+      <main className="flex-1 overflow-y-auto">{children}</main>
+    </Frame>
   )
 }
 
@@ -319,10 +317,10 @@ function Frame({
   className?: string
 }) {
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-neutral-900 to-black p-0 sm:p-6">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-[#fdeae5] to-[#f6cfc6] p-0 sm:p-6">
       <div
         className={cn(
-          "relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2.5rem] sm:border-8 sm:border-neutral-800 sm:shadow-2xl",
+          "relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2.5rem] sm:border-[6px] sm:border-white sm:shadow-2xl sm:shadow-[#f73b20]/15",
           className
         )}
       >
@@ -337,12 +335,13 @@ function LogoMark({ size = "md" }: { size?: "md" | "lg" }) {
   const big = size === "lg"
   return (
     <span
+      style={{ background: "linear-gradient(135deg, #f8a4a4 0%, #f73b20 100%)" }}
       className={cn(
-        "flex items-center justify-center rounded-[28%] bg-brand text-brand-foreground",
-        big ? "size-16" : "size-12"
+        "shadow-key flex items-center justify-center text-white",
+        big ? "size-20 rounded-[32%]" : "size-12 rounded-[28%]"
       )}
     >
-      <Package className={big ? "size-8" : "size-6"} />
+      <Package className={big ? "size-10" : "size-6"} />
     </span>
   )
 }

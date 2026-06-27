@@ -1,17 +1,12 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 
-// Linear design language: Inter for UI, monospace for technical IDs/metadata.
-const sans = Inter({
+// Jeton design language: geometric-humanist sans (Manrope — Sequel Sans stand-in
+// with Cyrillic support), airy positive tracking on display type.
+const sans = Manrope({
   variable: "--font-sans",
   subsets: ["latin", "cyrillic"],
-  display: "swap",
-});
-
-const mono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
   display: "swap",
 });
 
@@ -26,10 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ru"
-      className={`${sans.variable} ${mono.variable} h-full antialiased dark`}
-    >
+    <html lang="ru" className={`${sans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

@@ -51,32 +51,33 @@
 }
 
 :root {
-  --brand: oklch(0.66 0.16 152);
-  --brand-foreground: oklch(0.99 0 0);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  /* Jeton — warm light: white/cream canvas, coral accent, brandwood text. */
+  --brand: #f73b20; /* coral flame */
+  --brand-foreground: #ffffff;
+  --background: #fef5f3; /* sunset-fade warm canvas */
+  --foreground: #360802; /* brandwood deep text */
+  --card: #ffffff;
+  --card-foreground: #360802;
+  --popover: #ffffff;
+  --popover-foreground: #360802;
+  --primary: #f73b20; /* coral primary action */
+  --primary-foreground: #ffffff;
+  --secondary: #fbdfd9; /* blush mist */
+  --secondary-foreground: #360802;
+  --muted: #fdeee9;
+  --muted-foreground: #93726b; /* warm taupe secondary text */
+  --accent: #fbdfd9;
+  --accent-foreground: #360802;
+  --destructive: #fb2d54; /* magenta spark */
+  --border: #f4ddd6;
+  --input: #ecd5cd;
+  --ring: #f73b20;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 1rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -137,42 +138,47 @@
 }
 
 @layer utilities {
-  /* ===== Linear surfaces — depth via 1px inset borders + soft shadows, never fills/gradients ===== */
+  /* ===== Jeton surfaces — white cards on warm canvas, soft coral-tinted floating shadows ===== */
 
-  /* Card: charcoal sitting on onyx, defined by an inset graphite border + soft drop shadow. */
+  /* Card: white, lifting off the warm canvas with a soft warm shadow + hairline. */
   .surface-glass {
     background: var(--card);
     box-shadow:
-      inset 0 0 0 1px #23252a,
-      0 2px 4px 0 rgba(0, 0, 0, 0.4);
+      inset 0 0 0 1px #f4ddd6,
+      0 6px 20px -6px rgba(247, 59, 32, 0.1),
+      0 2px 6px -2px rgba(54, 8, 2, 0.06);
   }
-  /* Active / your-offer surface — same depth, brand-tinted hairline (the only chromatic edge). */
+  /* Active / your-offer surface — coral outline (Jeton's chromatic edge). */
   .surface-glass-brand {
     background: var(--card);
     box-shadow:
-      inset 0 0 0 1px oklch(0.74 0.17 152 / 0.55),
-      0 2px 4px 0 rgba(0, 0, 0, 0.4);
+      inset 0 0 0 1.5px rgba(247, 59, 32, 0.6),
+      0 8px 24px -6px rgba(247, 59, 32, 0.18);
   }
-  /* Inset row inside a card (Obsidian) — for nested list rows. */
+  /* Warm tinted nested surface (Sunset Fade) for rows inside a card. */
   .surface-inset {
-    background: var(--popover);
-    box-shadow: inset 0 0 0 1px #23252a;
+    background: #fef5f3;
+    box-shadow: inset 0 0 0 1px #f4ddd6;
   }
   .shadow-card {
     box-shadow:
-      inset 0 0 0 1px #23252a,
-      0 2px 4px 0 rgba(0, 0, 0, 0.4);
+      inset 0 0 0 1px #f4ddd6,
+      0 6px 20px -6px rgba(247, 59, 32, 0.1),
+      0 2px 6px -2px rgba(54, 8, 2, 0.06);
   }
-  /* Subtle pressable depth for buttons/FAB (Linear depth stack, not a chunky keycap). */
+  /* Coral CTA / floating pill — warm coral glow. */
   .shadow-key {
     box-shadow:
-      0 1px 2px 0 rgba(0, 0, 0, 0.4),
-      0 2px 6px -1px rgba(0, 0, 0, 0.3);
+      0 8px 20px -4px rgba(247, 59, 32, 0.35),
+      0 2px 6px -1px rgba(247, 59, 32, 0.2);
   }
-  /* Monospace technical metadata — IDs, codes (Linear's "this is a tool" signal). */
+  /* Warm coral gradient — hero banner / logo (Jeton signature). */
+  .bg-coral-gradient {
+    background: linear-gradient(135deg, #f8a4a4 0%, #f73b20 100%);
+  }
+  /* Tabular figures for prices/counts (kept the class name; now plain sans). */
   .font-mono-tech {
-    font-family: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
     font-feature-settings: "tnum" on;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.01em;
   }
 }
