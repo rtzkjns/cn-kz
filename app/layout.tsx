@@ -1,18 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Onest } from "next/font/google";
 import "./globals.css";
 
-// Clean Light Marketplace: Inter for UI/body, Playfair Display for editorial serif headlines.
-const sans = Inter({
+// Clean modern UI sans with full Cyrillic — friendly, geometric, polished.
+const sans = Onest({
   variable: "--font-sans",
   subsets: ["latin", "cyrillic"],
-  display: "swap",
-});
-
-const serif = Playfair_Display({
-  variable: "--font-serif",
-  subsets: ["latin", "cyrillic"],
-  weight: ["500", "600", "700"],
   display: "swap",
 });
 
@@ -27,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" className={`${sans.variable} ${serif.variable} h-full antialiased`}>
+    <html lang="ru" className={`${sans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

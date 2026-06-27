@@ -1,35 +1,16 @@
 "use client"
 
-import { Box, Calendar, ChevronRight, MessageCircle, Truck, Weight } from "lucide-react"
+import { Box, Calendar, ChevronRight, MessageCircle, Star, Truck, Weight } from "lucide-react"
 
+import { Avatar } from "@/components/ui/avatar"
 import type { Order } from "@/lib/cn-kz/types"
 import { cn } from "@/lib/utils"
 import { DealStatusBadge, OrderStatusBadge, money } from "./shared"
 
-// Route as a graphic: origin → dashed track with a truck → destination.
-function RouteLine({ from, to }: { from: string; to: string }) {
+function MetaPill({ icon: Icon, children }: { icon: typeof Truck; children: React.ReactNode }) {
   return (
-    <div className="min-w-0">
-      <div className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
-        <span className="truncate">{from}</span>
-        <span className="text-brand">→</span>
-        <span className="truncate">{to}</span>
-      </div>
-      <div className="mt-2 flex items-center gap-1.5">
-        <span className="size-1.5 shrink-0 rounded-full bg-muted-foreground/70" />
-        <span className="h-px flex-1 border-t border-dashed border-border" />
-        <Truck className="size-3 shrink-0 text-muted-foreground" />
-        <span className="h-px flex-1 border-t border-dashed border-border" />
-        <span className="size-1.5 shrink-0 rounded-full bg-brand" />
-      </div>
-    </div>
-  )
-}
-
-function Meta({ icon: Icon, children }: { icon: typeof Truck; children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-1">
-      <Icon className="size-3 opacity-55" />
+    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground/70 tabular-nums">
+      <Icon className="size-3 opacity-60" />
       {children}
     </span>
   )
@@ -47,19 +28,31 @@ export function OrderCard({
   const newOffers = order.offers.filter((o) => o.status === "pending").length
   const hasUnread = order.deal?.chat.some((m) => !m.fromMe)
   const mine = showMyOffer && !!order.myOfferStatus
+  const price = money(order.deal?.agreedPriceUsd ?? order.priceUsd)
 
   return (
     <div
       onClick={onClick}
       className={cn(
-        "group relative cursor-pointer rounded-2xl p-4 transition-[scale,box-shadow] duration-150 active:scale-[0.985]",
+        "group cursor-pointer rounded-3xl p-4 transition-transform duration-150 active:scale-[0.985]",
         mine ? "surface-glass-brand" : "surface-glass"
       )}
     >
-      {/* Route + status */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <RouteLine from={order.origin} to={order.destination} />
+      {/* Trust header: shipper + rating · freshness, status */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <Avatar name={order.shipper.name} className="size-7 text-[11px]" />
+          <div className="min-w-0 leading-tight">
+            <p className="truncate text-[13px] font-semibold">{order.shipper.name}</p>
+            <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Star className="size-3 fill-amber-400 text-amber-400" />
+              <span className="font-medium text-foreground/70 tabular-nums">
+                {order.shipper.rating.toFixed(1)}
+              </span>
+              <span aria-hidden>·</span>
+              {order.createdAgo}
+            </p>
+          </div>
         </div>
         {order.deal ? (
           <DealStatusBadge status={order.deal.status} />
@@ -68,45 +61,69 @@ export function OrderCard({
         )}
       </div>
 
+      {/* Route — origin muted, destination bold (the goal) */}
+      <div className="mt-4 flex gap-3">
+        <div className="flex flex-col items-center pt-1.5">
+          <span className="size-2 rounded-full bg-muted-foreground/50" />
+          <span className="my-1 w-px flex-1 bg-gradient-to-b from-muted-foreground/30 to-brand/40" />
+          <span className="size-2.5 rounded-full bg-brand ring-4 ring-brand/10" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-medium text-muted-foreground">
+            {order.origin}
+          </p>
+          <p className="mt-3 truncate text-lg font-bold tracking-tight">
+            {order.destination}
+          </p>
+        </div>
+      </div>
+
       {/* Cargo */}
-      <p className="mt-3 line-clamp-1 text-xs text-muted-foreground">
+      <p className="mt-3 line-clamp-1 text-[13px] text-muted-foreground">
         {order.cargo}
       </p>
 
-      {/* Meta */}
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground tabular-nums">
-        <Meta icon={Truck}>{order.truckType}</Meta>
-        <Meta icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} кг</Meta>
-        <Meta icon={Box}>{order.volumeM3} м³</Meta>
-        <Meta icon={Calendar}>{order.readyDate}</Meta>
+      {/* Meta pills */}
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        <MetaPill icon={Truck}>{order.truckType}</MetaPill>
+        <MetaPill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} кг</MetaPill>
+        <MetaPill icon={Box}>{order.volumeM3} м³</MetaPill>
+        <MetaPill icon={Calendar}>{order.readyDate}</MetaPill>
       </div>
 
-      {/* Price + signals */}
-      <div className="mt-3.5 flex items-end justify-between border-t border-border pt-3">
-        <div className="flex items-baseline gap-1">
-          <span className="font-mono-tech text-[26px] leading-none font-bold tracking-tight text-foreground">
-            {money(order.deal?.agreedPriceUsd ?? order.priceUsd)}
+      {/* Price footer + contextual action */}
+      <div className="mt-4 flex items-center justify-between rounded-2xl bg-muted px-3.5 py-2.5">
+        <div className="leading-none">
+          <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+            Цена шипера
+          </p>
+          <p className="mt-1.5 text-[22px] leading-none font-extrabold tracking-tight tabular-nums">
+            {price}
+          </p>
+        </div>
+
+        {order.deal ? (
+          <span className="inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
+            {hasUnread && <MessageCircle className="size-4 text-brand" />}
+            Открыть <ChevronRight className="size-4" />
           </span>
-        </div>
-        <div className="flex items-center gap-2 text-xs">
-          {hasUnread && (
-            <span className="text-muted-foreground">
-              <MessageCircle className="size-4" />
-            </span>
-          )}
-          {mine && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-brand/15 px-2 py-0.5 text-[11px] font-medium text-brand">
-              Ваш оффер
-            </span>
-          )}
-          {newOffers > 0 && (
-            <span className="inline-flex items-center gap-0.5 font-medium text-brand tabular-nums">
-              {newOffers}{" "}
-              {newOffers === 1 ? "оффер" : newOffers < 5 ? "оффера" : "офферов"}
-              <ChevronRight className="size-3.5" />
-            </span>
-          )}
-        </div>
+        ) : mine ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/12 px-3.5 py-2 text-[13px] font-semibold text-brand">
+            Ваш оффер
+          </span>
+        ) : newOffers > 0 ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-brand/12 px-3.5 py-2 text-[13px] font-semibold text-brand tabular-nums">
+            {newOffers} {newOffers === 1 ? "оффер" : newOffers < 5 ? "оффера" : "офферов"}
+            <ChevronRight className="size-3.5" />
+          </span>
+        ) : showMyOffer ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-foreground px-4 py-2.5 text-[13px] font-semibold text-background shadow-key transition-transform group-active:scale-95">
+            Откликнуться
+            <ChevronRight className="size-3.5" />
+          </span>
+        ) : (
+          <ChevronRight className="size-5 text-muted-foreground" />
+        )}
       </div>
     </div>
   )
