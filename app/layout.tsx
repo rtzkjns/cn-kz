@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-// Linear design language: Inter for UI, monospace for technical IDs/metadata.
+// Clean Light Marketplace: Inter for UI/body, Playfair Display for editorial serif headlines.
 const sans = Inter({
   variable: "--font-sans",
   subsets: ["latin", "cyrillic"],
   display: "swap",
 });
 
-const mono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const serif = Playfair_Display({
+  variable: "--font-serif",
+  subsets: ["latin", "cyrillic"],
+  weight: ["500", "600", "700"],
   display: "swap",
 });
 
@@ -26,10 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ru"
-      className={`${sans.variable} ${mono.variable} h-full antialiased dark`}
-    >
+    <html lang="ru" className={`${sans.variable} ${serif.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

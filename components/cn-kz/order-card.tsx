@@ -82,9 +82,9 @@ export function OrderCard({
       </div>
 
       {/* Price + signals */}
-      <div className="mt-3.5 flex items-end justify-between border-t border-white/[0.05] pt-3">
+      <div className="mt-3.5 flex items-end justify-between border-t border-border pt-3">
         <div className="flex items-baseline gap-1">
-          <span className="font-mono-tech text-xl leading-none font-semibold text-foreground">
+          <span className="font-mono-tech text-[26px] leading-none font-bold tracking-tight text-foreground">
             {money(order.deal?.agreedPriceUsd ?? order.priceUsd)}
           </span>
         </div>
