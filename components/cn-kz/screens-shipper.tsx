@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Check, Phone, Plus, RefreshCw, Search } from "lucide-react"
+import { Check, Gavel, Phone, Plus, RefreshCw, Search, Tag, Truck } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -72,9 +72,20 @@ export function ShipperOrdersScreen() {
 
       <StatStrip
         items={[
-          { value: inBidding, label: "В торгах" },
-          { value: activeDeals, label: "Сделки в пути", onClick: () => setTab("deals") },
-          { value: newOffers, label: "Новые офферы", accent: true, onClick: openNotifications },
+          { value: inBidding, label: "В торгах", icon: Gavel },
+          {
+            value: activeDeals,
+            label: "Сделки в пути",
+            icon: Truck,
+            onClick: () => setTab("deals"),
+          },
+          {
+            value: newOffers,
+            label: "Новые офферы",
+            icon: Tag,
+            accent: true,
+            onClick: openNotifications,
+          },
         ]}
       />
 

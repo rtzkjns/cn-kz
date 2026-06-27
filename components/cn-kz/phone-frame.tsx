@@ -178,7 +178,7 @@ const TABS: Record<
 function BottomNav() {
   const { role, tab, setTab } = useCnKz()
   return (
-    <nav className="flex shrink-0 items-stretch border-t border-border bg-card">
+    <nav className="flex shrink-0 items-stretch border-t border-border bg-card px-2 pt-2 pb-3">
       {TABS[role].map((t) => {
         const active = tab === t.id
         const Icon = t.icon
@@ -186,13 +186,24 @@ function BottomNav() {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={cn(
-              "flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors",
-              active ? "text-brand" : "text-muted-foreground"
-            )}
+            className="flex flex-1 flex-col items-center gap-1"
           >
-            <Icon className={cn("size-5", active && "stroke-[2.5]")} />
-            {t.label}
+            <span
+              className={cn(
+                "flex h-8 w-16 items-center justify-center rounded-full transition-colors",
+                active ? "bg-brand/12 text-brand" : "text-muted-foreground"
+              )}
+            >
+              <Icon className="size-5" />
+            </span>
+            <span
+              className={cn(
+                "text-[11px] font-medium transition-colors",
+                active ? "text-brand" : "text-muted-foreground"
+              )}
+            >
+              {t.label}
+            </span>
           </button>
         )
       })}

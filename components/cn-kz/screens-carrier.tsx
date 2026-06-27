@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Check, Phone } from "lucide-react"
+import { Boxes, Check, Phone, Tag, Truck } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -68,9 +68,14 @@ export function CarrierFeedScreen() {
 
       <StatStrip
         items={[
-          { value: available, label: "Подходящих грузов" },
-          { value: myOffers, label: "Мои офферы", accent: true },
-          { value: activeDeals, label: "Сделки в пути", onClick: () => setTab("deals") },
+          { value: available, label: "Подходящих грузов", icon: Boxes },
+          { value: myOffers, label: "Мои офферы", icon: Tag, accent: true },
+          {
+            value: activeDeals,
+            label: "Сделки в пути",
+            icon: Truck,
+            onClick: () => setTab("deals"),
+          },
         ]}
       />
 
@@ -88,11 +93,12 @@ export function CarrierFeedScreen() {
       {hiddenCount > 0 && (
         <button
           onClick={() => setShowOverCap((v) => !v)}
-          className="mx-4 mb-2 self-start text-xs font-medium text-brand"
+          className="mx-4 mb-2 inline-flex w-fit items-center gap-1.5 self-start rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-foreground/70 transition-colors hover:text-foreground active:scale-[0.97]"
         >
+          <Boxes className="size-3.5 text-brand" />
           {showOverCap
-            ? "Скрыть неподходящие по вместимости"
-            : `Не помещаются в вашу фуру: ${hiddenCount} — показать всё`}
+            ? "Скрыть неподходящие"
+            : `Не помещаются: ${hiddenCount} — показать всё`}
         </button>
       )}
 

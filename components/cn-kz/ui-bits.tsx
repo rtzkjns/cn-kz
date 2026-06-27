@@ -1,40 +1,54 @@
 "use client"
 
+import type { LucideIcon } from "lucide-react"
+
 import { cn } from "@/lib/utils"
 
-// Мини-сводка сверху ленты: ряд плиток «число + подпись», часть кликабельна.
+// Мини-сводка сверху ленты: единая карточка с сегментами «иконка + число + подпись».
 export interface Stat {
   value: number
   label: string
+  icon: LucideIcon
   accent?: boolean
   onClick?: () => void
 }
 
 export function StatStrip({ items }: { items: Stat[] }) {
   return (
-    <div className="flex gap-2 px-4 pb-2">
+    <div className="surface-glass mx-4 mb-3 flex items-stretch divide-x divide-border rounded-3xl">
       {items.map((s) => {
         const Tag = s.onClick ? "button" : "div"
+        const Icon = s.icon
+        const on = s.value > 0
         return (
           <Tag
             key={s.label}
             onClick={s.onClick}
             className={cn(
-              "surface-glass flex-1 rounded-xl px-3 py-3 text-left",
-              s.onClick &&
-                "transition-[scale,box-shadow] duration-150 active:scale-[0.97]"
+              "flex flex-1 flex-col gap-2.5 px-3.5 py-3.5 text-left first:rounded-l-3xl last:rounded-r-3xl",
+              s.onClick && "transition-transform duration-150 active:scale-[0.97]"
             )}
           >
-            <div
+            <span
               className={cn(
-                "text-2xl leading-none font-bold tracking-tight tabular-nums",
-                s.accent && s.value > 0 && "text-brand"
+                "flex size-7 items-center justify-center rounded-full",
+                s.accent && on ? "bg-brand/12 text-brand" : "bg-muted text-foreground/55"
               )}
             >
-              {s.value}
-            </div>
-            <div className="mt-1.5 text-[10px] leading-tight font-medium tracking-wide text-muted-foreground uppercase">
-              {s.label}
+              <Icon className="size-3.5" />
+            </span>
+            <div>
+              <div
+                className={cn(
+                  "text-[22px] leading-none font-extrabold tracking-tight tabular-nums",
+                  s.accent && on && "text-brand"
+                )}
+              >
+                {s.value}
+              </div>
+              <div className="mt-1 text-[11px] leading-tight font-medium text-muted-foreground">
+                {s.label}
+              </div>
             </div>
           </Tag>
         )
@@ -75,10 +89,10 @@ export function Chip({
     <button
       onClick={onClick}
       className={cn(
-        "shrink-0 rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap transition-[scale,color,background-color,border-color] duration-150 active:scale-[0.96]",
+        "shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium whitespace-nowrap transition-[scale,color,background-color,border-color] duration-150 active:scale-[0.96]",
         active
-          ? "border-transparent bg-secondary text-foreground"
-          : "border-border bg-transparent text-muted-foreground hover:text-foreground"
+          ? "border-transparent bg-foreground text-background"
+          : "border-border bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground"
       )}
     >
       {children}
