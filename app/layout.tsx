@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Onest } from "next/font/google";
+import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-// Clean modern UI sans with full Cyrillic — friendly, geometric, polished.
-const sans = Onest({
+// Linear: Inter for UI, Geist Mono for technical IDs/prices.
+const sans = Inter({
   variable: "--font-sans",
   subsets: ["latin", "cyrillic"],
+  display: "swap",
+});
+
+const mono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
   display: "swap",
 });
 
@@ -20,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" className={`${sans.variable} h-full antialiased`}>
+    <html lang="ru" className={`${sans.variable} ${mono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

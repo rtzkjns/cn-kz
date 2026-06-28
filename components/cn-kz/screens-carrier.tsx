@@ -24,10 +24,10 @@ const fitsFleet = (weightKg: number, volumeM3: number) =>
 // Realtime identity made tangible — a pulsing green dot reinforces the live feed (MVP §4).
 function LiveBadge() {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-2.5 py-1 text-[11px] font-medium tracking-wide text-brand">
+    <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
       <span className="relative flex size-1.5">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-70" />
-        <span className="relative inline-flex size-1.5 rounded-full bg-brand" />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-foreground opacity-60" />
+        <span className="relative inline-flex size-1.5 rounded-full bg-foreground" />
       </span>
       В эфире
     </span>
@@ -93,9 +93,9 @@ export function CarrierFeedScreen() {
       {hiddenCount > 0 && (
         <button
           onClick={() => setShowOverCap((v) => !v)}
-          className="mx-4 mb-2 inline-flex w-fit items-center gap-1.5 self-start rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-foreground/70 transition-colors hover:text-foreground active:scale-[0.97]"
+          className="mx-4 mb-2 inline-flex w-fit items-center gap-1.5 self-start rounded-md bg-secondary px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground active:scale-[0.97]"
         >
-          <Boxes className="size-3.5 text-brand" />
+          <Boxes className="size-3.5" />
           {showOverCap
             ? "Скрыть неподходящие"
             : `Не помещаются: ${hiddenCount} — показать всё`}

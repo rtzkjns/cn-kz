@@ -76,8 +76,8 @@ export function OfferStatusBadge({ status }: { status: OfferStatus }) {
 
 export function Rating({ value }: { value: number }) {
   return (
-    <span className="inline-flex items-center gap-0.5 text-amber-400">
-      ★ <span className="text-foreground">{value.toFixed(1)}</span>
+    <span className="inline-flex items-center gap-0.5 text-muted-foreground">
+      ★ <span className="font-mono-tech text-foreground">{value.toFixed(1)}</span>
     </span>
   )
 }

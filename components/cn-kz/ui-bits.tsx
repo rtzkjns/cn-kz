@@ -15,7 +15,7 @@ export interface Stat {
 
 export function StatStrip({ items }: { items: Stat[] }) {
   return (
-    <div className="surface-glass mx-4 mb-3 flex items-stretch divide-x divide-border rounded-3xl">
+    <div className="surface-glass mx-4 mb-3 flex items-stretch divide-x divide-border rounded-md">
       {items.map((s) => {
         const Tag = s.onClick ? "button" : "div"
         const Icon = s.icon
@@ -25,25 +25,20 @@ export function StatStrip({ items }: { items: Stat[] }) {
             key={s.label}
             onClick={s.onClick}
             className={cn(
-              "flex flex-1 flex-col gap-2.5 px-3.5 py-3.5 text-left first:rounded-l-3xl last:rounded-r-3xl",
+              "flex flex-1 flex-col gap-2.5 px-3.5 py-3.5 text-left first:rounded-l-md last:rounded-r-md",
               s.onClick && "transition-transform duration-150 active:scale-[0.97]"
             )}
           >
             <span
               className={cn(
-                "flex size-7 items-center justify-center rounded-full",
-                s.accent && on ? "bg-brand/12 text-brand" : "bg-muted text-foreground/55"
+                "flex size-7 items-center justify-center rounded-[5px]",
+                s.accent && on ? "bg-secondary text-foreground" : "bg-muted text-muted-foreground"
               )}
             >
               <Icon className="size-3.5" />
             </span>
             <div>
-              <div
-                className={cn(
-                  "text-[22px] leading-none font-extrabold tracking-tight tabular-nums",
-                  s.accent && on && "text-brand"
-                )}
-              >
+              <div className="font-mono-tech text-[22px] leading-none font-bold tracking-tight">
                 {s.value}
               </div>
               <div className="mt-1 text-[11px] leading-tight font-medium text-muted-foreground">
@@ -89,7 +84,7 @@ export function Chip({
     <button
       onClick={onClick}
       className={cn(
-        "shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium whitespace-nowrap transition-[scale,color,background-color,border-color] duration-150 active:scale-[0.96]",
+        "shrink-0 rounded-md border px-3 py-1.5 text-[13px] font-medium whitespace-nowrap transition-[scale,color,background-color,border-color] duration-150 active:scale-[0.96]",
         active
           ? "border-transparent bg-foreground text-background"
           : "border-border bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground"

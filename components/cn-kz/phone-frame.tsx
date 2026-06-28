@@ -121,8 +121,8 @@ function NotificationBell() {
                       className={cn(
                         "flex size-7 shrink-0 items-center justify-center rounded-full",
                         n.kind === "offer"
-                          ? "bg-brand/15 text-brand"
-                          : "bg-sky-500/15 text-sky-400"
+                          ? "bg-secondary text-foreground"
+                          : "bg-muted text-muted-foreground"
                       )}
                     >
                       {n.kind === "offer" ? (
@@ -190,8 +190,8 @@ function BottomNav() {
           >
             <span
               className={cn(
-                "flex h-8 w-16 items-center justify-center rounded-full transition-colors",
-                active ? "bg-brand/12 text-brand" : "text-muted-foreground"
+                "flex h-8 w-16 items-center justify-center rounded-md transition-colors",
+                active ? "bg-secondary text-foreground" : "text-muted-foreground"
               )}
             >
               <Icon className="size-5" />
@@ -199,7 +199,7 @@ function BottomNav() {
             <span
               className={cn(
                 "text-[11px] font-medium transition-colors",
-                active ? "text-brand" : "text-muted-foreground"
+                active ? "text-foreground" : "text-muted-foreground"
               )}
             >
               {t.label}
@@ -214,8 +214,8 @@ function BottomNav() {
 export function PhoneFrame({ children }: { children: React.ReactNode }) {
   const { toast } = useCnKz()
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-[#eeeef1] to-[#e3e3e7] p-0 sm:p-6">
-      <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2.5rem] sm:border-[6px] sm:border-white sm:shadow-2xl sm:shadow-black/15">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-neutral-950 to-black p-0 sm:p-6">
+      <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2rem] sm:border-[6px] sm:border-neutral-800 sm:shadow-2xl">
         <StatusBar />
         {/* Header */}
         <header className="flex shrink-0 items-center justify-between border-b border-border bg-background px-4 py-3">

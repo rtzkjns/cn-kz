@@ -281,7 +281,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
                             c.map((v, j) => (j === i ? !v : v))
                           )
                         }
-                        className="size-4 accent-[oklch(0.78_0.16_58)]"
+                        className="size-4 accent-[#e6e6e6]"
                       />
                       <span className={checked[i] ? "text-muted-foreground line-through" : ""}>
                         {doc}
@@ -326,7 +326,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
                     onClick={() => setStars(n)}
                     className={
                       "transition-transform hover:scale-110 " +
-                      (n <= stars ? "text-amber-400" : "text-muted-foreground/40")
+                      (n <= stars ? "text-foreground" : "text-muted-foreground/40")
                     }
                   >
                     ★
@@ -359,7 +359,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
           </Card>
         )}
         {completed && rated && (
-          <p className="text-center text-sm text-emerald-500">
+          <p className="text-center text-sm text-foreground">
             <Check className="inline size-4" /> Сделка завершена и оценена
           </p>
         )}
@@ -434,10 +434,10 @@ export function ChatScreen({ orderId }: { orderId: string }) {
           >
             <div
               className={
-                "max-w-[78%] rounded-2xl px-3 py-2 text-sm " +
+                "max-w-[78%] rounded-md px-3 py-2 text-sm " +
                 (m.fromMe
-                  ? "rounded-br-sm bg-brand text-brand-foreground"
-                  : "rounded-bl-sm bg-muted text-foreground")
+                  ? "rounded-br-[2px] bg-primary text-primary-foreground"
+                  : "rounded-bl-[2px] bg-secondary text-foreground")
               }
             >
               {m.text}

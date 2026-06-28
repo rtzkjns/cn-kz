@@ -94,7 +94,7 @@ export function OnboardingFlow() {
             <Button
               size="lg"
               variant="outline"
-              className="h-12 w-full rounded-full text-[15px]"
+              className="h-12 w-full text-[15px]"
               onClick={() => setStep("register")}
             >
               Создать аккаунт
@@ -290,8 +290,8 @@ function Shell({
   onBack?: () => void
 }) {
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-[#eeeef1] to-[#e3e3e7] p-0 sm:p-6">
-      <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2.5rem] sm:border-[6px] sm:border-white sm:shadow-2xl sm:shadow-black/15">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-neutral-950 to-black p-0 sm:p-6">
+      <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2rem] sm:border-[6px] sm:border-neutral-800 sm:shadow-2xl">
         <StatusBar />
         <header className="flex h-12 shrink-0 items-center gap-1 border-b border-border px-3">
           {onBack && (
@@ -319,10 +319,10 @@ function Frame({
   className?: string
 }) {
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-[#eeeef1] to-[#e3e3e7] p-0 sm:p-6">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-neutral-950 to-black p-0 sm:p-6">
       <div
         className={cn(
-          "relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2.5rem] sm:border-[6px] sm:border-white sm:shadow-2xl sm:shadow-black/15",
+          "relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2rem] sm:border-[6px] sm:border-neutral-800 sm:shadow-2xl",
           className
         )}
       >
@@ -338,11 +338,11 @@ function LogoMark({ size = "md" }: { size?: "md" | "lg" }) {
   return (
     <span
       className={cn(
-        "flex items-center justify-center rounded-[28%] bg-brand text-brand-foreground",
-        big ? "size-16" : "size-12"
+        "flex items-center justify-center rounded-md bg-foreground text-background",
+        big ? "size-14" : "size-11"
       )}
     >
-      <Package className={big ? "size-8" : "size-6"} />
+      <Package className={big ? "size-7" : "size-5"} />
     </span>
   )
 }
@@ -355,8 +355,8 @@ function ValuePill({
   label: string
 }) {
   return (
-    <span className="surface-inset inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground">
-      <Icon className="size-3.5 text-brand" />
+    <span className="surface-inset inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground">
+      <Icon className="size-3.5 text-foreground/70" />
       {label}
     </span>
   )
@@ -380,7 +380,7 @@ function RoleCard({
         "flex w-full items-start gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-brand hover:bg-muted/40"
       )}
     >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand/15 text-brand">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-secondary text-foreground">
         <Icon className="size-5" />
       </span>
       <span className="min-w-0">
