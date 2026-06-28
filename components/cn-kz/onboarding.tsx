@@ -338,7 +338,7 @@ function LogoMark({ size = "md" }: { size?: "md" | "lg" }) {
   return (
     <span
       className={cn(
-        "flex items-center justify-center rounded-md bg-foreground text-background",
+        "flex items-center justify-center rounded-md bg-brand text-brand-foreground",
         big ? "size-14" : "size-11"
       )}
     >

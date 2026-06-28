@@ -26,8 +26,8 @@ function LiveBadge() {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
       <span className="relative flex size-1.5">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-foreground opacity-60" />
-        <span className="relative inline-flex size-1.5 rounded-full bg-foreground" />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-70" />
+        <span className="relative inline-flex size-1.5 rounded-full bg-brand" />
       </span>
       В эфире
     </span>
@@ -58,8 +58,7 @@ export function CarrierFeedScreen() {
   ).length
 
   return (
-    <div className="relative flex h-full flex-col">
-      <div className="bg-aurora-soft pointer-events-none absolute inset-x-0 top-0 h-44" />
+    <div className="flex h-full flex-col">
       <ScreenHeader
         title="Лента грузов"
         subtitle="Хоргос → СНГ"
@@ -95,14 +94,14 @@ export function CarrierFeedScreen() {
           onClick={() => setShowOverCap((v) => !v)}
           className="mx-4 mb-2 inline-flex w-fit items-center gap-1.5 self-start rounded-md bg-secondary px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground active:scale-[0.97]"
         >
-          <Boxes className="size-3.5" />
+          <Boxes className="size-3.5 text-brand" />
           {showOverCap
             ? "Скрыть неподходящие"
             : `Не помещаются: ${hiddenCount} — показать всё`}
         </button>
       )}
 
-      <div className="flex-1 space-y-2 overflow-y-auto px-4 pb-24">
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-24">
         {list.length === 0 && (
           <p className="pt-10 text-center text-sm text-muted-foreground">
             Нет грузов под этот фильтр

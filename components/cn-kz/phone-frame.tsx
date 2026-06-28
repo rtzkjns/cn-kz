@@ -121,7 +121,7 @@ function NotificationBell() {
                       className={cn(
                         "flex size-7 shrink-0 items-center justify-center rounded-full",
                         n.kind === "offer"
-                          ? "bg-secondary text-foreground"
+                          ? "bg-brand/15 text-brand"
                           : "bg-muted text-muted-foreground"
                       )}
                     >
@@ -191,7 +191,7 @@ function BottomNav() {
             <span
               className={cn(
                 "flex h-8 w-16 items-center justify-center rounded-md transition-colors",
-                active ? "bg-secondary text-foreground" : "text-muted-foreground"
+                active ? "bg-brand/12 text-brand" : "text-muted-foreground"
               )}
             >
               <Icon className="size-5" />
@@ -199,7 +199,7 @@ function BottomNav() {
             <span
               className={cn(
                 "text-[11px] font-medium transition-colors",
-                active ? "text-foreground" : "text-muted-foreground"
+                active ? "text-brand" : "text-muted-foreground"
               )}
             >
               {t.label}

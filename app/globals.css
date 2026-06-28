@@ -51,28 +51,28 @@
 }
 
 :root {
-  /* Linear "midnight command deck" — STRICT MONOCHROME. No chromatic accent: the only
-     "accent" is brightness (snow on charcoal). Sharp corners, 1px graphite borders. */
-  --brand: #f7f8f8; /* mono accent = snow (active/emphasis) */
-  --brand-foreground: #08090a;
+  /* Linear "midnight command deck" — 3-color: dark neutrals + snow text + INDIGO accent.
+     Indigo is rationed to actions & active states (the research rule). Sharp corners, 1px borders. */
+  --brand: #5e6ad2; /* Linear indigo — the single accent */
+  --brand-foreground: #ffffff;
   --background: #08090a; /* onyx canvas */
   --foreground: #f7f8f8; /* snow */
   --card: #0f1011; /* charcoal */
   --card-foreground: #f7f8f8;
   --popover: #161718; /* obsidian */
   --popover-foreground: #f7f8f8;
-  --primary: #e6e6e6; /* near-white filled action (mono CTA) */
-  --primary-foreground: #0a0a0a;
+  --primary: #5e6ad2; /* indigo filled CTA — the one action color */
+  --primary-foreground: #ffffff;
   --secondary: #1b1c1e;
   --secondary-foreground: #f7f8f8;
   --muted: #161718;
   --muted-foreground: #8a8f98; /* fog */
   --accent: #1b1c1e;
   --accent-foreground: #f7f8f8;
-  --destructive: #b5564f; /* desaturated — danger only */
+  --destructive: #d05a52; /* desaturated — danger only */
   --border: #23252a; /* graphite */
   --input: #2a2c30;
-  --ring: #4b4e54;
+  --ring: #5e6ad2; /* indigo focus */
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -148,11 +148,11 @@
       inset 0 0 0 1px #23252a,
       0 1px 2px 0 rgba(0, 0, 0, 0.5);
   }
-  /* Active / emphasis surface — brighter (snow) 1px border, no color. */
+  /* Active / your-offer surface — indigo 1px border (the accent). */
   .surface-glass-brand {
     background: var(--card);
     box-shadow:
-      inset 0 0 0 1px rgba(247, 248, 248, 0.55),
+      inset 0 0 0 1px rgba(94, 106, 210, 0.65),
       0 1px 2px 0 rgba(0, 0, 0, 0.5);
   }
   /* Inset / quiet nested surface (obsidian). */

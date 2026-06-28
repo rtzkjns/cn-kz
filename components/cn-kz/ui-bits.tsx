@@ -32,13 +32,18 @@ export function StatStrip({ items }: { items: Stat[] }) {
             <span
               className={cn(
                 "flex size-7 items-center justify-center rounded-[5px]",
-                s.accent && on ? "bg-secondary text-foreground" : "bg-muted text-muted-foreground"
+                s.accent && on ? "bg-brand/15 text-brand" : "bg-muted text-muted-foreground"
               )}
             >
               <Icon className="size-3.5" />
             </span>
             <div>
-              <div className="font-mono-tech text-[22px] leading-none font-bold tracking-tight">
+              <div
+                className={cn(
+                  "font-mono-tech text-[22px] leading-none font-bold tracking-tight",
+                  s.accent && on && "text-brand"
+                )}
+              >
                 {s.value}
               </div>
               <div className="mt-1 text-[11px] leading-tight font-medium text-muted-foreground">
@@ -86,7 +91,7 @@ export function Chip({
       className={cn(
         "shrink-0 rounded-md border px-3 py-1.5 text-[13px] font-medium whitespace-nowrap transition-[scale,color,background-color,border-color] duration-150 active:scale-[0.96]",
         active
-          ? "border-transparent bg-foreground text-background"
+          ? "border-transparent bg-brand text-white"
           : "border-border bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground"
       )}
     >

@@ -65,8 +65,8 @@ export function OrderCard({
       <div className="mt-4 flex gap-3">
         <div className="flex flex-col items-center pt-1.5">
           <span className="size-1.5 rounded-full bg-muted-foreground/60" />
-          <span className="my-1 w-px flex-1 bg-border" />
-          <span className="size-2 rounded-full bg-foreground" />
+          <span className="my-1 w-px flex-1 bg-gradient-to-b from-border to-brand/50" />
+          <span className="size-2 rounded-full bg-brand ring-4 ring-brand/15" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-medium text-muted-foreground">
@@ -104,15 +104,15 @@ export function OrderCard({
 
         {order.deal ? (
           <span className="inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
-            {hasUnread && <MessageCircle className="size-4 text-foreground" />}
+            {hasUnread && <MessageCircle className="size-4 text-brand" />}
             Открыть <ChevronRight className="size-4" />
           </span>
         ) : mine ? (
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-[13px] font-semibold text-foreground">
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-[13px] font-semibold text-brand">
             Ваш оффер
           </span>
         ) : newOffers > 0 ? (
-          <span className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-3 py-2 text-[13px] font-semibold text-foreground tabular-nums">
+          <span className="inline-flex items-center gap-1 rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-[13px] font-semibold text-brand tabular-nums">
             {newOffers} {newOffers === 1 ? "оффер" : newOffers < 5 ? "оффера" : "офферов"}
             <ChevronRight className="size-3.5" />
           </span>
