@@ -5,6 +5,7 @@ import { PhoneFrame } from "./phone-frame"
 import {
   CargoDetailScreen,
   CarrierFeedScreen,
+  MyOffersScreen,
 } from "./screens-carrier"
 import {
   ChatScreen,
@@ -38,6 +39,7 @@ function Router() {
     }
   }
 
+  if (tab === "offers") return <MyOffersScreen />
   if (tab === "deals") return <DealsScreen />
   if (tab === "profile") return <ProfileScreen />
   // feed tab — role-dependent home

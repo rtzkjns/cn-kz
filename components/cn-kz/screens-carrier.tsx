@@ -35,12 +35,15 @@ function LiveBadge() {
 }
 
 export function CarrierFeedScreen() {
-  const { feedOrders, myOrders, push, setTab } = useCnKz()
+  const { feedOrders, push, setTab } = useCnKz()
   const [type, setType] = useState<TruckType | "all">("all")
   const [showOverCap, setShowOverCap] = useState(false)
 
   const byType = useMemo(
-    () => feedOrders.filter((o) => type === "all" || o.truckType === type),
+    () =>
+      feedOrders.filter(
+        (o) => !o.deal && (type === "all" || o.truckType === type)
+      ),
     [feedOrders, type]
   )
   const hiddenCount = byType.filter((o) => !fitsFleet(o.weightKg, o.volumeM3)).length
@@ -49,11 +52,13 @@ export function CarrierFeedScreen() {
     : byType.filter((o) => fitsFleet(o.weightKg, o.volumeM3))
 
   // Сводка сверху ленты.
-  const available = feedOrders.filter((o) =>
-    fitsFleet(o.weightKg, o.volumeM3)
+  const available = feedOrders.filter(
+    (o) => !o.deal && fitsFleet(o.weightKg, o.volumeM3)
   ).length
-  const myOffers = feedOrders.filter((o) => o.myOfferStatus === "pending").length
-  const activeDeals = myOrders.filter(
+  const myOffers = feedOrders.filter(
+    (o) => o.myOfferStatus === "pending" || o.myOfferStatus === "countered"
+  ).length
+  const activeDeals = feedOrders.filter(
     (o) => o.deal && o.deal.status !== "completed" && o.deal.status !== "cancelled"
   ).length
 
@@ -68,7 +73,13 @@ export function CarrierFeedScreen() {
       <StatStrip
         items={[
           { value: available, label: "Подходящих грузов", icon: Boxes },
-          { value: myOffers, label: "Мои офферы", icon: Tag, accent: true },
+          {
+            value: myOffers,
+            label: "Мои офферы",
+            icon: Tag,
+            accent: true,
+            onClick: () => setTab("offers"),
+          },
           {
             value: activeDeals,
             label: "Сделки в пути",
@@ -128,8 +139,64 @@ export function CarrierFeedScreen() {
   )
 }
 
+export function MyOffersScreen() {
+  const { feedOrders, push } = useCnKz()
+  const offers = feedOrders.filter((o) => o.myOfferStatus)
+  const active = offers.filter(
+    (o) => o.myOfferStatus === "pending" || o.myOfferStatus === "countered"
+  )
+  const settled = offers.filter(
+    (o) =>
+      o.myOfferStatus === "accepted" ||
+      o.myOfferStatus === "rejected" ||
+      o.myOfferStatus === "expired"
+  )
+
+  return (
+    <div className="flex h-full flex-col">
+      <ScreenHeader title="Мои офферы" subtitle="Ваши ставки на грузы" />
+      <div className="flex-1 space-y-4 overflow-y-auto px-4 pt-2 pb-24">
+        {offers.length === 0 && (
+          <p className="pt-10 text-center text-sm text-muted-foreground">
+            Пока нет офферов. Откликнитесь на груз в ленте.
+          </p>
+        )}
+        {active.length > 0 && (
+          <Section title="Активные">
+            <div className="space-y-3">
+              {active.map((o) => (
+                <OrderCard
+                  key={o.id}
+                  order={o}
+                  showMyOffer
+                  onClick={() => push({ type: "cargoDetail", orderId: o.id })}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
+        {settled.length > 0 && (
+          <Section title="История">
+            <div className="space-y-3">
+              {settled.map((o) => (
+                <OrderCard
+                  key={o.id}
+                  order={o}
+                  showMyOffer
+                  onClick={() => push({ type: "cargoDetail", orderId: o.id })}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function CargoDetailScreen({ orderId }: { orderId: string }) {
-  const { getOrder, pop, makeOffer, showToast } = useCnKz()
+  const { getOrder, pop, push, setTab, makeOffer, confirmCounter, declineMyOffer, showToast } =
+    useCnKz()
   const order = getOrder(orderId)
   const [counter, setCounter] = useState("")
   if (!order) return null
@@ -206,11 +273,67 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
           </Card>
         </Section>
 
-        {alreadyOffered && (
-          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
-            <span className="text-muted-foreground">Статус вашего оффера</span>
-            <OfferStatusBadge status={order.myOfferStatus!} />
-          </div>
+        {order.myOfferStatus && (
+          <Card
+            size="sm"
+            className={order.myOfferStatus === "accepted" ? "ring-brand/40" : ""}
+          >
+            <CardContent className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Ваш оффер</span>
+                <OfferStatusBadge status={order.myOfferStatus} />
+              </div>
+
+              {order.myOfferStatus === "pending" && (
+                <>
+                  <DetailRow
+                    label="Ваша цена"
+                    value={money(order.myOfferPriceUsd ?? order.priceUsd)}
+                  />
+                  <p className="text-xs text-muted-foreground">Ждём ответа шипера…</p>
+                </>
+              )}
+
+              {order.myOfferStatus === "countered" && (
+                <>
+                  <DetailRow label="Ваша цена" value={money(order.myOfferPriceUsd ?? 0)} />
+                  <DetailRow
+                    label="Встречная шипера"
+                    value={money(order.myCounterPriceUsd ?? 0)}
+                  />
+                  <div className="flex gap-2 pt-1">
+                    <Button className="flex-1" onClick={() => confirmCounter(order.id)}>
+                      <Check className="size-4" /> Согласиться {money(order.myCounterPriceUsd ?? 0)}
+                    </Button>
+                    <Button variant="outline" onClick={() => declineMyOffer(order.id)}>
+                      Отклонить
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {order.myOfferStatus === "accepted" && (
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    setTab("deals")
+                    push({ type: "deal", orderId: order.id })
+                  }}
+                >
+                  <Truck className="size-4" /> Открыть сделку
+                </Button>
+              )}
+
+              {(order.myOfferStatus === "rejected" ||
+                order.myOfferStatus === "expired") && (
+                <p className="text-xs text-muted-foreground">
+                  {order.myOfferStatus === "rejected"
+                    ? "Оффер снят или отклонён."
+                    : "Срок оффера истёк."}
+                </p>
+              )}
+            </CardContent>
+          </Card>
         )}
       </div>
 

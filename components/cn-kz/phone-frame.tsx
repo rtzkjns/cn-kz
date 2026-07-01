@@ -170,6 +170,7 @@ const TABS: Record<
   ],
   carrier: [
     { id: "feed", label: "Лента", icon: Truck },
+    { id: "offers", label: "Офферы", icon: Tag },
     { id: "deals", label: "Сделки", icon: Boxes },
     { id: "profile", label: "Профиль", icon: User },
   ],

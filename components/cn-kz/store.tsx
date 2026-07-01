@@ -24,7 +24,7 @@ export type Screen =
   | { type: "deal"; orderId: string }
   | { type: "chat"; orderId: string }
 
-export type Tab = "feed" | "deals" | "profile"
+export type Tab = "feed" | "offers" | "deals" | "profile"
 
 export interface Notification {
   id: string
@@ -79,6 +79,8 @@ interface CnKzStore {
   publishOrder: (d: NewOrderDraft) => void
   acceptOffer: (orderId: string, offerId: string) => void
   makeOffer: (orderId: string, kind: OfferKind, priceUsd: number) => void
+  confirmCounter: (orderId: string) => void // перевозчик принимает встречную цену шипера
+  declineMyOffer: (orderId: string) => void // перевозчик снимает свой оффер
   advanceDeal: (orderId: string) => void
   confirmDelivery: (orderId: string) => void
   cancelDeal: (orderId: string) => void
@@ -215,6 +217,11 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
     function updateFeed(id: string, fn: (o: Order) => Order) {
       setFeedOrders((list) => list.map((o) => (o.id === id ? fn(o) : o)))
     }
+    // Обновляет заказ в том списке, где он есть (id шипера ord-1xxx и ленты ord-2xxx не пересекаются).
+    function updateOrder(id: string, fn: (o: Order) => Order) {
+      setMyOrders((list) => list.map((o) => (o.id === id ? fn(o) : o)))
+      setFeedOrders((list) => list.map((o) => (o.id === id ? fn(o) : o)))
+    }
 
     function publishOrder(d: NewOrderDraft) {
       const order: Order = {
@@ -265,17 +272,69 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       showToast("Сделка создана. Перевозчик уведомлён")
     }
 
+    // Перевозчик выигрывает заказ → на заказе появляется сделка (carrier = ME_CARRIER).
+    function createCarrierDeal(orderId: string, price: number) {
+      updateFeed(orderId, (o) => ({
+        ...o,
+        status: "deal",
+        myOfferStatus: "accepted",
+        deal: {
+          status: "accepted",
+          carrier: ME_CARRIER,
+          agreedPriceUsd: price,
+          chat: [],
+        },
+      }))
+    }
+
     function makeOffer(orderId: string, kind: OfferKind, priceUsd: number) {
-      updateFeed(orderId, (o) => ({ ...o, myOfferStatus: "pending" }))
+      const order = feedOrders.find((o) => o.id === orderId)
+      const offered = kind === "accept" ? order?.priceUsd ?? priceUsd : priceUsd
+      const base = order?.priceUsd ?? offered
+      updateFeed(orderId, (o) => ({
+        ...o,
+        myOfferStatus: "pending",
+        myOfferPriceUsd: offered,
+        myCounterPriceUsd: undefined,
+      }))
       showToast(
         kind === "accept"
           ? "Оффер отправлен: готовы везти за цену шипера"
           : `Встречная цена отправлена: $${priceUsd}`
       )
+      // Симуляция ответа шипера (в проде — realtime-событие с бэкенда).
+      setTimeout(() => {
+        if (kind === "accept") {
+          createCarrierDeal(orderId, offered)
+          showToast("Шипер принял оффер — сделка создана")
+        } else {
+          const back = Math.round((offered + base) / 2)
+          setFeedOrders((list) =>
+            list.map((o) =>
+              o.id === orderId
+                ? { ...o, myOfferStatus: "countered", myCounterPriceUsd: back }
+                : o
+            )
+          )
+          showToast("Шипер предложил встречную цену")
+        }
+      }, 1600)
+    }
+
+    function confirmCounter(orderId: string) {
+      const o = feedOrders.find((x) => x.id === orderId)
+      const price = o?.myCounterPriceUsd ?? o?.myOfferPriceUsd ?? o?.priceUsd ?? 0
+      createCarrierDeal(orderId, price)
+      showToast("Сделка создана по встречной цене")
+    }
+
+    function declineMyOffer(orderId: string) {
+      updateFeed(orderId, (o) => ({ ...o, myOfferStatus: "rejected" }))
+      showToast("Оффер снят")
     }
 
     function advanceDeal(orderId: string) {
-      updateMy(orderId, (o) => {
+      updateOrder(orderId, (o) => {
         if (!o.deal) return o
         const i = DEAL_FLOW.indexOf(o.deal.status)
         // carrier advances up to "delivered"; shipper confirms "completed"
@@ -286,14 +345,14 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
     }
 
     function confirmDelivery(orderId: string) {
-      updateMy(orderId, (o) =>
+      updateOrder(orderId, (o) =>
         o.deal ? { ...o, deal: { ...o.deal, status: "completed" } } : o
       )
       showToast("Получение подтверждено. Сделка завершена")
     }
 
     function cancelDeal(orderId: string) {
-      updateMy(orderId, (o) =>
+      updateOrder(orderId, (o) =>
         o.deal ? { ...o, deal: { ...o.deal, status: "cancelled" } } : o
       )
       showToast("Сделка отменена. Рейтинг снижен")
@@ -306,7 +365,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
         text,
         time: nowTime(),
       }
-      updateMy(orderId, (o) =>
+      updateOrder(orderId, (o) =>
         o.deal ? { ...o, deal: { ...o.deal, chat: [...o.deal.chat, msg] } } : o
       )
     }
@@ -337,6 +396,8 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       publishOrder,
       acceptOffer,
       makeOffer,
+      confirmCounter,
+      declineMyOffer,
       advanceDeal,
       confirmDelivery,
       cancelDeal,

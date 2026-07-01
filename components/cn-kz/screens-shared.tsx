@@ -40,8 +40,10 @@ import { useCnKz } from "./store"
 // ---------- Deals dashboard ----------
 
 export function DealsScreen() {
-  const { myOrders, push, role, dealsNewOnly, setDealsNewOnly, isNew } = useCnKz()
-  const deals = myOrders.filter((o) => o.deal)
+  const { myOrders, feedOrders, push, role, dealsNewOnly, setDealsNewOnly, isNew } = useCnKz()
+  // Шипер видит сделки по своим заказам; перевозчик — по выигранным грузам из ленты.
+  const source = role === "carrier" ? feedOrders : myOrders
+  const deals = source.filter((o) => o.deal)
   const visible = dealsNewOnly ? deals.filter((o) => isNew(o.id)) : deals
   const active = visible.filter((o) => o.deal!.status !== "completed" && o.deal!.status !== "cancelled")
   const done = visible.filter((o) => o.deal!.status === "completed" || o.deal!.status === "cancelled")

@@ -64,6 +64,7 @@ const OFFER_STATUS: Record<
   { label: string; variant: React.ComponentProps<typeof Badge>["variant"] }
 > = {
   pending: { label: "На рассмотрении", variant: "warning" },
+  countered: { label: "Встречная цена", variant: "info" },
   accepted: { label: "Принят", variant: "success" },
   rejected: { label: "Отклонён", variant: "destructive" },
   expired: { label: "Истёк", variant: "muted" },

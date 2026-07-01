@@ -114,7 +114,7 @@ export const DEAL_STATUS_LABEL: Record<DealStatus, string> = {
 
 export type OfferKind = "accept" | "counter" // «Принять цену» | «Своя цена»
 
-export type OfferStatus = "pending" | "accepted" | "rejected" | "expired"
+export type OfferStatus = "pending" | "countered" | "accepted" | "rejected" | "expired"
 
 export interface User {
   id: string
@@ -182,4 +182,6 @@ export interface Order {
   }
   // carrier's own offer state when viewing the feed
   myOfferStatus?: OfferStatus
+  myOfferPriceUsd?: number // цена, которую предложил перевозчик
+  myCounterPriceUsd?: number // встречная цена шипера в ответ на оффер перевозчика
 }
