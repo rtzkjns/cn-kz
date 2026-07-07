@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { Search, X } from "lucide-react"
+import { ChevronDown, ChevronLeft, Search, X } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
-import { ALL_CITIES } from "@/lib/cn-kz/types"
+import { ALL_CITIES, POPULAR_CITIES } from "@/lib/cn-kz/types"
 import { Chip, ChipRow } from "./ui-bits"
+import { useCnKz } from "./store"
 
 // Нормализация: нижний регистр + ё→е, чтобы поиск был предсказуемым.
 const norm = (s: string) => s.toLowerCase().replace(/ё/g, "е").trim()
@@ -48,42 +49,108 @@ function Results({
   )
 }
 
-// Single-select city: search over the full CIS list (no preset chips).
+// Single-select city — tap to open a full-screen picker (search + недавние + популярные).
 export function CityPicker({
   value,
   onChange,
+  placeholder = "Выберите город",
 }: {
   value?: string
   onChange: (c: string) => void
+  placeholder?: string
 }) {
+  const { showToast } = useCnKz()
+  const [open, setOpen] = useState(false)
   const [q, setQ] = useState("")
   const results = search(q)
+  const pick = (c: string) => {
+    onChange(c)
+    setOpen(false)
+    setQ("")
+  }
   return (
-    <div className="space-y-2">
-      <div className="relative">
-        <Search className="absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Город назначения…"
-          className="h-8 pl-7"
-        />
-      </div>
-      <Results
-        items={results}
-        onPick={(c) => {
-          onChange(c)
-          setQ("")
-        }}
-      />
-      {value && (
-        <ChipRow>
-          <Chip active onClick={() => onChange(value)}>
-            {value}
-          </Chip>
-        </ChipRow>
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex h-9 w-full items-center justify-between rounded-md border border-border bg-card px-3 text-sm"
+      >
+        <span className={value ? "text-foreground" : "text-muted-foreground"}>
+          {value || placeholder}
+        </span>
+        <ChevronDown className="size-4 text-muted-foreground" />
+      </button>
+
+      {open && (
+        <div className="animate-in fade-in absolute inset-0 z-50 flex flex-col bg-background duration-150">
+          <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+            <button onClick={() => setOpen(false)} aria-label="Назад">
+              <ChevronLeft className="size-5" />
+            </button>
+            <span className="font-semibold">Выберите город</span>
+          </div>
+          <div className="px-4 py-3">
+            <div className="relative">
+              <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                autoFocus
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Введите город…"
+                className="h-10 pl-8"
+              />
+            </div>
+          </div>
+          <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-6">
+            {q ? (
+              <div className="overflow-hidden rounded-lg border border-border">
+                {results.length === 0 && (
+                  <p className="px-3 py-4 text-sm text-muted-foreground">Ничего не найдено</p>
+                )}
+                {results.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => pick(c)}
+                    className="block w-full border-b border-border/60 px-3 py-2.5 text-left text-sm last:border-0 hover:bg-muted"
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">Недавние</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {["Алматы", "Астана"].map((c) => (
+                      <Chip key={c} onClick={() => pick(c)}>
+                        {c}
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">Популярные города</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {POPULAR_CITIES.map((c) => (
+                      <Chip key={c} onClick={() => pick(c)}>
+                        {c}
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  onClick={() => showToast("Выбор точки на карте — скоро")}
+                  className="text-sm font-medium text-brand"
+                >
+                  Указать на карте →
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       )}
-    </div>
+    </>
   )
 }
 

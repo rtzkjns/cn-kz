@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Check, Gavel, Phone, Plus, RefreshCw, Search, Tag, Truck } from "lucide-react"
+import { BadgeCheck, Check, Gavel, MessageCircle, Package, Phone, RefreshCw, Tag, Truck, X } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -10,7 +10,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
-  ORIGIN,
   TRUCK_TYPES,
   type Order,
   type TruckType,
@@ -19,24 +18,22 @@ import { CityPicker } from "./city-picker"
 import { OrderCard } from "./order-card"
 import { ScreenHeader } from "./phone-frame"
 import { deals, plural, Rating, Route, money } from "./shared"
-import { Chip, ChipRow, DetailRow, Section, StatStrip } from "./ui-bits"
+import { Chip, ChipRow, DetailRow, EmptyState, Section, StatStrip } from "./ui-bits"
 import { useCnKz, type NewOrderDraft } from "./store"
 
 const FILTERS = [
   { id: "all", label: "Все" },
-  { id: "bidding", label: "Торги" },
-  { id: "deal", label: "Сделки" },
-  { id: "archived", label: "Архив" },
+  { id: "open", label: "Не принятые" },
+  { id: "accepted", label: "Принятые" },
 ] as const
 
 export function ShipperOrdersScreen() {
-  const { myOrders, push, setTab, openNotifications } = useCnKz()
+  const { myOrders, push, togglePin, dealsNewOnly, setDealsNewOnly, isNew } = useCnKz()
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("all")
-  const [q, setQ] = useState("")
+  const [sort, setSort] = useState<"new" | "offers">("new")
 
-  // Сводка сверху ленты.
   const inBidding = myOrders.filter(
-    (o) => o.status === "bidding" || o.status === "published"
+    (o) => !o.deal && (o.status === "bidding" || o.status === "published")
   ).length
   const activeDeals = myOrders.filter(
     (o) => o.deal && o.deal.status !== "completed" && o.deal.status !== "cancelled"
@@ -45,116 +42,135 @@ export function ShipperOrdersScreen() {
     (n, o) => n + o.offers.filter((of) => of.status === "pending").length,
     0
   )
+  // Завершённые/отменённые ушли в «Историю», архивные не активны — в счётчике только активные.
+  const activeCount = myOrders.filter(
+    (o) =>
+      o.status !== "archived" &&
+      !(o.deal && (o.deal.status === "completed" || o.deal.status === "cancelled"))
+  ).length
 
   const list = useMemo(() => {
-    return myOrders.filter((o) => {
+    const filtered = myOrders.filter((o) => {
+      const active = o.deal && o.deal.status !== "completed" && o.deal.status !== "cancelled"
+      const finished = o.deal && (o.deal.status === "completed" || o.deal.status === "cancelled")
+      if (finished) return false // завершённые/отменённые живут в «Истории заказов», не тут
       const byFilter =
         filter === "all"
           ? true
-          : filter === "bidding"
-            ? o.status === "bidding" || o.status === "published"
-            : filter === "deal"
-              ? o.status === "deal"
-              : o.status === "archived"
-      const byQ =
-        q.trim() === "" ||
-        `${o.destination} ${o.cargo}`.toLowerCase().includes(q.toLowerCase())
-      return byFilter && byQ
+          : filter === "open"
+            ? !o.deal && (o.status === "bidding" || o.status === "published")
+            : !!active
+      const byNew = !dealsNewOnly || isNew(o.id) // «Все сделки с новыми» из колокольчика
+      return byFilter && byNew
     })
-  }, [myOrders, filter, q])
+    const pendingOf = (o: Order) => o.offers.filter((of) => of.status === "pending").length
+    return filtered.sort((a, b) => {
+      if (!!b.pinned !== !!a.pinned) return b.pinned ? 1 : -1 // pinned first
+      if (sort === "offers") return pendingOf(b) - pendingOf(a)
+      return 0
+    })
+  }, [myOrders, filter, sort, dealsNewOnly, isNew])
 
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader
         title="Мои заказы"
-        subtitle={`${myOrders.length} ${plural(myOrders.length, "заказ", "заказа", "заказов")} · Хоргос → СНГ`}
+        subtitle={`${activeCount} ${plural(activeCount, "активный заказ", "активных заказа", "активных заказов")} · по всей СНГ`}
       />
 
       <StatStrip
         items={[
-          { value: inBidding, label: "В торгах", icon: Gavel },
-          {
-            value: activeDeals,
-            label: "Сделки в пути",
-            icon: Truck,
-            onClick: () => setTab("deals"),
-          },
+          { value: inBidding, label: "Не приняты", icon: Gavel, onClick: () => setFilter("open") },
+          { value: activeDeals, label: "В работе", icon: Truck, onClick: () => setFilter("accepted") },
           {
             value: newOffers,
-            label: "Новые офферы",
+            label: "Новые отклики",
             icon: Tag,
             accent: true,
-            onClick: openNotifications,
+            onClick: () => {
+              setFilter("open")
+              setSort("offers")
+            },
           },
         ]}
       />
 
-      <div className="px-4 pb-2">
-        <div className="relative">
-          <Search className="absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Поиск по маршруту и грузу"
-            className="h-8 pl-7"
-          />
-        </div>
-      </div>
-
       <ChipRow className="px-4 pb-2">
+        {dealsNewOnly && (
+          <Chip active onClick={() => setDealsNewOnly(false)}>
+            Только новые ✕
+          </Chip>
+        )}
         {FILTERS.map((f) => (
           <Chip
             key={f.id}
-            active={filter === f.id}
-            onClick={() => setFilter(f.id)}
+            active={filter === f.id && !dealsNewOnly}
+            onClick={() => {
+              setFilter(f.id)
+              setDealsNewOnly(false)
+            }}
           >
             {f.label}
           </Chip>
         ))}
+        <span className="mx-0.5 w-px shrink-0 self-stretch bg-border" />
+        <Chip active={sort === "new"} onClick={() => setSort("new")}>Новые</Chip>
+        <Chip active={sort === "offers"} onClick={() => setSort("offers")}>Больше откликов</Chip>
       </ChipRow>
 
       <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-24">
         {list.length === 0 && (
-          <p className="pt-10 text-center text-sm text-muted-foreground">
-            Нет заказов в этой вкладке
-          </p>
-        )}
-        {list.map((o) => (
-          <OrderCard
-            key={o.id}
-            order={o}
-            onClick={() =>
-              push(
-                o.deal
-                  ? { type: "deal", orderId: o.id }
-                  : { type: "orderDetail", orderId: o.id }
-              )
+          <EmptyState
+            icon={Package}
+            title="Здесь пока пусто"
+            hint="Опубликуйте заказ — перевозчики начнут откликаться в реальном времени."
+            action={
+              <Button size="sm" onClick={() => push({ type: "createOrder" })}>
+                Создать заказ
+              </Button>
             }
           />
+        )}
+        {list.map((o, i) => (
+          <div
+            key={o.id}
+            className="animate-in fade-in slide-in-from-bottom-1 fill-mode-both"
+            style={{ animationDelay: `${Math.min(i, 7) * 50}ms`, animationDuration: "300ms" }}
+          >
+            <OrderCard
+              order={o}
+              pinned={o.pinned}
+              onTogglePin={() => togglePin(o.id)}
+              onClick={() =>
+                push(
+                  o.deal
+                    ? { type: "deal", orderId: o.id }
+                    : { type: "orderDetail", orderId: o.id }
+                )
+              }
+            />
+          </div>
         ))}
       </div>
-
-      <button
-        onClick={() => push({ type: "createOrder" })}
-        className="shadow-key absolute right-4 bottom-5 z-10 flex size-14 items-center justify-center rounded-full bg-brand text-brand-foreground transition-transform duration-150 active:scale-[0.96]"
-        aria-label="Новый заказ"
-      >
-        <Plus className="size-6" />
-      </button>
     </div>
   )
 }
 
 export function OrderDetailScreen({ orderId }: { orderId: string }) {
-  const { getOrder, pop, push, acceptOffer, showToast, markSeen } = useCnKz()
+  const { getOrder, pop, push, acceptOffer, rejectOffer, counterOffer, republishOrder, showToast, markSeen } = useCnKz()
+  const [counterFor, setCounterFor] = useState<string | null>(null)
+  const [counterVal, setCounterVal] = useState("")
+  const [rejectFor, setRejectFor] = useState<string | null>(null)
   const order = getOrder(orderId)
-  // Открыли заказ → новые офферы прочитаны.
+  // Открыли заказ → новые отклики прочитаны.
   useEffect(() => {
     markSeen(orderId)
   }, [orderId, markSeen])
   if (!order) return null
 
-  const pending = order.offers.filter((o) => o.status === "pending")
+  const visible = order.offers.filter(
+    (o) => o.status === "pending" || o.status === "countered"
+  )
 
   return (
     <div className="flex h-full flex-col">
@@ -207,75 +223,185 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
         </Card>
 
         <Section
-          title="Офферы"
-          right={<span className="text-xs text-muted-foreground">{pending.length} активных</span>}
+          title="Отклики"
+          right={<span className="text-xs text-muted-foreground">{visible.length} активных</span>}
         >
-          {pending.length === 0 && (
+          {visible.length === 0 && (
             <p className="text-sm text-muted-foreground">
               Пока нет откликов. Пуш ушёл подходящим перевозчикам.
             </p>
           )}
           <div className="space-y-2">
-            {pending.map((of) => (
-              <Card key={of.id} size="sm">
+            {visible.map((of) => (
+              <Card
+                key={of.id}
+                size="sm"
+                onClick={() =>
+                  push({
+                    type: "carrierProfile",
+                    carrierId: of.carrier.id,
+                    orderId: order.id,
+                    offerId: of.id,
+                  })
+                }
+                className="cursor-pointer hover:ring-foreground/20"
+              >
                 <CardContent className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Avatar name={of.carrier.name} className="size-8" />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">
+                      <p className="flex items-center gap-1 truncate text-sm font-medium">
                         {of.carrier.name}
+                        {of.carrier.verified && <BadgeCheck className="size-3.5 shrink-0 text-brand" />}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        <Rating value={of.carrier.rating} /> ·{" "}
-                        {deals(of.carrier.dealsCount)}
+                        <Rating value={of.carrier.rating} /> · {deals(of.carrier.dealsCount)}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="font-mono-tech text-base font-semibold text-foreground">
                         {money(of.priceUsd)}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {of.createdAgo}
-                      </p>
+                      <p className="text-[10px] text-muted-foreground">{of.createdAgo}</p>
                     </div>
                   </div>
 
-                  {of.kind === "accept" ? (
-                    <Badge variant="success">
-                      <Check className="size-3" /> Готов везти сразу
-                    </Badge>
-                  ) : (
-                    <Badge variant="warning">Встречная цена</Badge>
-                  )}
-
-                  <div className="flex gap-2 pt-1">
-                    <Button
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => {
-                        acceptOffer(order.id, of.id)
-                        pop()
-                        push({ type: "deal", orderId: order.id })
-                      }}
-                    >
-                      {of.kind === "accept" ? "Принять — сделка сразу" : "Выбрать · 15 мин на подтверждение"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => showToast(`Звоним: ${of.carrier.phone}`)}
-                    >
-                      <Phone className="size-3.5" />
-                    </Button>
+                  {/* vehicle params */}
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className="inline-flex items-center gap-1 rounded-[4px] bg-secondary px-2 py-1 text-[11px] font-medium text-muted-foreground">
+                      <Truck className="size-3 opacity-60" /> {of.truck}
+                    </span>
+                    {of.plate && (
+                      <span className="font-mono-tech inline-flex items-center rounded-[4px] bg-secondary px-2 py-1 text-[11px] font-medium text-muted-foreground">
+                        {of.plate}
+                      </span>
+                    )}
+                    {of.capacityKg && (
+                      <span className="inline-flex items-center rounded-[4px] bg-secondary px-2 py-1 text-[11px] font-medium text-muted-foreground tabular-nums">
+                        до {of.capacityKg.toLocaleString("ru-RU")} кг
+                      </span>
+                    )}
+                    {of.kind === "accept" ? (
+                      <Badge variant="success">
+                        <Check className="size-3" /> Готов сразу
+                      </Badge>
+                    ) : (
+                      <Badge variant="warning">Встречная</Badge>
+                    )}
                   </div>
+
+                  {of.status === "countered" ? (
+                    <div className="rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-[13px] font-medium text-brand">
+                      Встречная отправлена: {money(of.shipperCounterUsd ?? of.priceUsd)} · ждём ответа перевозчика
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex gap-2 pt-1">
+                        <Button
+                          size="sm"
+                          className="flex-1"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            acceptOffer(order.id, of.id)
+                            pop()
+                            push({ type: "deal", orderId: order.id })
+                          }}
+                        >
+                          {of.kind === "accept" ? "Выбрать" : "Выбрать встречную"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className={rejectFor === of.id ? "border-destructive text-destructive" : ""}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            if (rejectFor === of.id) {
+                              rejectOffer(order.id, of.id)
+                              setRejectFor(null)
+                            } else {
+                              setRejectFor(of.id)
+                            }
+                          }}
+                        >
+                          <X className="size-3.5" /> {rejectFor === of.id ? "Точно?" : "Отклонить"}
+                        </Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="flex-1"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setCounterFor(counterFor === of.id ? null : of.id)
+                            setCounterVal("")
+                          }}
+                        >
+                          Своя цена
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="flex-1"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            showToast("Чат откроется после начала сделки")
+                          }}
+                        >
+                          <MessageCircle className="size-3.5" /> Чат
+                        </Button>
+                      </div>
+                      {counterFor === of.id && (
+                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                          <Input
+                            type="number"
+                            inputMode="numeric"
+                            value={counterVal}
+                            onChange={(e) => setCounterVal(e.target.value)}
+                            placeholder={`Ваша цена, $ (сейчас ${of.priceUsd})`}
+                            className="h-9"
+                          />
+                          <Button
+                            size="sm"
+                            disabled={!counterVal}
+                            onClick={() => {
+                              counterOffer(order.id, of.id, Number(counterVal))
+                              setCounterFor(null)
+                            }}
+                          >
+                            Отправить
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </CardContent>
               </Card>
             ))}
           </div>
         </Section>
 
+        {order.deal && order.status === "deal" && (
+          <Button
+            className="w-full"
+            onClick={() => {
+              pop()
+              push({ type: "deal", orderId: order.id })
+            }}
+          >
+            <Truck className="size-4" /> Открыть сделку · {money(order.deal.agreedPriceUsd)}
+          </Button>
+        )}
+
         {order.status === "archived" && (
-          <Button variant="outline" className="w-full" onClick={pop}>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              republishOrder(order.id)
+              pop()
+            }}
+          >
             <RefreshCw className="size-4" /> Перепубликовать заказ
           </Button>
         )}
@@ -284,7 +410,21 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
   )
 }
 
+const RU_MONTHS = [
+  "янв", "фев", "мар", "апр", "май", "июн",
+  "июл", "авг", "сен", "окт", "ноя", "дек",
+]
+
+// ISO из <input type="date"> ("2026-06-12") → «12 июн 2026» для карточек/деталей.
+function formatReadyDate(iso: string): string {
+  if (!iso) return ""
+  const [y, m, day] = iso.split("-").map(Number)
+  if (!y || !m || !day) return iso
+  return `${day} ${RU_MONTHS[m - 1]} ${y}`
+}
+
 const emptyDraft: NewOrderDraft = {
+  origin: "",
   pickupPoint: "",
   pickupPhone: "",
   destination: "",
@@ -293,7 +433,7 @@ const emptyDraft: NewOrderDraft = {
   volumeM3: 0,
   truckType: "тент",
   priceUsd: 0,
-  readyDate: "12 июн 2026",
+  readyDate: "",
   notes: "",
   address: "",
   recipientName: "",
@@ -302,17 +442,20 @@ const emptyDraft: NewOrderDraft = {
 }
 
 export function CreateOrderScreen() {
-  const { publishOrder, pop } = useCnKz()
+  const { publishOrder, pop, setTab } = useCnKz()
   const [d, setD] = useState<NewOrderDraft>(emptyDraft)
+  const [readyIso, setReadyIso] = useState("")
   const set = <K extends keyof NewOrderDraft>(k: K, v: NewOrderDraft[K]) =>
     setD((cur) => ({ ...cur, [k]: v }))
 
   const valid =
+    d.origin.trim() &&
     d.pickupPoint.trim() &&
     d.destination.trim() &&
     d.cargo.trim() &&
     d.weightKg > 0 &&
-    d.priceUsd > 0
+    d.priceUsd > 0 &&
+    d.readyDate.trim()
 
   return (
     <div className="flex h-full flex-col">
@@ -320,10 +463,10 @@ export function CreateOrderScreen() {
 
       <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-24">
         <Field label="Откуда">
-          <Input value={ORIGIN} disabled />
+          <CityPicker value={d.origin} onChange={(c) => set("origin", c)} />
         </Field>
 
-        <Field label="Точка погрузки в Хоргосе">
+        <Field label="Точка погрузки">
           <Input
             value={d.pickupPoint}
             onChange={(e) => set("pickupPoint", e.target.value)}
@@ -335,15 +478,22 @@ export function CreateOrderScreen() {
           <Input
             value={d.pickupPhone}
             onChange={(e) => set("pickupPhone", e.target.value)}
-            placeholder="+86 / +7…"
+            placeholder="+7…"
           />
         </Field>
 
         <Field label="Куда">
-          <CityPicker
-            value={d.destination}
-            onChange={(c) => set("destination", c)}
-          />
+          <div className="space-y-1.5">
+            <CityPicker value={d.destination} onChange={(c) => set("destination", c)} />
+            {(d.origin || d.destination) && (
+              <button
+                onClick={() => setD((c) => ({ ...c, origin: c.destination, destination: c.origin }))}
+                className="inline-flex items-center gap-1 text-xs font-medium text-brand"
+              >
+                ⇅ Поменять откуда / куда
+              </button>
+            )}
+          </div>
         </Field>
 
         <Field label="Описание груза">
@@ -372,7 +522,7 @@ export function CreateOrderScreen() {
         </div>
 
         <Field label="Тип авто">
-          <ChipRow>
+          <div className="flex flex-wrap gap-1.5">
             {TRUCK_TYPES.map((t) => (
               <Chip
                 key={t}
@@ -382,7 +532,7 @@ export function CreateOrderScreen() {
                 {t}
               </Chip>
             ))}
-          </ChipRow>
+          </div>
         </Field>
 
         <Field label="Ваша цена, $">
@@ -396,8 +546,12 @@ export function CreateOrderScreen() {
 
         <Field label="Дата готовности к погрузке">
           <Input
-            value={d.readyDate}
-            onChange={(e) => set("readyDate", e.target.value)}
+            type="date"
+            value={readyIso}
+            onChange={(e) => {
+              setReadyIso(e.target.value)
+              set("readyDate", formatReadyDate(e.target.value))
+            }}
           />
         </Field>
 
@@ -455,6 +609,7 @@ export function CreateOrderScreen() {
           onClick={() => {
             publishOrder(d)
             pop()
+            setTab("myorders") // покажем новый заказ в «Мои заказы», а не в общей ленте
           }}
         >
           Опубликовать

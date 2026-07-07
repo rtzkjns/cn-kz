@@ -2,15 +2,23 @@
 
 import { useEffect, useState } from "react"
 import {
+  BadgeCheck,
+  BarChart3,
   Bell,
+  Camera,
   Check,
-  ClipboardList,
+  ChevronRight,
+  Clock,
+  Plus,
+  Settings as SettingsIcon,
+  Lock,
   LogOut,
   MessageCircle,
   Moon,
   Phone,
   Send,
   ShieldAlert,
+  ShieldCheck,
   Truck,
 } from "lucide-react"
 
@@ -26,14 +34,9 @@ import {
   ME_SHIPPER,
   WATCHED_ROUTES,
 } from "@/lib/cn-kz/mock-data"
-import {
-  DEAL_FLOW,
-  DEAL_STATUS_LABEL,
-  type DealStatus,
-  type Order,
-} from "@/lib/cn-kz/types"
+import { type Order } from "@/lib/cn-kz/types"
 import { ScreenHeader } from "./phone-frame"
-import { deals, DealStatusBadge, Rating, Route, money } from "./shared"
+import { deals, DealStatusBadge, OfferStatusBadge, Rating, Route, money } from "./shared"
 import { Chip, ChipRow, DetailRow, Section } from "./ui-bits"
 import { useCnKz } from "./store"
 
@@ -41,28 +44,52 @@ import { useCnKz } from "./store"
 
 export function DealsScreen() {
   const { myOrders, feedOrders, push, role, dealsNewOnly, setDealsNewOnly, isNew } = useCnKz()
-  // Шипер видит сделки по своим заказам; перевозчик — по выигранным грузам из ленты.
+  // Заказчик видит сделки по своим заказам; перевозчик — по выигранным грузам из ленты.
   const source = role === "carrier" ? feedOrders : myOrders
   const deals = source.filter((o) => o.deal)
   const visible = dealsNewOnly ? deals.filter((o) => isNew(o.id)) : deals
   const active = visible.filter((o) => o.deal!.status !== "completed" && o.deal!.status !== "cancelled")
-  const done = visible.filter((o) => o.deal!.status === "completed" || o.deal!.status === "cancelled")
+  // Перевозчик: «Отклики» (ожидающие ставки без сделки) слиты в «Мои сделки».
+  const myOffers =
+    role === "carrier"
+      ? source.filter(
+          (o) => !o.deal && (o.myOfferStatus === "pending" || o.myOfferStatus === "countered")
+        )
+      : []
+  const settledOffers =
+    role === "carrier"
+      ? source.filter(
+          (o) => !o.deal && (o.myOfferStatus === "rejected" || o.myOfferStatus === "expired")
+        )
+      : []
 
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader
-        title="Сделки"
-        subtitle={role === "shipper" ? "Ваши грузы в пути" : "Ваши рейсы"}
+        title={role === "carrier" ? "Мои сделки" : "Сделки"}
+        subtitle={role === "shipper" ? "Ваши грузы в пути" : "Отклики и рейсы"}
       />
-      <ChipRow className="px-4 pb-2">
-        <Chip active={!dealsNewOnly} onClick={() => setDealsNewOnly(false)}>
-          Все
-        </Chip>
-        <Chip active={dealsNewOnly} onClick={() => setDealsNewOnly(true)}>
-          Есть новые
-        </Chip>
-      </ChipRow>
+      {dealsNewOnly && (
+        <ChipRow className="px-4 pb-2">
+          <Chip active onClick={() => setDealsNewOnly(false)}>
+            Только новые ✕
+          </Chip>
+        </ChipRow>
+      )}
       <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-24">
+        {myOffers.length > 0 && (
+          <Section title="Отклики · ожидают ответа">
+            <div className="space-y-2">
+              {myOffers.map((o) => (
+                <OfferRow
+                  key={o.id}
+                  order={o}
+                  onClick={() => push({ type: "cargoDetail", orderId: o.id })}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
         <Section title="Активные">
           {active.length === 0 && (
             <p className="text-sm text-muted-foreground">
@@ -76,11 +103,15 @@ export function DealsScreen() {
           </div>
         </Section>
 
-        {done.length > 0 && (
-          <Section title="Завершённые">
+        {settledOffers.length > 0 && (
+          <Section title="История откликов">
             <div className="space-y-2">
-              {done.map((o) => (
-                <DealRow key={o.id} order={o} isNew={isNew(o.id)} onClick={() => push({ type: "deal", orderId: o.id })} />
+              {settledOffers.map((o) => (
+                <OfferRow
+                  key={o.id}
+                  order={o}
+                  onClick={() => push({ type: "cargoDetail", orderId: o.id })}
+                />
               ))}
             </div>
           </Section>
@@ -105,6 +136,10 @@ function DealRow({
         <div className="flex items-center justify-between">
           <Route from={order.origin} to={order.destination} className="text-sm" />
           <div className="flex items-center gap-1.5">
+            {order.overdue && order.deal!.status === "accepted" && (
+              <Badge variant="warning">Опаздывает</Badge>
+            )}
+            {order.deal!.tripId && <Badge variant="outline">Рейс</Badge>}
             {isNew && <Badge variant="brand">новое</Badge>}
             <DealStatusBadge status={order.deal!.status} />
           </div>
@@ -123,16 +158,31 @@ function DealRow({
   )
 }
 
-// ---------- Deal detail ----------
+// Compact row for a carrier's pending offer (bid) — folded into «Мои сделки».
+function OfferRow({ order, onClick }: { order: Order; onClick: () => void }) {
+  const countered = order.myOfferStatus === "countered"
+  return (
+    <Card size="sm" onClick={onClick} className="cursor-pointer hover:ring-foreground/20">
+      <CardContent className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <Route from={order.origin} to={order.destination} className="text-sm" />
+          <OfferStatusBadge status={order.myOfferStatus!} />
+        </div>
+        <p className="line-clamp-1 text-xs text-muted-foreground">{order.cargo}</p>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">
+            {countered ? "Встречная цена заказчика" : "Ваш отклик отправлен"}
+          </span>
+          <span className="font-mono-tech text-sm font-semibold text-foreground">
+            {money(order.myCounterPriceUsd ?? order.myOfferPriceUsd ?? order.priceUsd)}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
-const DOCS = [
-  "CMR — транспортная накладная",
-  "Commercial Invoice",
-  "Packing List",
-  "TIR Carnet / транзитная декларация",
-  "Фитосанитарный сертификат",
-  "Паспорт водителя + виза страны назначения",
-]
+// ---------- Deal detail ----------
 
 export function DealScreen({ orderId }: { orderId: string }) {
   const {
@@ -140,9 +190,10 @@ export function DealScreen({ orderId }: { orderId: string }) {
     pop,
     push,
     role,
-    advanceDeal,
+    completeDeal,
     confirmDelivery,
     cancelDeal,
+    submitRating,
     showToast,
     markSeen,
   } = useCnKz()
@@ -151,18 +202,21 @@ export function DealScreen({ orderId }: { orderId: string }) {
   useEffect(() => {
     markSeen(orderId)
   }, [orderId, markSeen])
-  const [showDocs, setShowDocs] = useState(false)
-  const [checked, setChecked] = useState<boolean[]>(() => DOCS.map(() => false))
-  const [rated, setRated] = useState(false)
   const [stars, setStars] = useState(0)
   const [comment, setComment] = useState("")
+  const [criteria, setCriteria] = useState<string[]>([])
+  const [showCancel, setShowCancel] = useState(false)
+  const [podStep, setPodStep] = useState(false)
+  const [podAdded, setPodAdded] = useState(false)
   // Низкая оценка (1–2★) требует комментарий — MVP §8.
   const commentRequired = stars > 0 && stars <= 2
   const canSubmitRating = stars > 0 && (!commentRequired || comment.trim().length > 0)
+  const toggleCriterion = (c: string) =>
+    setCriteria((cur) => (cur.includes(c) ? cur.filter((x) => x !== c) : [...cur, c]))
 
   if (!order?.deal) return null
   const deal = order.deal
-  const stepIndex = DEAL_FLOW.indexOf(deal.status)
+  const rated = order.ratedStars != null
   const cancelled = deal.status === "cancelled"
   const completed = deal.status === "completed"
   const other = role === "shipper" ? deal.carrier : order.shipper
@@ -181,123 +235,97 @@ export function DealScreen({ orderId }: { orderId: string }) {
       />
 
       <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-6">
-        {/* status tracker */}
+        {/* status — 2 состояния, без трекинга доставки */}
         <Card size="sm">
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Статус доставки</span>
+              <span className="text-sm font-medium">Статус</span>
               <DealStatusBadge status={deal.status} />
             </div>
             {cancelled ? (
               <p className="text-sm text-destructive">Сделка отменена</p>
             ) : (
-              <div className="flex items-center justify-between">
-                {DEAL_FLOW.map((s, i) => (
-                  <div key={s} className="flex flex-1 flex-col items-center gap-1">
-                    <div className="flex w-full items-center">
-                      {i > 0 && (
-                        <div
-                          className={
-                            "h-0.5 flex-1 " +
-                            (i <= stepIndex ? "bg-brand" : "bg-border")
-                          }
-                        />
-                      )}
-                      <div
-                        className={
-                          "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] " +
-                          (i <= stepIndex
-                            ? "bg-brand text-brand-foreground"
-                            : "bg-muted text-muted-foreground")
-                        }
-                      >
-                        {i < stepIndex ? <Check className="size-3" /> : i + 1}
-                      </div>
-                      {i < DEAL_FLOW.length - 1 && (
-                        <div
-                          className={
-                            "h-0.5 flex-1 " +
-                            (i < stepIndex ? "bg-brand" : "bg-border")
-                          }
-                        />
-                      )}
-                    </div>
-                    <span className="text-center text-[8px] leading-tight text-muted-foreground">
-                      {DEAL_STATUS_LABEL[s as DealStatus]}
-                    </span>
-                  </div>
-                ))}
+              <div className="flex items-center gap-2 text-xs font-medium">
+                <span className="inline-flex items-center gap-1.5 text-brand">
+                  <span className="flex size-5 items-center justify-center rounded-full bg-brand text-brand-foreground">
+                    <Check className="size-3" />
+                  </span>
+                  Принято
+                </span>
+                <span className={"h-0.5 flex-1 " + (completed ? "bg-brand" : "bg-border")} />
+                <span
+                  className={
+                    "inline-flex items-center gap-1.5 " +
+                    (completed ? "text-brand" : "text-muted-foreground")
+                  }
+                >
+                  <span
+                    className={
+                      "flex size-5 items-center justify-center rounded-full text-[10px] " +
+                      (completed ? "bg-brand text-brand-foreground" : "bg-muted text-muted-foreground")
+                    }
+                  >
+                    {completed ? <Check className="size-3" /> : "2"}
+                  </span>
+                  Завершено
+                </span>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* other party */}
-        <Card size="sm">
+        {/* other party — tap opens the carrier profile (shipper side) */}
+        <Card
+          size="sm"
+          onClick={
+            role === "shipper"
+              ? () => push({ type: "carrierProfile", carrierId: deal.carrier.id })
+              : undefined
+          }
+          className={role === "shipper" ? "cursor-pointer hover:ring-foreground/20" : ""}
+        >
           <CardContent className="flex items-center gap-2">
             <Avatar name={other.name} className="size-8" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{other.name}</p>
+              <p className="flex items-center gap-1 truncate text-sm font-medium">
+                {other.name}
+                {other.verified && <BadgeCheck className="size-3.5 shrink-0 text-brand" />}
+              </p>
               <p className="text-xs text-muted-foreground">
                 <Rating value={other.rating} /> ·{" "}
-                {role === "shipper" ? "перевозчик" : "шипер"}
+                {role === "shipper" ? "перевозчик" : "заказчик"}
               </p>
             </div>
-            <Button size="sm" variant="outline" onClick={() => showToast(`Звоним: ${other.phone}`)}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation()
+                showToast("Звоним (номер скрыт для безопасности)")
+              }}
+            >
               <Phone className="size-3.5" />
             </Button>
+            {role === "shipper" && <ChevronRight className="size-4 text-muted-foreground" />}
           </CardContent>
         </Card>
 
         <DetailRow label="Груз" value={order.cargo} />
         <DetailRow label="Согласованная цена" value={money(deal.agreedPriceUsd)} />
-
-        {/* docs checklist (carrier) */}
-        {role === "carrier" && (
-          <div>
-            <Button
-              variant="outline"
-              className="w-full justify-between"
-              onClick={() => setShowDocs((v) => !v)}
-            >
-              <span className="inline-flex items-center gap-2">
-                <ClipboardList className="size-4" /> Документы на границу
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {checked.filter(Boolean).length}/{DOCS.length}
-              </span>
-            </Button>
-            {showDocs && (
-              <Card size="sm" className="mt-2">
-                <CardContent className="space-y-2">
-                  {DOCS.map((doc, i) => (
-                    <label
-                      key={doc}
-                      className="flex cursor-pointer items-center gap-2 text-sm"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked[i]}
-                        onChange={() =>
-                          setChecked((c) =>
-                            c.map((v, j) => (j === i ? !v : v))
-                          )
-                        }
-                        className="size-4 accent-[#e6e6e6]"
-                      />
-                      <span className={checked[i] ? "text-muted-foreground line-through" : ""}>
-                        {doc}
-                      </span>
-                    </label>
-                  ))}
-                  <p className="pt-1 text-[10px] text-muted-foreground">
-                    Отметьте, что подготовили. Не обязательно для статуса «На границе».
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+        {order.deliverBy && <DetailRow label="Срок доставки" value={order.deliverBy} />}
+        {order.overdue && !completed && !cancelled && (
+          <div className="flex items-center gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-500">
+            <ShieldAlert className="size-3.5 shrink-0" /> Перевозчик опаздывает к сроку доставки. Напишите в чат или согласуйте новый срок.
           </div>
         )}
+        <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-xs text-muted-foreground">
+          <Lock className="size-3.5 shrink-0 text-brand" />
+          {cancelled
+            ? "Сделка отменена — оплата не проводится"
+            : completed
+              ? `Доставка подтверждена — оплату ${money(deal.agreedPriceUsd)} можно провести`
+              : `Безопасная сделка — оплату ${money(deal.agreedPriceUsd)} проводите после подтверждения доставки`}
+        </div>
 
         {/* chat entry */}
         <Button
@@ -306,7 +334,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
           onClick={() => push({ type: "chat", orderId: order.id })}
         >
           <MessageCircle className="size-4" /> Чат с{" "}
-          {role === "shipper" ? "перевозчиком" : "шипером"}
+          {role === "shipper" ? "перевозчиком" : "заказчиком"}
           {deal.chat.length > 0 && (
             <Badge variant="muted" className="ml-auto">
               {deal.chat.length}
@@ -319,7 +347,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
           <Card size="sm" className="ring-brand/40">
             <CardContent className="space-y-2">
               <p className="text-sm font-medium">
-                Оцените {role === "shipper" ? "перевозчика" : "шипера"}
+                Оцените {role === "shipper" ? "перевозчика" : "заказчика"}
               </p>
               <div className="flex justify-center gap-1 text-2xl">
                 {[1, 2, 3, 4, 5].map((n) => (
@@ -335,6 +363,24 @@ export function DealScreen({ orderId }: { orderId: string }) {
                   </button>
                 ))}
               </div>
+              {stars > 0 && stars <= 4 && (
+                <div className="flex flex-wrap justify-center gap-1.5">
+                  {["Пунктуальность", "Состояние груза", "Документы", "Связь"].map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => toggleCriterion(c)}
+                      className={
+                        "rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors " +
+                        (criteria.includes(c)
+                          ? "border-brand/40 bg-brand/15 text-brand"
+                          : "border-border text-muted-foreground hover:text-foreground")
+                      }
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              )}
               <Textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
@@ -350,10 +396,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
               <Button
                 className="w-full"
                 disabled={!canSubmitRating}
-                onClick={() => {
-                  setRated(true)
-                  showToast("Спасибо! Оценка отправлена")
-                }}
+                onClick={() => submitRating(order.id, stars)}
               >
                 Отправить оценку
               </Button>
@@ -362,44 +405,100 @@ export function DealScreen({ orderId }: { orderId: string }) {
         )}
         {completed && rated && (
           <p className="text-center text-sm text-foreground">
-            <Check className="inline size-4" /> Сделка завершена и оценена
+            <Check className="inline size-4" /> Сделка завершена · ваша оценка {order.ratedStars}★
           </p>
         )}
 
-        {/* actions */}
+        {/* actions — 2 состояния (перевозчик завершает, заказчик может подтвердить) */}
         {!cancelled && !completed && (
           <div className="space-y-2 pt-1">
-            {role === "carrier" && stepIndex < DEAL_FLOW.indexOf("delivered") && (
-              <Button className="w-full" onClick={() => advanceDeal(order.id)}>
-                <Truck className="size-4" /> Следующий этап:{" "}
-                {DEAL_STATUS_LABEL[DEAL_FLOW[stepIndex + 1] as DealStatus]}
-              </Button>
-            )}
-            {role === "shipper" && deal.status === "delivered" && (
+            {role === "carrier" ? (
+              podStep ? (
+                <Card size="sm" className="ring-brand/40">
+                  <CardContent className="space-y-2">
+                    <p className="text-sm font-medium">Подтверждение доставки (POD)</p>
+                    <p className="text-xs text-muted-foreground">
+                      Приложите фото выгруженного груза или накладной — заказчик увидит, что доставлено, и подтвердит.
+                    </p>
+                    <Button variant="outline" className="w-full" onClick={() => setPodAdded(true)}>
+                      <Camera className="size-4" /> {podAdded ? "Фото добавлено ✓" : "Добавить фото выгрузки"}
+                    </Button>
+                    <Button className="w-full" disabled={!podAdded} onClick={() => completeDeal(order.id)}>
+                      <Check className="size-4" /> Завершить заказ
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Button className="w-full" onClick={() => setPodStep(true)}>
+                  <Check className="size-4" /> Завершил заказ
+                </Button>
+              )
+            ) : (
               <Button className="w-full" onClick={() => confirmDelivery(order.id)}>
                 <Check className="size-4" /> Подтвердить получение
               </Button>
             )}
-            {deal.status === "accepted" ? (
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={() => cancelDeal(order.id)}
-              >
-                Отменить сделку
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => showToast("Заявка создана — поддержка свяжется с вами")}
-              >
-                <ShieldAlert className="size-4" /> Подать претензию
-              </Button>
-            )}
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={() => setShowCancel(true)}
+            >
+              Отменить сделку
+            </Button>
           </div>
         )}
       </div>
+
+      {/* cancel-confirmation — показываем цену отмены (главный рычаг против срывов) */}
+      {showCancel && (
+        <div
+          className="animate-in fade-in absolute inset-0 z-50 flex items-end bg-black/50"
+          onClick={() => setShowCancel(false)}
+        >
+          <div
+            className="animate-in slide-in-from-bottom w-full space-y-3 rounded-t-2xl border-t border-border bg-card p-4 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-base font-semibold">Отменить сделку?</p>
+            <p className="text-sm text-muted-foreground">
+              {role === "carrier"
+                ? "Отмена принятого заказа снизит вашу надёжность на −10 и может ограничить доступ к премиум-грузам."
+                : "Отмена оставит перевозчика без груза и повлияет на ваш рейтинг заказчика."}
+            </p>
+            <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-xs text-muted-foreground">
+              <ShieldAlert className="size-3.5 shrink-0 text-amber-500" /> Форс-мажор (поломка, граница)? Отмена без штрафа — приложите фото.
+            </div>
+            <div className="space-y-2">
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={() => {
+                  cancelDeal(order.id)
+                  setShowCancel(false)
+                }}
+              >
+                {role === "carrier" ? "Отменить (−10 к надёжности)" : "Отменить сделку"}
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setShowCancel(false)
+                  showToast("Заявка о форс-мажоре отправлена на проверку")
+                }}
+              >
+                <ShieldAlert className="size-4" /> Это форс-мажор
+              </Button>
+              <button
+                onClick={() => setShowCancel(false)}
+                className="w-full py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+              >
+                Оставить сделку
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -475,8 +574,7 @@ export function ChatScreen({ orderId }: { orderId: string }) {
 // ---------- Profile ----------
 
 export function ProfileScreen() {
-  const { role, resetOnboarding } = useCnKz()
-  const me = role === "shipper" ? ME_SHIPPER : ME_CARRIER
+  const { role, me, resetOnboarding, setTab, showToast } = useCnKz()
   const [quiet, setQuiet] = useState(true)
 
   return (
@@ -495,12 +593,132 @@ export function ProfileScreen() {
                 <Rating value={me.rating} /> · {deals(me.dealsCount)}
               </p>
             </div>
-            <Badge variant="brand">{role === "shipper" ? "Шипер" : "Перевозчик"}</Badge>
+            <Badge variant="brand">{role === "shipper" ? "Заказчик" : "Перевозчик"}</Badge>
           </CardContent>
         </Card>
 
+        {/* История + Настройки — быстрый доступ */}
+        <Card size="sm">
+          <CardContent className="divide-y divide-border">
+            <button onClick={() => setTab("history")} className="flex w-full items-center gap-3 py-2.5 text-left text-sm">
+              <Clock className="size-4 text-muted-foreground" />
+              <span className="flex-1">{role === "carrier" ? "История рейсов" : "История заказов"}</span>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </button>
+            <button onClick={() => setTab("settings")} className="flex w-full items-center gap-3 py-2.5 text-left text-sm">
+              <SettingsIcon className="size-4 text-muted-foreground" />
+              <span className="flex-1">Настройки</span>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </button>
+          </CardContent>
+        </Card>
+
+        {/* Честная проверка — без госбаз: телефон, фото, сверка селфи с документом, отзывы */}
+        <Section title="Проверка профиля">
+          <Card size="sm">
+            <CardContent className="space-y-2.5 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-2">
+                  <ShieldCheck className="size-4 text-brand" /> Телефон подтверждён
+                </span>
+                <Badge variant="success">Да</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-2">
+                  <BadgeCheck className="size-4 text-brand" /> Профиль с фото (селфи)
+                </span>
+                <Badge variant="success">Есть</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-2">
+                  <BadgeCheck className="size-4 text-brand" /> Селфи сверено с документом
+                </span>
+                <Badge variant="success">Совпало</Badge>
+              </div>
+              {role === "carrier" && (
+                <button
+                  onClick={() => showToast("Загрузка фото фуры с гос. номером")}
+                  className="flex w-full items-center justify-between"
+                >
+                  <span className="inline-flex items-center gap-2 text-foreground">
+                    <Camera className="size-4 text-muted-foreground" /> Транспорт · фото с гос. номером
+                  </span>
+                  <Badge variant="success">На файле</Badge>
+                </button>
+              )}
+              <p className="pt-1 text-[11px] leading-snug text-muted-foreground">
+                Мы не сверяем документы с госбазами. Доверие строится на подтверждённом телефоне, фото, сверке селфи с документом, отзывах и истории сделок.
+              </p>
+            </CardContent>
+          </Card>
+        </Section>
+
+        {role === "shipper" && (
+          <Section title="Аналитика">
+            <Card
+              size="sm"
+              onClick={() => setTab("analytics")}
+              className="cursor-pointer hover:ring-foreground/20"
+            >
+              <CardContent className="flex items-center gap-3">
+                <span className="flex size-9 items-center justify-center rounded-md bg-brand/15 text-brand">
+                  <BarChart3 className="size-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">Аналитика заказов</p>
+                  <p className="text-xs text-muted-foreground">Расходы, топ маршрутов, качество откликов</p>
+                </div>
+                <ChevronRight className="size-4 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </Section>
+        )}
+
         {role === "carrier" && (
           <>
+            <Section title="Надёжность">
+              <Card size="sm">
+                <CardContent className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono-tech text-lg font-bold">98 / 100</span>
+                    <Badge variant="success">Надёжный ✓</Badge>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div className="h-full rounded-full bg-brand" style={{ width: "98%" }} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    За последние 20 заказов · 0 отмен. Высокая надёжность = приоритет в ленте и доступ к премиум-грузам.
+                  </p>
+                </CardContent>
+              </Card>
+            </Section>
+
+            <Section title="Моя статистика">
+              <Card size="sm">
+                <CardContent>
+                  <div className="flex items-center justify-around text-center">
+                    <div>
+                      <div className="font-mono-tech text-lg font-bold">{me.dealsCount}</div>
+                      <div className="text-[11px] text-muted-foreground">рейсов</div>
+                    </div>
+                    <div>
+                      <div className="font-mono-tech text-lg font-bold">{me.rating.toFixed(1)}</div>
+                      <div className="text-[11px] text-muted-foreground">рейтинг</div>
+                    </div>
+                    <div>
+                      <div className="font-mono-tech text-lg font-bold text-brand">96%</div>
+                      <div className="text-[11px] text-muted-foreground">вовремя</div>
+                    </div>
+                    <div>
+                      <div className="font-mono-tech text-lg font-bold">$18.4k</div>
+                      <div className="text-[11px] text-muted-foreground">заработано</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Section>
+
+
             <Section title="Мой парк">
               <div className="space-y-2">
                 {MY_FLEET.map((t) => (
@@ -513,9 +731,16 @@ export function ProfileScreen() {
                           {t.maxWeightKg.toLocaleString("ru-RU")} кг · {t.maxVolumeM3} м³ · {t.plate}
                         </p>
                       </div>
+                      <BadgeCheck className="size-4 text-brand" />
                     </CardContent>
                   </Card>
                 ))}
+                <button
+                  onClick={() => showToast("Авто добавлено · на проверке")}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-border py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <Plus className="size-4" /> Добавить авто
+                </button>
               </div>
             </Section>
 
@@ -574,7 +799,7 @@ export function ProfileScreen() {
         </Button>
 
         <p className="pb-4 text-center text-[10px] text-muted-foreground">
-          CN-KZ · MVP-вайрфрейм · демо-данные
+          CN-KZ · Грузоперевозки по СНГ
         </p>
       </div>
     </div>

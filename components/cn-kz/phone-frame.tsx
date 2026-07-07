@@ -2,63 +2,127 @@
 
 import { useState } from "react"
 import {
+  BarChart3,
   BatteryFull,
   Bell,
   Boxes,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  Heart,
   HelpCircle,
-  Info,
+  Home,
+  LogOut,
+  Menu,
   MessageCircle,
   Package,
+  Plus,
+  Settings,
   Signal,
   Tag,
-  Truck,
   User,
   Wifi,
 } from "lucide-react"
 
+import { Avatar } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { ME_CARRIER, ME_SHIPPER } from "@/lib/cn-kz/mock-data"
+import { FilterSheet } from "./filter-sheet"
 import { useCnKz, type Tab } from "./store"
 
-// Logo doubles as a menu button (top-left). Holds actions that aren't in the bottom nav.
+// Left slide-in drawer — account header + grouped items. Filters live on-screen
+// (keyword chips), so the drawer holds account/notifications/support/logout.
 function LogoMenu() {
-  const { showToast } = useCnKz()
+  const { showToast, openNotifications, setTab, resetOnboarding, newCount, role, me } = useCnKz()
   const [open, setOpen] = useState(false)
-  const items = [
-    { icon: HelpCircle, label: "Поддержка" },
-    { icon: Info, label: "О приложении" },
-  ]
+  const close = () => setOpen(false)
+  const go = (fn: () => void) => {
+    close()
+    fn()
+  }
   return (
-    <div className="relative">
+    <>
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen(true)}
         aria-label="Меню"
-        className="flex size-7 items-center justify-center rounded-lg bg-brand text-brand-foreground transition-transform active:scale-95"
+        className="flex size-8 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted active:scale-95"
       >
-        <Package className="size-4" />
+        <Menu className="size-5" />
       </button>
       {open && (
-        <>
-          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute top-9 left-0 z-40 w-44 overflow-hidden rounded-xl border border-border bg-popover py-1 shadow-lg">
-            {items.map((it) => (
-              <button
-                key={it.label}
-                onClick={() => {
-                  setOpen(false)
-                  showToast(`${it.label} — демо`)
-                }}
-                className="flex w-full items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted"
-              >
-                <it.icon className="size-4 text-muted-foreground" />
-                {it.label}
-              </button>
-            ))}
+        <div className="absolute inset-0 z-40 flex">
+          <button
+            aria-label="Закрыть меню"
+            onClick={close}
+            className="animate-in fade-in absolute inset-0 bg-black/55 duration-200"
+          />
+          <div className="animate-in slide-in-from-left relative flex h-full w-72 flex-col bg-popover shadow-2xl duration-200 ease-out">
+            <button
+              onClick={() => go(() => setTab("profile"))}
+              className="flex items-center gap-3 border-b border-border p-4 text-left transition-colors hover:bg-muted"
+            >
+              <Avatar name={me.name} className="size-11 text-base" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">{me.name}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {role === "shipper" ? "Заказчик" : "Перевозчик"} · открыть профиль
+                </p>
+              </div>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </button>
+
+            <nav className="flex-1 space-y-0.5 p-2">
+              <MenuRow icon={Bell} label="Уведомления" badge={newCount} onClick={() => go(openNotifications)} />
+              <MenuRow
+                icon={Clock}
+                label={role === "carrier" ? "История рейсов" : "История заказов"}
+                onClick={() => go(() => setTab("history"))}
+              />
+              {role === "shipper" && (
+                <MenuRow icon={BarChart3} label="Аналитика" onClick={() => go(() => setTab("analytics"))} />
+              )}
+              <MenuRow icon={Settings} label="Настройки" onClick={() => go(() => setTab("settings"))} />
+              <MenuRow icon={HelpCircle} label="Поддержка" onClick={() => go(() => showToast("Открываем чат поддержки"))} />
+            </nav>
+
+            <div className="border-t border-border p-2">
+              <MenuRow icon={LogOut} label="Выйти" danger onClick={() => go(resetOnboarding)} />
+            </div>
           </div>
-        </>
+        </div>
       )}
-    </div>
+    </>
+  )
+}
+
+function MenuRow({
+  icon: Icon,
+  label,
+  badge = 0,
+  danger = false,
+  onClick,
+}: {
+  icon: typeof Package
+  label: string
+  badge?: number
+  danger?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-muted active:scale-[0.98]",
+        danger ? "text-destructive" : "text-foreground"
+      )}
+    >
+      <Icon className={cn("size-4", danger ? "" : "text-muted-foreground")} />
+      <span className="flex-1 text-left">{label}</span>
+      {badge > 0 && (
+        <span className="rounded-full bg-brand px-1.5 text-[10px] font-semibold text-brand-foreground">{badge}</span>
+      )}
+    </button>
   )
 }
 
@@ -159,34 +223,84 @@ function NotificationBell() {
   )
 }
 
-const TABS: Record<
-  "shipper" | "carrier",
-  { id: Tab; label: string; icon: typeof Package }[]
-> = {
+type NavItem = { id: string; label: string; icon: typeof Package; center?: boolean }
+
+const NAV: Record<"shipper" | "carrier", NavItem[]> = {
   shipper: [
-    { id: "feed", label: "Заказы", icon: Package },
-    { id: "deals", label: "Сделки", icon: Boxes },
+    { id: "feed", label: "Главная", icon: Home },
+    { id: "myorders", label: "Мои заказы", icon: Package },
+    { id: "add", label: "", icon: Plus, center: true },
+    { id: "chats", label: "Чаты", icon: MessageCircle },
     { id: "profile", label: "Профиль", icon: User },
   ],
   carrier: [
-    { id: "feed", label: "Лента", icon: Truck },
-    { id: "offers", label: "Офферы", icon: Tag },
-    { id: "deals", label: "Сделки", icon: Boxes },
+    { id: "feed", label: "Главная", icon: Home },
+    { id: "favorites", label: "Избранное", icon: Heart },
+    { id: "deals", label: "Мои сделки", icon: Boxes },
+    { id: "chats", label: "Чат", icon: MessageCircle },
     { id: "profile", label: "Профиль", icon: User },
   ],
 }
 
 function BottomNav() {
-  const { role, tab, setTab } = useCnKz()
+  const { role, tab, setTab, push, authed, openAuth } = useCnKz()
+  // Гость (не залогинен): та же нижняя навигация, но действия ведут на вход.
+  if (!authed) {
+    const guestNav = [
+      { id: "feed", label: "Главная", icon: Home, active: true, action: () => {} },
+      { id: "login", label: "Войти в аккаунт", icon: User, active: false, action: openAuth },
+    ]
+    return (
+      <nav className="flex shrink-0 items-stretch border-t border-border bg-card px-2 pt-2 pb-3">
+        {guestNav.map((t) => {
+          const Icon = t.icon
+          return (
+            <button key={t.id} onClick={t.action} className="flex flex-1 flex-col items-center gap-1">
+              <span
+                className={cn(
+                  "flex h-8 w-16 items-center justify-center rounded-md transition-colors",
+                  t.active ? "bg-brand/12 text-brand" : "text-muted-foreground"
+                )}
+              >
+                <Icon className="size-5" />
+              </span>
+              <span
+                className={cn(
+                  "text-[11px] font-medium transition-colors",
+                  t.active ? "text-brand" : "text-muted-foreground"
+                )}
+              >
+                {t.label}
+              </span>
+            </button>
+          )
+        })}
+      </nav>
+    )
+  }
   return (
     <nav className="flex shrink-0 items-stretch border-t border-border bg-card px-2 pt-2 pb-3">
-      {TABS[role].map((t) => {
-        const active = tab === t.id
+      {NAV[role].map((t) => {
         const Icon = t.icon
+        if (t.center) {
+          return (
+            <button
+              key={t.id}
+              onClick={() => push({ type: "createOrder" })}
+              className="flex flex-1 flex-col items-center justify-center"
+              aria-label="Новый заказ"
+            >
+              <span className="shadow-key flex size-11 items-center justify-center rounded-full bg-brand text-brand-foreground transition-transform duration-150 active:scale-95">
+                <Icon className="size-5" />
+              </span>
+            </button>
+          )
+        }
+        const active = tab === t.id
         return (
           <button
             key={t.id}
-            onClick={() => setTab(t.id)}
+            onClick={() => setTab(t.id as Tab)}
             className="flex flex-1 flex-col items-center gap-1"
           >
             <span
@@ -213,15 +327,30 @@ function BottomNav() {
 }
 
 export function PhoneFrame({ children }: { children: React.ReactNode }) {
-  const { toast } = useCnKz()
+  const { toast, authed, openAuth } = useCnKz()
   return (
     <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-neutral-950 to-black p-0 sm:p-6">
       <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2rem] sm:border-[6px] sm:border-neutral-800 sm:shadow-2xl">
         <StatusBar />
-        {/* Header */}
+        {/* Header — гость видит логотип + «Войти», залогиненный — меню + колокольчик */}
         <header className="flex shrink-0 items-center justify-between border-b border-border bg-background px-4 py-3">
-          <LogoMenu />
-          <NotificationBell />
+          {authed ? (
+            <LogoMenu />
+          ) : (
+            <span className="flex items-center gap-2 font-semibold tracking-tight">
+              <span className="flex size-7 items-center justify-center rounded-md bg-brand text-brand-foreground">
+                <Package className="size-4" />
+              </span>
+              CN-KZ
+            </span>
+          )}
+          {authed ? (
+            <NotificationBell />
+          ) : (
+            <Button size="sm" onClick={openAuth}>
+              Войти
+            </Button>
+          )}
         </header>
 
         {/* Content */}
@@ -237,6 +366,7 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
         )}
 
         <BottomNav />
+        <FilterSheet />
       </div>
     </div>
   )

@@ -1,20 +1,23 @@
 "use client"
 
-import { createContext, useContext, useMemo, useState } from "react"
+import { createContext, useContext, useEffect, useMemo, useState } from "react"
 
 import {
+  carriers,
   FEED_ORDERS,
   ME_CARRIER,
   ME_SHIPPER,
   MY_ORDERS,
 } from "@/lib/cn-kz/mock-data"
 import {
-  DEAL_FLOW,
   type ChatMessage,
   type OfferKind,
   type Order,
   type Role,
+  type User,
 } from "@/lib/cn-kz/types"
+import { plural } from "./shared"
+import { EMPTY_FILTERS, type FilterState } from "@/lib/cn-kz/filters"
 
 // A pushed detail screen sits on top of the active tab.
 export type Screen =
@@ -23,8 +26,25 @@ export type Screen =
   | { type: "cargoDetail"; orderId: string }
   | { type: "deal"; orderId: string }
   | { type: "chat"; orderId: string }
+  | { type: "carrierProfile"; carrierId: string; orderId?: string; offerId?: string }
+  | { type: "marketOrder"; orderId: string }
+  | { type: "tripBuilder" }
 
-export type Tab = "feed" | "offers" | "deals" | "profile"
+export type Tab =
+  | "feed"
+  | "myorders"
+  | "deals"
+  | "favorites"
+  | "profile"
+  | "analytics"
+  | "chats"
+  | "settings"
+  | "history"
+
+// Монотонные счётчики id — исключают коллизии со seed- id (ord-0xxx/1xxx/2xxx) и
+// дубликаты React key при быстрых действиях. Стартуют выше всех сидов.
+let ORDER_SEQ = 9000
+let MSG_SEQ = 0
 
 export interface Notification {
   id: string
@@ -35,6 +55,7 @@ export interface Notification {
 }
 
 export interface NewOrderDraft {
+  origin: string
   pickupPoint: string
   pickupPhone: string
   destination: Order["destination"]
@@ -53,8 +74,12 @@ export interface NewOrderDraft {
 
 interface CnKzStore {
   authed: boolean
-  enterApp: (r: Role) => void // finish onboarding → main app with a fixed role
+  enterApp: (r: Role, p?: { name: string; company?: string }) => void // онбординг → приложение
+  me: User // текущий пользователь (демо-аккаунт или введённый при регистрации)
   resetOnboarding: () => void // demo reset: back to the onboarding flow
+  showAuth: boolean // guest tapped a gated action → show the auth flow over the public feed
+  openAuth: () => void
+  closeAuth: () => void
   role: Role
   setRole: (r: Role) => void
   tab: Tab
@@ -77,14 +102,34 @@ interface CnKzStore {
   getOrder: (id: string) => Order | undefined
 
   publishOrder: (d: NewOrderDraft) => void
+  republishOrder: (orderId: string) => void // архивный заказ → снова в ленту
   acceptOffer: (orderId: string, offerId: string) => void
   makeOffer: (orderId: string, kind: OfferKind, priceUsd: number) => void
-  confirmCounter: (orderId: string) => void // перевозчик принимает встречную цену шипера
-  declineMyOffer: (orderId: string) => void // перевозчик снимает свой оффер
-  advanceDeal: (orderId: string) => void
+  confirmCounter: (orderId: string) => void // перевозчик принимает встречную цену заказчика
+  declineMyOffer: (orderId: string) => void // перевозчик снимает свой отклик
+  completeDeal: (orderId: string) => void
+  submitRating: (orderId: string, stars: number) => void
   confirmDelivery: (orderId: string) => void
   cancelDeal: (orderId: string) => void
   sendMessage: (orderId: string, text: string) => void
+  togglePin: (orderId: string) => void // закрепить/открепить заказ
+  toggleFavorite: (orderId: string) => void // добавить/убрать из «Избранного»
+  isFavorite: (orderId: string) => boolean
+  favorites: string[]
+  tripDraft: string[] // грузы в собираемом рейсе
+  isInTrip: (orderId: string) => boolean
+  addToTrip: (orderId: string) => void
+  removeFromTrip: (orderId: string) => void
+  clearTrip: () => void
+  submitTrip: () => void
+  filters: FilterState
+  setFilters: (f: FilterState) => void
+  showFilters: boolean
+  openFilters: () => void
+  closeFilters: () => void
+  rejectOffer: (orderId: string, offerId: string) => void // заказчик отклоняет отклик
+  counterOffer: (orderId: string, offerId: string, priceUsd: number) => void // встречная цена
+  getCarrier: (id: string) => User | undefined // профиль перевозчика
 }
 
 const Ctx = createContext<CnKzStore | null>(null)
@@ -104,6 +149,7 @@ function nowTime() {
 
 export function CnKzProvider({ children }: { children: React.ReactNode }) {
   const [authed, setAuthed] = useState(false)
+  const [showAuth, setShowAuth] = useState(false)
   const [role, setRoleRaw] = useState<Role>("shipper")
   const [tab, setTabRaw] = useState<Tab>("feed")
   const [dealsNewOnly, setDealsNewOnly] = useState(false)
@@ -112,6 +158,23 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<string | null>(null)
   const [myOrders, setMyOrders] = useState<Order[]>(MY_ORDERS)
   const [feedOrders, setFeedOrders] = useState<Order[]>(FEED_ORDERS)
+  const [favorites, setFavorites] = useState<string[]>([]) // «Избранное» перевозчика (id заказов)
+  const [tripDraft, setTripDraft] = useState<string[]>([]) // грузы, собираемые в один рейс (сборный груз)
+  const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS)
+  const [showFilters, setShowFilters] = useState(false)
+  const [profile, setProfile] = useState<{ name: string; company?: string } | null>(null) // из регистрации
+
+  // Выделенные ссылки: ?role=carrier / ?role=shipper открывают сразу нужную роль.
+  useEffect(() => {
+    const r = new URLSearchParams(window.location.search).get("role")
+    if (r === "carrier" || r === "shipper") {
+      setRoleRaw(r)
+      setAuthed(true)
+      setShowAuth(false)
+      // Автовыбор фильтра по типу авто из профиля (Figma) — перевозчик видит «свои» грузы.
+      if (r === "carrier") setFilters({ ...EMPTY_FILTERS, bodyTypes: ["тент"] })
+    }
+  }, [])
 
   const store = useMemo<CnKzStore>(() => {
     function showToast(m: string) {
@@ -125,17 +188,30 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       setStack([])
     }
 
-    function enterApp(r: Role) {
+    function enterApp(r: Role, p?: { name: string; company?: string }) {
       setRoleRaw(r)
       setTabRaw("feed")
       setStack([])
       setAuthed(true)
+      setShowAuth(false)
+      setProfile(p ?? null)
+      setFilters(r === "carrier" ? { ...EMPTY_FILTERS, bodyTypes: ["тент"] } : EMPTY_FILTERS)
     }
+
+    // Текущий пользователь: демо-аккаунт (сид) или введённый при регистрации.
+    const seededMe = role === "shipper" ? ME_SHIPPER : ME_CARRIER
+    const me: User = profile
+      ? { ...seededMe, name: profile.name, company: profile.company ?? seededMe.company }
+      : seededMe
 
     function resetOnboarding() {
       setAuthed(false)
+      setShowAuth(false)
       setStack([])
     }
+
+    const openAuth = () => setShowAuth(true)
+    const closeAuth = () => setShowAuth(false)
 
     function setTab(t: Tab) {
       setTabRaw(t)
@@ -145,19 +221,21 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
 
     // §10: тап по колокольчику → дашборд «Сделки» с фильтром «есть новые».
     function openNotifications() {
-      setTabRaw("deals")
+      setTabRaw(role === "carrier" ? "deals" : "myorders") // shipper: свои заказы с новыми событиями
       setDealsNewOnly(true)
       setStack([])
     }
 
     const seenSet = new Set(seen)
+    // Заказчик: события по своим заказам; перевозчик: по выигранным грузам из ленты.
+    const source = role === "carrier" ? feedOrders : myOrders
     function markSeen(orderId: string) {
       setSeen((s) => (s.includes(orderId) ? s : [...s, orderId]))
     }
     // Заказ/сделка «новые», если есть непрочитанное событие и они ещё не просмотрены.
     function isNew(orderId: string) {
       if (seenSet.has(orderId)) return false
-      const o = myOrders.find((x) => x.id === orderId)
+      const o = source.find((x) => x.id === orderId)
       if (!o) return false
       const newOffers =
         role === "shipper" &&
@@ -168,12 +246,14 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
         o.deal.status !== "completed" &&
         o.deal.status !== "cancelled" &&
         o.deal.chat.some((m) => !m.fromMe)
-      return newOffers || newMsg
+      // Перевозчик: только что выигранная сделка тоже «новое» в списке сделок.
+      const newWonDeal = role === "carrier" && !!o.deal && o.deal.status === "accepted"
+      return newOffers || newMsg || newWonDeal
     }
 
-    // Лента уведомлений: только непрочитанные (новые офферы шиперу + входящие сообщения в сделках).
+    // Лента уведомлений: только непрочитанные (новые отклики заказчику + входящие сообщения в сделках).
     const notifications: Notification[] = []
-    for (const o of myOrders) {
+    for (const o of source) {
       if (seenSet.has(o.id)) continue
       if (role === "shipper") {
         const pending = o.offers.filter((of) => of.status === "pending").length
@@ -181,26 +261,39 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
           notifications.push({
             id: `${o.id}-offers`,
             kind: "offer",
-            title: `${pending} ${pending === 1 ? "новый оффер" : "новых офферов"}`,
+            title: `${pending} ${pending === 1 ? "новый" : "новых"} ${plural(pending, "отклик", "отклика", "откликов")}`,
             subtitle: `${o.origin} → ${o.destination}`,
             screen: { type: "orderDetail", orderId: o.id },
           })
         }
       }
-      if (
-        o.deal &&
-        o.deal.status !== "completed" &&
-        o.deal.status !== "cancelled" &&
-        o.deal.chat.some((m) => !m.fromMe)
-      ) {
-        const other = role === "shipper" ? o.deal.carrier.name : o.shipper.name
-        notifications.push({
-          id: `${o.id}-msg`,
-          kind: "message",
-          title: "Новое сообщение",
-          subtitle: `${other} · ${o.origin} → ${o.destination}`,
-          screen: { type: "deal", orderId: o.id },
-        })
+      if (o.deal) {
+        const route = `${o.origin} → ${o.destination}`
+        const active = o.deal.status !== "completed" && o.deal.status !== "cancelled"
+        // Новое входящее сообщение в активной сделке.
+        if (active && o.deal.chat.some((m) => !m.fromMe)) {
+          const other = role === "shipper" ? o.deal.carrier.name : o.shipper.name
+          notifications.push({
+            id: `${o.id}-msg`,
+            kind: "message",
+            title: "Новое сообщение",
+            subtitle: `${other} · ${route}`,
+            screen: { type: "deal", orderId: o.id },
+          })
+        }
+        // Перевозчик: заказчик принял отклик → сделка создана (только свежая, без чата,
+        // чтобы не дублировать уведомление о сообщении и совпадать со счётчиком «новых»).
+        if (role === "carrier" && o.deal.status === "accepted" && o.deal.chat.length === 0) {
+          notifications.push({
+            id: `${o.id}-accepted`,
+            kind: "offer",
+            title: "Ваш отклик принят",
+            subtitle: `Сделка создана · ${route}`,
+            screen: { type: "deal", orderId: o.id },
+          })
+        }
+        // Завершённые/отменённые сделки не шлют пуш: они уходят в «Историю», оценка
+        // и статус видны на экране сделки — иначе счётчик колокольчика расходится со списком.
       }
     }
     const newCount = notifications.length
@@ -217,7 +310,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
     function updateFeed(id: string, fn: (o: Order) => Order) {
       setFeedOrders((list) => list.map((o) => (o.id === id ? fn(o) : o)))
     }
-    // Обновляет заказ в том списке, где он есть (id шипера ord-1xxx и ленты ord-2xxx не пересекаются).
+    // Обновляет заказ в том списке, где он есть (id заказчика ord-1xxx и ленты ord-2xxx не пересекаются).
     function updateOrder(id: string, fn: (o: Order) => Order) {
       setMyOrders((list) => list.map((o) => (o.id === id ? fn(o) : o)))
       setFeedOrders((list) => list.map((o) => (o.id === id ? fn(o) : o)))
@@ -225,8 +318,8 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
 
     function publishOrder(d: NewOrderDraft) {
       const order: Order = {
-        id: `ord-${Math.floor(Math.random() * 9000 + 1000)}`,
-        origin: "Хоргос",
+        id: `ord-${++ORDER_SEQ}`,
+        origin: d.origin,
         pickupPoint: d.pickupPoint.trim() || undefined,
         pickupPhone: d.pickupPhone.trim() || undefined,
         destination: d.destination,
@@ -250,6 +343,17 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       showToast("Заказ опубликован — ушёл в ленту перевозчиков")
     }
 
+    // Перепубликация архивного заказа: сбрасываем срок и старые отклики, возвращаем в ленту.
+    function republishOrder(orderId: string) {
+      updateMy(orderId, (o) => ({
+        ...o,
+        status: "published",
+        createdAgo: "только что",
+        offers: [],
+      }))
+      showToast("Заказ снова в ленте перевозчиков")
+    }
+
     function acceptOffer(orderId: string, offerId: string) {
       updateMy(orderId, (o) => {
         const chosen = o.offers.find((of) => of.id === offerId)
@@ -266,14 +370,15 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
             carrier: chosen.carrier,
             agreedPriceUsd: chosen.priceUsd,
             chat: [],
+            escrow: "held",
           },
         }
       })
-      showToast("Сделка создана. Перевозчик уведомлён")
+      showToast("Сделка создана. Оплата зарезервирована в эскроу")
     }
 
     // Перевозчик выигрывает заказ → на заказе появляется сделка (carrier = ME_CARRIER).
-    function createCarrierDeal(orderId: string, price: number) {
+    function createCarrierDeal(orderId: string, price: number, tripId?: string) {
       updateFeed(orderId, (o) => ({
         ...o,
         status: "deal",
@@ -283,6 +388,8 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
           carrier: ME_CARRIER,
           agreedPriceUsd: price,
           chat: [],
+          tripId,
+          escrow: "held",
         },
       }))
     }
@@ -299,14 +406,14 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       }))
       showToast(
         kind === "accept"
-          ? "Оффер отправлен: готовы везти за цену шипера"
+          ? "Отклик отправлен: готовы везти за цену заказчика"
           : `Встречная цена отправлена: $${priceUsd}`
       )
-      // Симуляция ответа шипера (в проде — realtime-событие с бэкенда).
+      // Симуляция ответа заказчика (в проде — realtime-событие с бэкенда).
       setTimeout(() => {
         if (kind === "accept") {
           createCarrierDeal(orderId, offered)
-          showToast("Шипер принял оффер — сделка создана")
+          showToast("Заказчик принял отклик — сделка создана")
         } else {
           const back = Math.round((offered + base) / 2)
           setFeedOrders((list) =>
@@ -316,7 +423,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
                 : o
             )
           )
-          showToast("Шипер предложил встречную цену")
+          showToast("Заказчик предложил встречную цену")
         }
       }, 1600)
     }
@@ -330,25 +437,28 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
 
     function declineMyOffer(orderId: string) {
       updateFeed(orderId, (o) => ({ ...o, myOfferStatus: "rejected" }))
-      showToast("Оффер снят")
+      showToast("Отклик снят")
     }
 
-    function advanceDeal(orderId: string) {
-      updateOrder(orderId, (o) => {
-        if (!o.deal) return o
-        const i = DEAL_FLOW.indexOf(o.deal.status)
-        // carrier advances up to "delivered"; shipper confirms "completed"
-        const next = DEAL_FLOW[Math.min(i + 1, DEAL_FLOW.indexOf("delivered"))]
-        return { ...o, deal: { ...o.deal, status: next } }
-      })
-      showToast("Статус обновлён")
+    // Перевозчик завершает заказ (кнопка «Завершил»). Трекинг между этим не делаем.
+    function completeDeal(orderId: string) {
+      updateOrder(orderId, (o) =>
+        o.deal ? { ...o, deal: { ...o.deal, status: "completed", escrow: "released" } } : o
+      )
+      showToast("Заказ завершён · оплата переведена перевозчику")
     }
 
     function confirmDelivery(orderId: string) {
       updateOrder(orderId, (o) =>
-        o.deal ? { ...o, deal: { ...o.deal, status: "completed" } } : o
+        o.deal ? { ...o, deal: { ...o.deal, status: "completed", escrow: "released" } } : o
       )
-      showToast("Получение подтверждено. Сделка завершена")
+      showToast("Получение подтверждено · оплата переведена перевозчику")
+    }
+
+    // Заказчик оценил перевозчика — оценка сохраняется на заказе (видно в истории).
+    function submitRating(orderId: string, stars: number) {
+      updateOrder(orderId, (o) => ({ ...o, ratedStars: stars }))
+      showToast(`Спасибо! Вы поставили ${stars}★`)
     }
 
     function cancelDeal(orderId: string) {
@@ -360,7 +470,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
 
     function sendMessage(orderId: string, text: string) {
       const msg: ChatMessage = {
-        id: `m-${Date.now()}`,
+        id: `m-${++MSG_SEQ}`,
         fromMe: true,
         text,
         time: nowTime(),
@@ -370,10 +480,107 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       )
     }
 
+    function togglePin(orderId: string) {
+      updateOrder(orderId, (o) => ({ ...o, pinned: !o.pinned }))
+    }
+
+    function toggleFavorite(orderId: string) {
+      setFavorites((f) =>
+        f.includes(orderId) ? f.filter((x) => x !== orderId) : [...f, orderId]
+      )
+    }
+    const isFavorite = (orderId: string) => favorites.includes(orderId)
+
+    // ——— Сборный рейс (консолидация): грузы в один A→B рейс, статус на каждый груз 2-статусный.
+    const isInTrip = (orderId: string) => tripDraft.includes(orderId)
+    function addToTrip(orderId: string) {
+      setTripDraft((d) => (d.includes(orderId) ? d.filter((x) => x !== orderId) : [...d, orderId]))
+    }
+    function removeFromTrip(orderId: string) {
+      setTripDraft((d) => d.filter((x) => x !== orderId))
+    }
+    function clearTrip() {
+      setTripDraft([])
+    }
+    function submitTrip() {
+      if (tripDraft.length === 0) return
+      const tripId = "trip-" + tripDraft.join("-")
+      const ids = [...tripDraft]
+      ids.forEach((oid) => {
+        const o = feedOrders.find((x) => x.id === oid)
+        if (o) createCarrierDeal(oid, o.priceUsd, tripId)
+      })
+      setTripDraft([])
+      setStack([])
+      setTabRaw("deals")
+      showToast(`Рейс собран: ${ids.length} груз(а). Заказчики уведомлены`)
+    }
+
+    function rejectOffer(orderId: string, offerId: string) {
+      updateOrder(orderId, (o) => {
+        const offers = o.offers.map((of) =>
+          of.id === offerId ? { ...of, status: "rejected" as const } : of
+        )
+        // Не осталось активных откликов → заказ снова просто «Опубликован» (не «Торги»).
+        const stillActive = offers.some(
+          (of) => of.status === "pending" || of.status === "countered"
+        )
+        const status = o.status === "bidding" && !stillActive ? "published" : o.status
+        return { ...o, offers, status }
+      })
+      showToast("Отклик отклонён")
+    }
+
+    // Заказчик предлагает перевозчику свою (встречную) цену по его отклику (inDrive-торг).
+    // shipperCounterUsd хранит встречную ОТДЕЛЬНО — цена перевозчика (priceUsd) не затирается.
+    function counterOffer(orderId: string, offerId: string, priceUsd: number) {
+      updateMy(orderId, (o) => ({
+        ...o,
+        offers: o.offers.map((of) =>
+          of.id === offerId
+            ? { ...of, status: "countered", shipperCounterUsd: priceUsd }
+            : of
+        ),
+      }))
+      showToast(`Встречная цена отправлена: $${priceUsd}`)
+      // Симуляция ответа перевозчика (в проде — realtime-событие). Иначе торг — тупик.
+      setTimeout(() => {
+        setMyOrders((list) =>
+          list.map((o) => {
+            if (o.id !== orderId) return o
+            const chosen = o.offers.find((of) => of.id === offerId)
+            if (!chosen || chosen.status !== "countered") return o // уже разрешено
+            return {
+              ...o,
+              status: "deal",
+              offers: o.offers.map((of) => ({
+                ...of,
+                status: of.id === offerId ? "accepted" : "rejected",
+              })),
+              deal: {
+                status: "accepted",
+                carrier: chosen.carrier,
+                agreedPriceUsd: priceUsd,
+                chat: [],
+                escrow: "held",
+              },
+            }
+          })
+        )
+        showToast("Перевозчик принял встречную цену — сделка создана")
+      }, 1600)
+    }
+
+    const getCarrier = (id: string) => carriers.find((c) => c.id === id)
+
     return {
       authed,
+      me,
       enterApp,
       resetOnboarding,
+      showAuth,
+      openAuth,
+      closeAuth,
       role,
       setRole,
       tab,
@@ -394,16 +601,36 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       feedOrders,
       getOrder,
       publishOrder,
+      republishOrder,
       acceptOffer,
       makeOffer,
       confirmCounter,
       declineMyOffer,
-      advanceDeal,
+      completeDeal,
+      submitRating,
       confirmDelivery,
       cancelDeal,
       sendMessage,
+      togglePin,
+      counterOffer,
+      toggleFavorite,
+      isFavorite,
+      favorites,
+      tripDraft,
+      isInTrip,
+      addToTrip,
+      removeFromTrip,
+      clearTrip,
+      submitTrip,
+      filters,
+      setFilters,
+      showFilters,
+      openFilters: () => setShowFilters(true),
+      closeFilters: () => setShowFilters(false),
+      rejectOffer,
+      getCarrier,
     }
-  }, [authed, role, tab, dealsNewOnly, seen, stack, toast, myOrders, feedOrders])
+  }, [authed, showAuth, role, tab, dealsNewOnly, seen, stack, toast, myOrders, feedOrders, favorites, tripDraft, filters, showFilters, profile])
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>
 }

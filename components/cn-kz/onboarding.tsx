@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { ChevronLeft, Gavel, Package, Star, Truck, User, Zap } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -12,20 +12,13 @@ import { StatusBar } from "./phone-frame"
 import { useCnKz } from "./store"
 import { Chip, ChipRow } from "./ui-bits"
 
-type Step = "splash" | "auth" | "login" | "register" | "role" | "profile"
+type Step = "auth" | "login" | "register" | "role" | "profile"
 
 // Mirrors User Flow «1. Онбординг»: splash → вход → главный экран; регистрация → выбор роли → профиль → главный экран.
 export function OnboardingFlow() {
   // Вход использует роль уже существующего аккаунта (последнюю в сторе); роль выбирается только при регистрации.
-  const { enterApp, role: accountRole } = useCnKz()
-  const [step, setStep] = useState<Step>("splash")
-
-  // Splash при запуске: показываем логотип ~1.6с, затем экран авторизации.
-  useEffect(() => {
-    if (step !== "splash") return
-    const t = setTimeout(() => setStep("auth"), 1600)
-    return () => clearTimeout(t)
-  }, [step])
+  const { enterApp, role: accountRole, closeAuth } = useCnKz()
+  const [step, setStep] = useState<Step>("auth")
   const [method, setMethod] = useState<"email" | "phone">("phone")
   const [role, setRole] = useState<Role>("shipper")
 
@@ -34,27 +27,14 @@ export function OnboardingFlow() {
   const [phone, setPhone] = useState("")
   const [company, setCompany] = useState("")
   const [truck, setTruck] = useState<TruckType>("тент")
+  const [docs, setDocs] = useState<string[]>([])
+  const toggleDoc = (d: string) =>
+    setDocs((x) => (x.includes(d) ? x.filter((y) => y !== d) : [...x, d]))
   const [routes, setRoutes] = useState<City[]>(["Алматы"])
 
   function pickRole(r: Role) {
     setRole(r)
     setStep("profile") // выбор роли есть только в регистрации → дальше профиль
-  }
-
-  if (step === "splash") {
-    return (
-      <Frame className="items-center justify-center">
-        <div className="flex flex-col items-center gap-5">
-          <LogoMark size="lg" />
-          <div className="flex flex-col items-center gap-1.5">
-            <span className="text-3xl font-semibold tracking-tight">CN-KZ</span>
-            <span className="font-mono-tech text-[13px] text-muted-foreground">
-              Хоргос&nbsp;→&nbsp;СНГ
-            </span>
-          </div>
-        </div>
-      </Frame>
-    )
   }
 
   if (step === "auth") {
@@ -69,7 +49,7 @@ export function OnboardingFlow() {
               <h1 className="text-center text-[2rem] leading-[1.08] font-semibold tracking-[-0.02em] text-balance">
                 Грузоперевозки
                 <br />
-                Хоргос → СНГ
+                по всей СНГ
               </h1>
               <p className="max-w-[18rem] text-center text-sm leading-relaxed text-muted-foreground text-pretty">
                 Маркетплейс грузов и перевозчиков. Прямые сделки, торги и рейтинги — без посредников.
@@ -99,6 +79,12 @@ export function OnboardingFlow() {
             >
               Создать аккаунт
             </Button>
+            <button
+              onClick={closeAuth}
+              className="mt-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Смотреть грузы без входа →
+            </button>
           </div>
         </div>
       </Frame>
@@ -119,7 +105,25 @@ export function OnboardingFlow() {
     >
       {step === "login" && (
         <div className="space-y-4 px-5 pt-4">
-          <h1 className="font-heading text-lg font-semibold">Вход</h1>
+          <h1 className="font-heading text-xl font-semibold">Вход</h1>
+
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-12 w-full gap-2.5 text-[15px]"
+            onClick={() => enterApp(accountRole)}
+          >
+            <span className="flex size-5 items-center justify-center rounded-full bg-white text-[13px] font-bold text-[#4285F4]">
+              G
+            </span>
+            Продолжить с Google
+          </Button>
+
+          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+            <span className="h-px flex-1 bg-border" /> или по телефону
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
           <ChipRow>
             <Chip active={method === "phone"} onClick={() => setMethod("phone")}>
               Телефон + SMS
@@ -131,24 +135,27 @@ export function OnboardingFlow() {
           {method === "phone" ? (
             <>
               <Field label="Телефон">
-                <Input placeholder="+7 7__ ___ __ __" />
+                <Input className="h-11" placeholder="+7 705 123 45 67" />
               </Field>
               <Field label="SMS-код">
-                <Input placeholder="____" inputMode="numeric" />
+                <Input className="h-11" placeholder="Введите 4 цифры" inputMode="numeric" />
               </Field>
             </>
           ) : (
             <>
               <Field label="Email">
-                <Input type="email" placeholder="you@mail.kz" />
+                <Input className="h-11" type="email" placeholder="you@mail.kz" />
               </Field>
               <Field label="Пароль">
-                <Input type="password" placeholder="••••••••" />
+                <Input className="h-11" type="password" placeholder="Ваш пароль" />
               </Field>
+              <button className="text-xs font-medium text-brand hover:underline">
+                Забыли пароль?
+              </button>
             </>
           )}
-          <Button className="w-full" onClick={() => enterApp(accountRole)}>
-            Войти
+          <Button size="lg" className="h-12 w-full text-[15px]" onClick={() => enterApp(accountRole)}>
+            {method === "phone" ? "Получить код" : "Войти"}
           </Button>
         </div>
       )}
@@ -199,7 +206,7 @@ export function OnboardingFlow() {
           </p>
           <RoleCard
             icon={Package}
-            title="Шипер"
+            title="Заказчик"
             desc="У меня есть груз — публикую заказы и выбираю перевозчика."
             onClick={() => pickRole("shipper")}
           />
@@ -215,7 +222,7 @@ export function OnboardingFlow() {
       {step === "profile" && (
         <div className="space-y-4 px-5 pt-4 pb-6">
           <h1 className="font-heading text-lg font-semibold">
-            Профиль {role === "shipper" ? "шипера" : "перевозчика"}
+            Профиль {role === "shipper" ? "заказчика" : "перевозчика"}
           </h1>
           <Field label="ФИО">
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя Фамилия" />
@@ -234,13 +241,13 @@ export function OnboardingFlow() {
                 <span className="text-xs font-medium text-muted-foreground">
                   Тип первой фуры
                 </span>
-                <ChipRow>
+                <div className="flex flex-wrap gap-1.5">
                   {TRUCK_TYPES.map((t) => (
                     <Chip key={t} active={truck === t} onClick={() => setTruck(t)}>
                       {t}
                     </Chip>
                   ))}
-                </ChipRow>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Макс. вес, кг">
@@ -253,6 +260,29 @@ export function OnboardingFlow() {
               <Field label="Гос. номер">
                 <Input placeholder="777 ABC 02" />
               </Field>
+
+              <div className="space-y-1.5">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Проверка профиля — повышает доверие (мы не сверяем с госбазами)
+                </span>
+                {[
+                  "Селфи · подтверждение, что вы реальный человек",
+                  "Удостоверение личности · сверим с селфи",
+                  "Фото фуры с гос. номером",
+                ].map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => toggleDoc(d)}
+                    className="flex w-full items-center justify-between rounded-md border border-dashed border-border px-3 py-2 text-left text-sm"
+                  >
+                    <span className={docs.includes(d) ? "text-foreground" : "text-muted-foreground"}>{d}</span>
+                    <span className={"shrink-0 text-xs font-medium " + (docs.includes(d) ? "text-brand" : "text-muted-foreground")}>
+                      {docs.includes(d) ? "✓ Готово" : "Загрузить"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
               <div className="space-y-1.5">
                 <span className="text-xs font-medium text-muted-foreground">
                   Маршруты — пришлём уведомление о новых грузах
@@ -272,7 +302,7 @@ export function OnboardingFlow() {
           <Button
             className="w-full"
             disabled={role === "carrier" && routes.length === 0}
-            onClick={() => enterApp(role)}
+            onClick={() => enterApp(role, name.trim() ? { name: name.trim(), company: company.trim() || undefined } : undefined)}
           >
             Готово
           </Button>

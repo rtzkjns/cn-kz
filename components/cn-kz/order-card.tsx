@@ -1,6 +1,6 @@
 "use client"
 
-import { Box, Calendar, ChevronRight, MessageCircle, Star, Truck, Weight } from "lucide-react"
+import { Box, Calendar, Check, ChevronRight, Heart, MessageCircle, Pin, Plus, Star, Truck, Weight } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import type { Order } from "@/lib/cn-kz/types"
@@ -20,10 +20,25 @@ export function OrderCard({
   order,
   onClick,
   showMyOffer = false,
+  pinned = false,
+  onTogglePin,
+  favorited = false,
+  onToggleFavorite,
+  onAddToTrip,
+  inTrip = false,
+  browse = false,
 }: {
   order: Order
   onClick: () => void
   showMyOffer?: boolean
+  pinned?: boolean
+  onTogglePin?: () => void
+  favorited?: boolean
+  onToggleFavorite?: () => void
+  onAddToTrip?: () => void // добавить/убрать груз из сборного рейса
+  inTrip?: boolean
+  // browse = маркетплейс «Главная»: чужие грузы, без статуса/счётчика откликов — только просмотр.
+  browse?: boolean
 }) {
   const newOffers = order.offers.filter((o) => o.status === "pending").length
   const hasUnread = order.deal?.chat.some((m) => !m.fromMe)
@@ -54,11 +69,44 @@ export function OrderCard({
             </p>
           </div>
         </div>
-        {order.deal ? (
-          <DealStatusBadge status={order.deal.status} />
-        ) : (
-          <OrderStatusBadge status={order.status} />
-        )}
+        <div className="flex items-center gap-1.5">
+          {onToggleFavorite && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleFavorite()
+              }}
+              aria-label="В избранное"
+              className={cn(
+                "flex size-6 items-center justify-center rounded-md transition-colors",
+                favorited ? "text-rose-400" : "text-muted-foreground/50 hover:text-foreground"
+              )}
+            >
+              <Heart className={cn("size-4", favorited && "fill-rose-400")} />
+            </button>
+          )}
+          {onTogglePin && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onTogglePin()
+              }}
+              aria-label="Закрепить"
+              className={cn(
+                "flex size-6 items-center justify-center rounded-md transition-colors",
+                pinned ? "text-brand" : "text-muted-foreground/50 hover:text-foreground"
+              )}
+            >
+              <Pin className={cn("size-4", pinned && "fill-brand")} />
+            </button>
+          )}
+          {!browse &&
+            (order.deal ? (
+              <DealStatusBadge status={order.deal.status} />
+            ) : (
+              <OrderStatusBadge status={order.status} />
+            ))}
+        </div>
       </div>
 
       {/* Route — origin muted, destination bold */}
@@ -95,25 +143,29 @@ export function OrderCard({
       <div className="mt-4 flex items-center justify-between rounded-md bg-secondary px-3.5 py-2.5">
         <div className="leading-none">
           <p className="font-mono-tech text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
-            Цена шипера
+            Цена заказчика
           </p>
           <p className="font-mono-tech mt-1.5 text-[22px] leading-none font-bold tracking-tight">
             {price}
           </p>
         </div>
 
-        {order.deal ? (
+        {browse ? (
+          <span className="inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
+            Смотреть <ChevronRight className="size-4" />
+          </span>
+        ) : order.deal ? (
           <span className="inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground">
             {hasUnread && <MessageCircle className="size-4 text-brand" />}
             Открыть <ChevronRight className="size-4" />
           </span>
         ) : mine ? (
           <span className="inline-flex items-center gap-1.5 rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-[13px] font-semibold text-brand">
-            Ваш оффер
+            Ваш отклик
           </span>
         ) : newOffers > 0 ? (
           <span className="inline-flex items-center gap-1 rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-[13px] font-semibold text-brand tabular-nums">
-            {newOffers} {newOffers === 1 ? "оффер" : newOffers < 5 ? "оффера" : "офферов"}
+            {newOffers} {newOffers === 1 ? "отклик" : newOffers < 5 ? "отклика" : "откликов"}
             <ChevronRight className="size-3.5" />
           </span>
         ) : showMyOffer ? (
@@ -125,6 +177,31 @@ export function OrderCard({
           <ChevronRight className="size-5 text-muted-foreground" />
         )}
       </div>
+
+      {onAddToTrip && !order.deal && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onAddToTrip()
+          }}
+          className={cn(
+            "mt-2 flex w-full items-center justify-center gap-1.5 rounded-md border py-2 text-[13px] font-medium transition-colors",
+            inTrip
+              ? "border-brand/40 bg-brand/12 text-brand"
+              : "border-border text-muted-foreground hover:text-foreground"
+          )}
+        >
+          {inTrip ? (
+            <>
+              <Check className="size-3.5" /> В рейсе
+            </>
+          ) : (
+            <>
+              <Plus className="size-3.5" /> Добавить в рейс
+            </>
+          )}
+        </button>
+      )}
     </div>
   )
 }

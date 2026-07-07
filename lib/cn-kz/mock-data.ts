@@ -25,12 +25,37 @@ export const MY_FLEET: Truck[] = [
   { id: "t2", type: "рефрижератор", maxWeightKg: 18000, maxVolumeM3: 80, plate: "012 KZA 05" },
 ]
 
-export const WATCHED_ROUTES = ["Хоргос → Алматы", "Хоргос → Астана"]
+export const WATCHED_ROUTES = ["Алматы → Москва", "Астана → Новосибирск", "Ташкент → Алматы"]
 
-const carriers: User[] = [
-  { id: "c1", name: "Бауыржан Нур", phone: "+7 705 333 88 11", rating: 4.9, dealsCount: 124, role: "carrier" },
-  { id: "c2", name: "Ерлан Қасым", phone: "+7 707 121 45 67", rating: 4.6, dealsCount: 58, role: "carrier" },
-  { id: "c3", name: "Дамир Тлеу", phone: "+7 700 909 10 20", rating: 4.3, dealsCount: 22, role: "carrier" },
+export const carriers: User[] = [
+  {
+    id: "c1", name: "Бауыржан Нур", phone: "+7 705 333 88 11", rating: 4.9, dealsCount: 124,
+    role: "carrier", verified: true, onTimeRate: 97, memberSince: "2023",
+    trucks: [
+      { id: "c1t1", type: "тент", maxWeightKg: 20000, maxVolumeM3: 86, plate: "777 ABC 02" },
+      { id: "c1t2", type: "рефрижератор", maxWeightKg: 18000, maxVolumeM3: 80, plate: "012 KZA 05" },
+    ],
+    reviews: [
+      { id: "rv1", author: "Айдос С.", rating: 5, text: "Довёз вовремя, аккуратно. Рекомендую.", ago: "2 нед назад" },
+      { id: "rv2", author: "Гүлнар О.", rating: 5, text: "Хорошая связь на всём пути.", ago: "1 мес назад" },
+      { id: "rv3", author: "Triple-A", rating: 4, text: "Всё ок, чуть задержался на границе.", ago: "1 мес назад" },
+    ],
+  },
+  {
+    id: "c2", name: "Ерлан Қасым", phone: "+7 707 121 45 67", rating: 4.6, dealsCount: 58,
+    role: "carrier", verified: true, onTimeRate: 91, memberSince: "2024",
+    trucks: [{ id: "c2t1", type: "тент", maxWeightKg: 22000, maxVolumeM3: 90, plate: "555 KZB 09" }],
+    reviews: [
+      { id: "rv4", author: "Айдос С.", rating: 5, text: "Быстро откликнулся, честная цена.", ago: "3 нед назад" },
+      { id: "rv5", author: "Сауле К.", rating: 4, text: "Нормально, но опоздал на погрузку.", ago: "2 мес назад" },
+    ],
+  },
+  {
+    id: "c3", name: "Дамир Тлеу", phone: "+7 700 909 10 20", rating: 4.3, dealsCount: 22,
+    role: "carrier", verified: false, onTimeRate: 85, memberSince: "2025",
+    trucks: [{ id: "c3t1", type: "тент", maxWeightKg: 20000, maxVolumeM3: 82, plate: "108 KZC 11" }],
+    reviews: [{ id: "rv6", author: "Марат Е.", rating: 4, text: "Груз доставил, связь могла быть лучше.", ago: "1 мес назад" }],
+  },
 ]
 
 const shippers: User[] = [
@@ -43,7 +68,7 @@ const shippers: User[] = [
 export const MY_ORDERS: Order[] = [
   {
     id: "ord-1001",
-    origin: "Хоргос",
+    origin: "Караганда",
     destination: "Алматы",
     cargo: "Электроника (смартфоны, аксессуары), 18 паллет",
     weightKg: 4200,
@@ -59,14 +84,14 @@ export const MY_ORDERS: Order[] = [
     payment: "transfer",
     createdAgo: "2 ч назад",
     offers: [
-      { id: "of-1", carrier: carriers[0], truck: "тент", kind: "accept", priceUsd: 1450, status: "pending", createdAgo: "40 мин назад" },
-      { id: "of-2", carrier: carriers[1], truck: "тент", kind: "counter", priceUsd: 1600, status: "pending", createdAgo: "25 мин назад" },
-      { id: "of-3", carrier: carriers[2], truck: "тент", kind: "counter", priceUsd: 1550, status: "pending", createdAgo: "12 мин назад" },
+      { id: "of-1", carrier: carriers[0], truck: "тент", plate: "777 ABC 02", capacityKg: 20000, kind: "accept", priceUsd: 1450, status: "pending", createdAgo: "40 мин назад" },
+      { id: "of-2", carrier: carriers[1], truck: "тент", plate: "555 KZB 09", capacityKg: 22000, kind: "counter", priceUsd: 1600, status: "pending", createdAgo: "25 мин назад" },
+      { id: "of-3", carrier: carriers[2], truck: "тент", plate: "108 KZC 11", capacityKg: 20000, kind: "counter", priceUsd: 1550, status: "pending", createdAgo: "12 мин назад" },
     ],
   },
   {
     id: "ord-1002",
-    origin: "Хоргос",
+    origin: "Москва",
     destination: "Астана",
     cargo: "Бытовая техника, 30 коробок",
     weightKg: 9800,
@@ -74,6 +99,8 @@ export const MY_ORDERS: Order[] = [
     truckType: "рефрижератор",
     priceUsd: 2300,
     readyDate: "10 июн 2026",
+    deliverBy: "14 июн 2026",
+    overdue: true,
     status: "deal",
     shipper: ME_SHIPPER,
     address: "Астана, пр. Кабанбай батыра 12",
@@ -83,7 +110,7 @@ export const MY_ORDERS: Order[] = [
     createdAgo: "1 дн назад",
     offers: [],
     deal: {
-      status: "in_transit",
+      status: "accepted",
       carrier: carriers[0],
       agreedPriceUsd: 2300,
       chat: [
@@ -95,7 +122,7 @@ export const MY_ORDERS: Order[] = [
   },
   {
     id: "ord-1003",
-    origin: "Хоргос",
+    origin: "Ташкент",
     destination: "Шымкент",
     cargo: "Текстиль, рулоны ткани",
     weightKg: 6100,
@@ -114,7 +141,7 @@ export const MY_ORDERS: Order[] = [
   },
   {
     id: "ord-1004",
-    origin: "Хоргос",
+    origin: "Астана",
     destination: "Алматы",
     cargo: "Запчасти для авто",
     weightKg: 2500,
@@ -131,13 +158,38 @@ export const MY_ORDERS: Order[] = [
     createdAgo: "20 мин назад",
     offers: [],
   },
+  // Завершённые заказы — история для аналитики.
+  {
+    id: "ord-0990", origin: "Бишкек", destination: "Алматы", cargo: "Одежда, 20 коробок",
+    weightKg: 3800, volumeM3: 22, truckType: "тент", priceUsd: 1300, readyDate: "20 май 2026",
+    status: "deal", shipper: ME_SHIPPER, address: "Алматы, ул. Абая 10", recipientName: "Ержан",
+    recipientPhone: "+7 701 111 22 33", payment: "transfer", createdAgo: "3 нед назад",
+    completedAt: "Май", offers: [],
+    deal: { status: "completed", carrier: carriers[0], agreedPriceUsd: 1300, chat: [] },
+  },
+  {
+    id: "ord-0985", origin: "Хоргос", destination: "Астана", cargo: "Электроника, 14 паллет",
+    weightKg: 7600, volumeM3: 40, truckType: "рефрижератор", priceUsd: 2200, readyDate: "12 май 2026",
+    status: "deal", shipper: ME_SHIPPER, address: "Астана, пр. Туран 5", recipientName: "Аружан",
+    recipientPhone: "+7 702 333 44 55", payment: "cash", createdAgo: "1 мес назад",
+    completedAt: "Май", offers: [],
+    deal: { status: "completed", carrier: carriers[1], agreedPriceUsd: 2200, chat: [] },
+  },
+  {
+    id: "ord-0980", origin: "Шымкент", destination: "Алматы", cargo: "Косметика, 30 коробок",
+    weightKg: 4100, volumeM3: 26, truckType: "тент", priceUsd: 1400, readyDate: "28 апр 2026",
+    status: "deal", shipper: ME_SHIPPER, address: "Алматы, ул. Сатпаева 5", recipientName: "Дана",
+    recipientPhone: "+7 705 777 88 99", payment: "transfer", createdAgo: "2 мес назад",
+    completedAt: "Апрель", offers: [],
+    deal: { status: "completed", carrier: carriers[0], agreedPriceUsd: 1400, chat: [] },
+  },
 ]
 
 // Public feed for carriers — orders from various shippers.
 export const FEED_ORDERS: Order[] = [
   {
     id: "ord-2001",
-    origin: "Хоргос",
+    origin: "Караганда",
     destination: "Алматы",
     cargo: "Электроника (смартфоны, аксессуары), 18 паллет",
     weightKg: 4200,
@@ -157,8 +209,8 @@ export const FEED_ORDERS: Order[] = [
   },
   {
     id: "ord-2002",
-    origin: "Хоргос",
-    pickupPoint: "Хоргос, МЦПС, склад В-4",
+    origin: "Новосибирск",
+    pickupPoint: "Терминал МЦПС, склад В-4",
     pickupPhone: "+7 705 880 11 22",
     destination: "Астана",
     cargo: "Стройматериалы, плитка",
@@ -178,8 +230,8 @@ export const FEED_ORDERS: Order[] = [
   },
   {
     id: "ord-2003",
-    origin: "Хоргос",
-    pickupPoint: "Хоргос, сухой порт, терминал 2",
+    origin: "Алматы",
+    pickupPoint: "Сухой порт, терминал 2",
     pickupPhone: "+86 138 0000 1122",
     destination: "Шымкент",
     cargo: "Продукты питания (сухие), 22 паллеты",
@@ -200,7 +252,7 @@ export const FEED_ORDERS: Order[] = [
   },
   {
     id: "ord-2004",
-    origin: "Хоргос",
+    origin: "Москва",
     destination: "Караганда",
     cargo: "Мебель в разборе",
     weightKg: 5400,
@@ -219,7 +271,7 @@ export const FEED_ORDERS: Order[] = [
   },
   {
     id: "ord-2005",
-    origin: "Хоргос",
+    origin: "Ташкент",
     destination: "Астана",
     cargo: "Металлопрокат, тяжёлая партия",
     weightKg: 26000,
@@ -239,7 +291,7 @@ export const FEED_ORDERS: Order[] = [
   // Выигранные перевозчиком грузы → его вкладка «Сделки».
   {
     id: "ord-2006",
-    origin: "Хоргос",
+    origin: "Астана",
     destination: "Алматы",
     cargo: "Бытовая техника, 26 коробок",
     weightKg: 8600,
@@ -258,7 +310,7 @@ export const FEED_ORDERS: Order[] = [
     myOfferStatus: "accepted",
     myOfferPriceUsd: 1850,
     deal: {
-      status: "in_transit",
+      status: "accepted",
       carrier: ME_CARRIER,
       agreedPriceUsd: 1850,
       chat: [
@@ -269,7 +321,7 @@ export const FEED_ORDERS: Order[] = [
   },
   {
     id: "ord-2007",
-    origin: "Хоргос",
+    origin: "Бишкек",
     destination: "Шымкент",
     cargo: "Обувь, 15 паллет",
     weightKg: 5200,

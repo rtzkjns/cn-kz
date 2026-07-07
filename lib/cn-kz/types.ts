@@ -78,36 +78,22 @@ export const TRUCK_TYPES: TruckType[] = [
 
 // Lifecycle of an order in the marketplace.
 export type OrderStatus =
-  | "published" // Опубликован — в ленте, офферов нет
-  | "bidding" // Торгуется — есть офферы
+  | "published" // Опубликован — в ленте, откликов нет
+  | "bidding" // Торгуется — есть отклики
   | "deal" // Сделка создана
   | "archived" // Архив (истёк срок без откликов)
 
 // Lifecycle of a deal (after an offer is accepted).
+// Трекинг доставки не делаем (нет GPS) → только 2 рабочих статуса + отмена.
 export type DealStatus =
   | "accepted" // Принято
-  | "picked_up" // Забрал заказ
-  | "in_transit" // В пути
-  | "at_border" // На границе
-  | "delivered" // Доставлено
   | "completed" // Завершено
   | "cancelled" // Отменено
 
-export const DEAL_FLOW: DealStatus[] = [
-  "accepted",
-  "picked_up",
-  "in_transit",
-  "at_border",
-  "delivered",
-  "completed",
-]
+export const DEAL_FLOW: DealStatus[] = ["accepted", "completed"]
 
 export const DEAL_STATUS_LABEL: Record<DealStatus, string> = {
   accepted: "Принято",
-  picked_up: "Забрал заказ",
-  in_transit: "В пути",
-  at_border: "На границе",
-  delivered: "Доставлено",
   completed: "Завершено",
   cancelled: "Отменено",
 }
@@ -115,6 +101,14 @@ export const DEAL_STATUS_LABEL: Record<DealStatus, string> = {
 export type OfferKind = "accept" | "counter" // «Принять цену» | «Своя цена»
 
 export type OfferStatus = "pending" | "countered" | "accepted" | "rejected" | "expired"
+
+export interface Review {
+  id: string
+  author: string
+  rating: number
+  text: string
+  ago: string
+}
 
 export interface User {
   id: string
@@ -124,6 +118,11 @@ export interface User {
   dealsCount: number
   role: Role
   company?: string
+  verified?: boolean // документы проверены (безопасность)
+  trucks?: Truck[] // парк перевозчика (для профиля)
+  reviews?: Review[] // отзывы (для профиля)
+  onTimeRate?: number // % вовремя
+  memberSince?: string
 }
 
 export interface Truck {
@@ -138,8 +137,11 @@ export interface Offer {
   id: string
   carrier: User
   truck: TruckType
+  plate?: string // гос. номер авто в отклике
+  capacityKg?: number // грузоподъёмность авто
   kind: OfferKind
-  priceUsd: number // counter price, or the order's price for "accept"
+  priceUsd: number // carrier's bid: counter price, or the order's price for "accept"
+  shipperCounterUsd?: number // встречная цена заказчика в ответ на отклик (не затирает priceUsd)
   status: OfferStatus
   createdAgo: string // human-readable, e.g. "12 мин назад"
 }
@@ -162,7 +164,9 @@ export interface Order {
   volumeM3: number
   truckType: TruckType
   priceUsd: number
-  readyDate: string // ISO-ish display date
+  readyDate: string // ISO-ish display date (готов к погрузке)
+  deliverBy?: string // крайний срок доставки (для контроля опозданий)
+  overdue?: boolean // мок-флаг «перевозчик опаздывает» (в проде — из ETA vs срок)
   notes?: string // примечание: ограничения/требования
   status: OrderStatus
   shipper: User
@@ -179,9 +183,14 @@ export interface Order {
     carrier: User
     agreedPriceUsd: number
     chat: ChatMessage[]
+    tripId?: string // сборный рейс: несколько грузов в одной фуре
+    escrow?: "held" | "released" // безопасная сделка: оплата в эскроу до завершения
   }
+  ratedStars?: number // оценка, которую заказчик поставил перевозчику (сохраняется в истории)
   // carrier's own offer state when viewing the feed
   myOfferStatus?: OfferStatus
   myOfferPriceUsd?: number // цена, которую предложил перевозчик
-  myCounterPriceUsd?: number // встречная цена шипера в ответ на оффер перевозчика
+  myCounterPriceUsd?: number // встречная цена заказчика в ответ на отклик перевозчика
+  pinned?: boolean // закреплён заказчиком (в топ списка)
+  completedAt?: string // для аналитики завершённых заказов
 }
