@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { BadgeCheck, Check, Gavel, MessageCircle, Package, Phone, RefreshCw, Tag, Truck, X } from "lucide-react"
+import { BadgeCheck, Check, Copy, Gavel, MessageCircle, Package, Pencil, Phone, RefreshCw, Search, Tag, Truck, X } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -25,12 +25,14 @@ const FILTERS = [
   { id: "all", label: "Все" },
   { id: "open", label: "Не принятые" },
   { id: "accepted", label: "Принятые" },
+  { id: "archived", label: "Архив" },
 ] as const
 
 export function ShipperOrdersScreen() {
   const { myOrders, push, togglePin, dealsNewOnly, setDealsNewOnly, isNew } = useCnKz()
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("all")
   const [sort, setSort] = useState<"new" | "offers">("new")
+  const [query, setQuery] = useState("")
 
   const inBidding = myOrders.filter(
     (o) => !o.deal && (o.status === "bidding" || o.status === "published")
@@ -50,6 +52,8 @@ export function ShipperOrdersScreen() {
   ).length
 
   const list = useMemo(() => {
+    // Поиск по конечной точке / городу / грузу (теги #алматы #тент тоже работают).
+    const words = query.trim().toLowerCase().replace(/#/g, " ").split(/\s+/).filter(Boolean)
     const filtered = myOrders.filter((o) => {
       const active = o.deal && o.deal.status !== "completed" && o.deal.status !== "cancelled"
       const finished = o.deal && (o.deal.status === "completed" || o.deal.status === "cancelled")
@@ -59,9 +63,13 @@ export function ShipperOrdersScreen() {
           ? true
           : filter === "open"
             ? !o.deal && (o.status === "bidding" || o.status === "published")
-            : !!active
+            : filter === "archived"
+              ? o.status === "archived"
+              : !!active
       const byNew = !dealsNewOnly || isNew(o.id) // «Все сделки с новыми» из колокольчика
-      return byFilter && byNew
+      const hay = `${o.origin} ${o.destination} ${o.cargo} ${o.truckType}`.toLowerCase()
+      const byQuery = words.length === 0 || words.every((w) => hay.includes(w))
+      return byFilter && byNew && byQuery
     })
     const pendingOf = (o: Order) => o.offers.filter((of) => of.status === "pending").length
     return filtered.sort((a, b) => {
@@ -69,7 +77,7 @@ export function ShipperOrdersScreen() {
       if (sort === "offers") return pendingOf(b) - pendingOf(a)
       return 0
     })
-  }, [myOrders, filter, sort, dealsNewOnly, isNew])
+  }, [myOrders, filter, sort, dealsNewOnly, isNew, query])
 
   return (
     <div className="flex h-full flex-col">
@@ -94,6 +102,18 @@ export function ShipperOrdersScreen() {
           },
         ]}
       />
+
+      <div className="px-4 pb-2">
+        <div className="relative">
+          <Search className="absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Поиск по городу назначения, грузу…  #алматы #тент"
+            className="h-9 pl-7"
+          />
+        </div>
+      </div>
 
       <ChipRow className="px-4 pb-2">
         {dealsNewOnly && (
@@ -381,6 +401,27 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
           </div>
         </Section>
 
+        <div className="flex gap-2">
+          {(order.status === "published" || order.status === "bidding") && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => push({ type: "createOrder", editId: order.id })}
+            >
+              <Pencil className="size-3.5" /> Редактировать
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => push({ type: "createOrder", prefillFrom: order.id })}
+          >
+            <Copy className="size-3.5" /> Создать копию
+          </Button>
+        </div>
+
         {order.deal && order.status === "deal" && (
           <Button
             className="w-full"
@@ -423,6 +464,36 @@ function formatReadyDate(iso: string): string {
   return `${day} ${RU_MONTHS[m - 1]} ${y}`
 }
 
+// Обратно: «12 июн 2026» → ISO для инициализации date-picker при копии/редактировании.
+function readyIsoFromDisplay(s: string): string {
+  const m = s.trim().match(/^(\d{1,2})\s+([а-я]+)\s+(\d{4})$/i)
+  if (!m) return ""
+  const mi = RU_MONTHS.indexOf(m[2].toLowerCase())
+  if (mi < 0) return ""
+  return `${m[3]}-${String(mi + 1).padStart(2, "0")}-${m[1].padStart(2, "0")}`
+}
+
+// Заказ → черновик формы (для «Создать копию» и редактирования).
+function orderToDraft(o: Order): NewOrderDraft {
+  return {
+    origin: o.origin,
+    pickupPoint: o.pickupPoint ?? "",
+    pickupPhone: o.pickupPhone ?? "",
+    destination: o.destination,
+    cargo: o.cargo,
+    weightKg: o.weightKg,
+    volumeM3: o.volumeM3,
+    truckType: o.truckType,
+    priceUsd: o.priceUsd,
+    readyDate: o.readyDate,
+    notes: o.notes ?? "",
+    address: o.address,
+    recipientName: o.recipientName,
+    recipientPhone: o.recipientPhone,
+    payment: o.payment,
+  }
+}
+
 const emptyDraft: NewOrderDraft = {
   origin: "",
   pickupPoint: "",
@@ -441,10 +512,22 @@ const emptyDraft: NewOrderDraft = {
   payment: "transfer",
 }
 
-export function CreateOrderScreen() {
-  const { publishOrder, pop, setTab } = useCnKz()
-  const [d, setD] = useState<NewOrderDraft>(emptyDraft)
-  const [readyIso, setReadyIso] = useState("")
+export function CreateOrderScreen({
+  prefillFrom,
+  editId,
+}: {
+  prefillFrom?: string
+  editId?: string
+}) {
+  const { publishOrder, saveOrderEdit, getOrder, pop, setTab } = useCnKz()
+  const srcOrder = (editId ?? prefillFrom) ? getOrder((editId ?? prefillFrom)!) : undefined
+  const isEdit = !!editId
+  const [d, setD] = useState<NewOrderDraft>(() =>
+    srcOrder ? orderToDraft(srcOrder) : emptyDraft
+  )
+  const [readyIso, setReadyIso] = useState(() =>
+    srcOrder ? readyIsoFromDisplay(srcOrder.readyDate) : ""
+  )
   const set = <K extends keyof NewOrderDraft>(k: K, v: NewOrderDraft[K]) =>
     setD((cur) => ({ ...cur, [k]: v }))
 
@@ -459,7 +542,11 @@ export function CreateOrderScreen() {
 
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title="Новый заказ" subtitle="Опишите груз и маршрут" onBack={pop} />
+      <ScreenHeader
+        title={isEdit ? "Редактировать заказ" : prefillFrom ? "Копия заказа" : "Новый заказ"}
+        subtitle={isEdit ? "Изменение условий обновит заказ" : "Опишите груз и маршрут"}
+        onBack={pop}
+      />
 
       <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-24">
         <Field label="Откуда">
@@ -607,12 +694,13 @@ export function CreateOrderScreen() {
           className="w-full"
           disabled={!valid}
           onClick={() => {
-            publishOrder(d)
+            if (isEdit) saveOrderEdit(editId!, d)
+            else publishOrder(d)
             pop()
-            setTab("myorders") // покажем новый заказ в «Мои заказы», а не в общей ленте
+            setTab("myorders") // покажем заказ в «Мои заказы», а не в общей ленте
           }}
         >
-          Опубликовать
+          {isEdit ? "Сохранить изменения" : "Опубликовать"}
         </Button>
       </div>
     </div>

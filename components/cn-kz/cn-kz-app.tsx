@@ -35,7 +35,7 @@ function Router() {
       case "orderDetail":
         return <OrderDetailScreen orderId={top.orderId} />
       case "createOrder":
-        return <CreateOrderScreen />
+        return <CreateOrderScreen prefillFrom={top.prefillFrom} editId={top.editId} />
       case "cargoDetail":
         return <CargoDetailScreen orderId={top.orderId} />
       case "deal":

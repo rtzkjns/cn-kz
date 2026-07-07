@@ -186,10 +186,12 @@ export interface Order {
     tripId?: string // сборный рейс: несколько грузов в одной фуре
     escrow?: "held" | "released" // безопасная сделка: оплата в эскроу до завершения
   }
-  ratedStars?: number // оценка, которую заказчик поставил перевозчику (сохраняется в истории)
+  ratedStars?: number // оценка, которую МЫ поставили второй стороне (сохраняется в истории)
+  counterpartRating?: number // оценка, которую вторая сторона поставила НАМ — раскрывается после обоюдной (§8)
   // carrier's own offer state when viewing the feed
   myOfferStatus?: OfferStatus
   myOfferPriceUsd?: number // цена, которую предложил перевозчик
+  myOfferTruck?: Truck // фура из парка, которой перевозчик откликнулся
   myCounterPriceUsd?: number // встречная цена заказчика в ответ на отклик перевозчика
   pinned?: boolean // закреплён заказчиком (в топ списка)
   completedAt?: string // для аналитики завершённых заказов

@@ -404,9 +404,23 @@ export function DealScreen({ orderId }: { orderId: string }) {
           </Card>
         )}
         {completed && rated && (
-          <p className="text-center text-sm text-foreground">
-            <Check className="inline size-4" /> Сделка завершена · ваша оценка {order.ratedStars}★
-          </p>
+          <Card size="sm">
+            <CardContent className="space-y-1.5 text-sm">
+              <p className="text-foreground">
+                <Check className="inline size-4" /> Ваша оценка {other.name.split(" ")[0]}: {order.ratedStars}★
+              </p>
+              {order.counterpartRating == null ? (
+                <p className="text-xs text-muted-foreground">
+                  Оценка {role === "shipper" ? "перевозчика" : "заказчика"} появится, когда он тоже оценит вас (взаимно и вслепую).
+                </p>
+              ) : (
+                <p className="text-foreground">
+                  <Rating value={order.counterpartRating} />{" "}
+                  <span className="text-muted-foreground">— {role === "shipper" ? "перевозчик" : "заказчик"} оценил вас</span>
+                </p>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* actions — 2 состояния (перевозчик завершает, заказчик может подтвердить) */}

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Phone, Search, SlidersHorizontal } from "lucide-react"
+import { Phone, RefreshCw, Search, SlidersHorizontal } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -30,12 +30,14 @@ function LiveBadge() {
 export function MarketFeedScreen() {
   const { feedOrders, push, filters, setFilters, openFilters } = useCnKz()
   const [q, setQ] = useState("")
-  // Короткий скелет загрузки — под обещание «Realtime лента».
+  // Короткий скелет загрузки — под обещание «Realtime лента». refresh() = «потянуть обновить».
   const [loading, setLoading] = useState(true)
   useEffect(() => {
+    if (!loading) return
     const t = setTimeout(() => setLoading(false), 550)
     return () => clearTimeout(t)
-  }, [])
+  }, [loading])
+  const refresh = () => setLoading(true)
 
   const toggleBody = (t: string) =>
     setFilters({
@@ -58,7 +60,18 @@ export function MarketFeedScreen() {
       <ScreenHeader
         title="Главная"
         subtitle={`${list.length} ${plural(list.length, "груз", "груза", "грузов")} на маршруте · по всей СНГ`}
-        action={<LiveBadge />}
+        action={
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={refresh}
+              aria-label="Обновить ленту"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <RefreshCw className={"size-4 " + (loading ? "animate-spin" : "")} />
+            </button>
+            <LiveBadge />
+          </div>
+        }
       />
 
       <div className="px-4 pb-2">
@@ -67,7 +80,7 @@ export function MarketFeedScreen() {
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Напишите город или тип груза…"
+            placeholder="Город, груз или #тег…  #алматы #тент"
             className="h-9 pl-7"
           />
         </div>

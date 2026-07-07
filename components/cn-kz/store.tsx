@@ -7,6 +7,7 @@ import {
   FEED_ORDERS,
   ME_CARRIER,
   ME_SHIPPER,
+  MY_FLEET,
   MY_ORDERS,
 } from "@/lib/cn-kz/mock-data"
 import {
@@ -22,13 +23,13 @@ import { EMPTY_FILTERS, type FilterState } from "@/lib/cn-kz/filters"
 // A pushed detail screen sits on top of the active tab.
 export type Screen =
   | { type: "orderDetail"; orderId: string }
-  | { type: "createOrder" }
   | { type: "cargoDetail"; orderId: string }
   | { type: "deal"; orderId: string }
   | { type: "chat"; orderId: string }
   | { type: "carrierProfile"; carrierId: string; orderId?: string; offerId?: string }
   | { type: "marketOrder"; orderId: string }
   | { type: "tripBuilder" }
+  | { type: "createOrder"; prefillFrom?: string; editId?: string } // дубль/редактирование
 
 export type Tab =
   | "feed"
@@ -45,6 +46,27 @@ export type Tab =
 // дубликаты React key при быстрых действиях. Стартуют выше всех сидов.
 let ORDER_SEQ = 9000
 let MSG_SEQ = 0
+
+// Общие поля заказа из черновика — используются и при публикации, и при редактировании.
+function draftToFields(d: NewOrderDraft) {
+  return {
+    origin: d.origin,
+    pickupPoint: d.pickupPoint.trim() || undefined,
+    pickupPhone: d.pickupPhone.trim() || undefined,
+    destination: d.destination,
+    cargo: d.cargo,
+    weightKg: d.weightKg,
+    volumeM3: d.volumeM3,
+    truckType: d.truckType,
+    priceUsd: d.priceUsd,
+    readyDate: d.readyDate,
+    notes: d.notes.trim() || undefined,
+    address: d.address,
+    recipientName: d.recipientName,
+    recipientPhone: d.recipientPhone,
+    payment: d.payment,
+  }
+}
 
 export interface Notification {
   id: string
@@ -102,9 +124,12 @@ interface CnKzStore {
   getOrder: (id: string) => Order | undefined
 
   publishOrder: (d: NewOrderDraft) => void
+  saveOrderEdit: (orderId: string, d: NewOrderDraft) => void // редактирование заказа
   republishOrder: (orderId: string) => void // архивный заказ → снова в ленту
   acceptOffer: (orderId: string, offerId: string) => void
-  makeOffer: (orderId: string, kind: OfferKind, priceUsd: number) => void
+  makeOffer: (orderId: string, kind: OfferKind, priceUsd: number, truckId?: string) => void
+  skipOrder: (orderId: string) => void // «Пропустить» груз (без отклика)
+  isSkipped: (orderId: string) => boolean
   confirmCounter: (orderId: string) => void // перевозчик принимает встречную цену заказчика
   declineMyOffer: (orderId: string) => void // перевозчик снимает свой отклик
   completeDeal: (orderId: string) => void
@@ -159,6 +184,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
   const [myOrders, setMyOrders] = useState<Order[]>(MY_ORDERS)
   const [feedOrders, setFeedOrders] = useState<Order[]>(FEED_ORDERS)
   const [favorites, setFavorites] = useState<string[]>([]) // «Избранное» перевозчика (id заказов)
+  const [skipped, setSkipped] = useState<string[]>([]) // грузы, которые перевозчик «Пропустил»
   const [tripDraft, setTripDraft] = useState<string[]>([]) // грузы, собираемые в один рейс (сборный груз)
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS)
   const [showFilters, setShowFilters] = useState(false)
@@ -319,28 +345,30 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
     function publishOrder(d: NewOrderDraft) {
       const order: Order = {
         id: `ord-${++ORDER_SEQ}`,
-        origin: d.origin,
-        pickupPoint: d.pickupPoint.trim() || undefined,
-        pickupPhone: d.pickupPhone.trim() || undefined,
-        destination: d.destination,
-        cargo: d.cargo,
-        weightKg: d.weightKg,
-        volumeM3: d.volumeM3,
-        truckType: d.truckType,
-        priceUsd: d.priceUsd,
-        readyDate: d.readyDate,
-        notes: d.notes.trim() || undefined,
+        ...draftToFields(d),
         status: "published",
         shipper: ME_SHIPPER,
-        address: d.address,
-        recipientName: d.recipientName,
-        recipientPhone: d.recipientPhone,
-        payment: d.payment,
         createdAgo: "только что",
         offers: [],
       }
       setMyOrders((list) => [order, ...list])
       showToast("Заказ опубликован — ушёл в ленту перевозчиков")
+    }
+
+    // Редактирование заказа: обновляет поля; изменение условий аннулирует активные отклики.
+    function saveOrderEdit(orderId: string, d: NewOrderDraft) {
+      updateMy(orderId, (o) => {
+        const hadOffers = o.offers.some(
+          (of) => of.status === "pending" || of.status === "countered"
+        )
+        return {
+          ...o,
+          ...draftToFields(d),
+          offers: hadOffers ? [] : o.offers,
+          status: "published",
+        }
+      })
+      showToast("Заказ обновлён")
     }
 
     // Перепубликация архивного заказа: сбрасываем срок и старые отклики, возвращаем в ленту.
@@ -394,14 +422,16 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       }))
     }
 
-    function makeOffer(orderId: string, kind: OfferKind, priceUsd: number) {
+    function makeOffer(orderId: string, kind: OfferKind, priceUsd: number, truckId?: string) {
       const order = feedOrders.find((o) => o.id === orderId)
       const offered = kind === "accept" ? order?.priceUsd ?? priceUsd : priceUsd
       const base = order?.priceUsd ?? offered
+      const truck = MY_FLEET.find((t) => t.id === truckId) ?? MY_FLEET[0]
       updateFeed(orderId, (o) => ({
         ...o,
         myOfferStatus: "pending",
         myOfferPriceUsd: offered,
+        myOfferTruck: truck,
         myCounterPriceUsd: undefined,
       }))
       showToast(
@@ -440,6 +470,13 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       showToast("Отклик снят")
     }
 
+    // «Пропустить» (inDrive): без отклика, убираем груз из ленты перевозчика.
+    function skipOrder(orderId: string) {
+      setSkipped((s) => (s.includes(orderId) ? s : [...s, orderId]))
+      showToast("Груз пропущен")
+    }
+    const isSkipped = (orderId: string) => skipped.includes(orderId)
+
     // Перевозчик завершает заказ (кнопка «Завершил»). Трекинг между этим не делаем.
     function completeDeal(orderId: string) {
       updateOrder(orderId, (o) =>
@@ -455,10 +492,16 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       showToast("Получение подтверждено · оплата переведена перевозчику")
     }
 
-    // Заказчик оценил перевозчика — оценка сохраняется на заказе (видно в истории).
+    // Оценка сохраняется на заказе (видно в истории). §8: взаимная СЛЕПАЯ оценка —
+    // встречная оценка второй стороны раскрывается только после того, как она тоже оценит (мок).
     function submitRating(orderId: string, stars: number) {
       updateOrder(orderId, (o) => ({ ...o, ratedStars: stars }))
       showToast(`Спасибо! Вы поставили ${stars}★`)
+      setTimeout(() => {
+        updateOrder(orderId, (o) =>
+          o.counterpartRating == null ? { ...o, counterpartRating: 5 } : o
+        )
+      }, 1800)
     }
 
     function cancelDeal(orderId: string) {
@@ -601,9 +644,12 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       feedOrders,
       getOrder,
       publishOrder,
+      saveOrderEdit,
       republishOrder,
       acceptOffer,
       makeOffer,
+      skipOrder,
+      isSkipped,
       confirmCounter,
       declineMyOffer,
       completeDeal,
@@ -630,7 +676,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       rejectOffer,
       getCarrier,
     }
-  }, [authed, showAuth, role, tab, dealsNewOnly, seen, stack, toast, myOrders, feedOrders, favorites, tripDraft, filters, showFilters, profile])
+  }, [authed, showAuth, role, tab, dealsNewOnly, seen, stack, toast, myOrders, feedOrders, favorites, skipped, tripDraft, filters, showFilters, profile])
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>
 }

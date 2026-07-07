@@ -49,7 +49,7 @@ export function OrderCard({
     <div
       onClick={onClick}
       className={cn(
-        "group cursor-pointer rounded-md p-4 transition-transform duration-150 active:scale-[0.99]",
+        "group cursor-pointer rounded-md p-3.5 transition-transform duration-150 active:scale-[0.99]",
         mine ? "surface-glass-brand" : "surface-glass"
       )}
     >
@@ -110,7 +110,7 @@ export function OrderCard({
       </div>
 
       {/* Route — origin muted, destination bold */}
-      <div className="mt-4 flex gap-3">
+      <div className="mt-3 flex gap-3">
         <div className="flex flex-col items-center pt-1.5">
           <span className="size-1.5 rounded-full bg-muted-foreground/60" />
           <span className="my-1 w-px flex-1 bg-gradient-to-b from-border to-brand/50" />
@@ -120,19 +120,19 @@ export function OrderCard({
           <p className="truncate text-[13px] font-medium text-muted-foreground">
             {order.origin}
           </p>
-          <p className="mt-3 truncate text-lg font-bold tracking-tight">
+          <p className="mt-1 truncate text-lg font-bold tracking-tight">
             {order.destination}
           </p>
         </div>
       </div>
 
       {/* Cargo */}
-      <p className="mt-3 line-clamp-1 text-[13px] text-muted-foreground">
+      <p className="mt-2.5 line-clamp-1 text-[13px] text-muted-foreground">
         {order.cargo}
       </p>
 
       {/* Meta pills */}
-      <div className="mt-3 flex flex-wrap gap-1.5">
+      <div className="mt-2.5 flex flex-wrap gap-1.5">
         <MetaPill icon={Truck}>{order.truckType}</MetaPill>
         <MetaPill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} кг</MetaPill>
         <MetaPill icon={Box}>{order.volumeM3} м³</MetaPill>
@@ -140,7 +140,7 @@ export function OrderCard({
       </div>
 
       {/* Price footer + contextual action */}
-      <div className="mt-4 flex items-center justify-between rounded-md bg-secondary px-3.5 py-2.5">
+      <div className="mt-3 flex items-center justify-between rounded-md bg-secondary px-3.5 py-2.5">
         <div className="leading-none">
           <p className="font-mono-tech text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
             Цена заказчика

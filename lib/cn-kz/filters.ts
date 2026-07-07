@@ -10,6 +10,7 @@ export type FilterState = {
   temp: string[] // температурный режим (только для реф/изотерм)
   adr: string | null // опасный груз
   cargo: string | null // категория груза
+  destination: string | null // город назначения
 }
 
 export const EMPTY_FILTERS: FilterState = {
@@ -20,7 +21,18 @@ export const EMPTY_FILTERS: FilterState = {
   temp: [],
   adr: null,
   cargo: null,
+  destination: null,
 }
+
+// Популярные города назначения по СНГ (для фасета «Куда»).
+export const POPULAR_DEST_CITIES = [
+  "Алматы",
+  "Астана",
+  "Шымкент",
+  "Караганда",
+  "Актобе",
+  "Тараз",
+]
 
 // ~6 самых частых — показываем строкой без горизонтального скролла.
 export const POPULAR_BODY_TYPES = [
@@ -122,7 +134,7 @@ export function tonnageRange(tier: string | null): [number, number] {
 
 // Функциональная фильтрация ленты (кузов + грузоподъёмность + категория; остальное — витрина).
 export function matchesFilters(
-  o: { truckType: string; weightKg: number; cargo: string },
+  o: { truckType: string; weightKg: number; cargo: string; destination?: string },
   f: FilterState
 ): boolean {
   if (f.bodyTypes.length && !f.bodyTypes.includes(o.truckType)) return false
@@ -130,6 +142,7 @@ export function matchesFilters(
   if (o.weightKg < minW || o.weightKg > maxW) return false
   if (f.cargo && f.cargo !== "Другое" && !o.cargo.toLowerCase().includes(f.cargo.toLowerCase()))
     return false
+  if (f.destination && o.destination !== f.destination) return false
   return true
 }
 
@@ -141,6 +154,7 @@ export function countActive(f: FilterState): number {
     (f.tonnage ? 1 : 0) +
     (f.volume ? 1 : 0) +
     (f.adr ? 1 : 0) +
-    (f.cargo ? 1 : 0)
+    (f.cargo ? 1 : 0) +
+    (f.destination ? 1 : 0)
   )
 }

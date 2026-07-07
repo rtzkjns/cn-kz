@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Bookmark, Boxes, Check, ChevronRight, Heart, Phone, Plus, Search, SlidersHorizontal, Tag, Truck, X } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { Bookmark, Boxes, Check, ChevronRight, Heart, Phone, Plus, RefreshCw, Search, SlidersHorizontal, Tag, Truck, X } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -39,12 +39,20 @@ function LiveBadge() {
 }
 
 export function CarrierFeedScreen() {
-  const { feedOrders, push, setTab, toggleFavorite, isFavorite, tripDraft, isInTrip, addToTrip, filters, setFilters, openFilters, showToast } =
+  const { feedOrders, push, setTab, toggleFavorite, isFavorite, tripDraft, isInTrip, addToTrip, filters, setFilters, openFilters, isSkipped, showToast } =
     useCnKz()
   // Сборный рейс: докидывать можно только грузы в тот же город назначения (решение — same destination).
   const tripDest = feedOrders.find((o) => o.id === tripDraft[0])?.destination
   const [showOverCap, setShowOverCap] = useState(false)
   const [q, setQ] = useState("")
+  // Скелет загрузки + «потянуть обновить» (жест — нативный; на вебе даём кнопку).
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    if (!loading) return
+    const t = setTimeout(() => setLoading(false), 550)
+    return () => clearTimeout(t)
+  }, [loading])
+  const refresh = () => setLoading(true)
   // Домашний город перевозчика — из профиля (мок). Питает «по моему маршруту» / «обратный груз».
   const [routeMode, setRouteMode] = useState<"all" | "my" | "back">("all")
 
@@ -60,13 +68,14 @@ export function CarrierFeedScreen() {
     const words = q.trim().toLowerCase().replace(/#/g, " ").split(/\s+/).filter(Boolean)
     return feedOrders.filter((o) => {
       if (o.deal) return false
+      if (isSkipped(o.id)) return false // «Пропущенные» грузы скрыты из ленты
       if (!matchesFilters(o, filters)) return false
       if (routeMode === "my" && o.origin !== CARRIER_HOME) return false // грузы из моего города
       if (routeMode === "back" && o.destination !== CARRIER_HOME) return false // обратно домой
       const hay = `${o.origin} ${o.destination} ${o.cargo} ${o.truckType}`.toLowerCase()
       return words.length === 0 || words.every((w) => hay.includes(w))
     })
-  }, [feedOrders, filters, q, routeMode])
+  }, [feedOrders, filters, q, routeMode, isSkipped])
   const hiddenCount = byType.filter((o) => !fitsFleet(o.weightKg, o.volumeM3)).length
   const list = showOverCap
     ? byType
@@ -88,7 +97,18 @@ export function CarrierFeedScreen() {
       <ScreenHeader
         title="Главная"
         subtitle="Все грузы · по всей СНГ"
-        action={<LiveBadge />}
+        action={
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={refresh}
+              aria-label="Обновить ленту"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <RefreshCw className={"size-4 " + (loading ? "animate-spin" : "")} />
+            </button>
+            <LiveBadge />
+          </div>
+        }
       />
 
       <StatStrip
@@ -149,7 +169,7 @@ export function CarrierFeedScreen() {
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Напишите город или тип груза…"
+            placeholder="Город, груз или #тег…  #алматы #тент"
             className="h-9 pl-7"
           />
         </div>
@@ -184,7 +204,15 @@ export function CarrierFeedScreen() {
       )}
 
       <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-24">
-        {list.length === 0 && (
+        {loading &&
+          [0, 1, 2].map((i) => (
+            <div key={i} className="surface-glass animate-pulse space-y-3 rounded-md p-4">
+              <div className="h-4 w-1/2 rounded bg-muted" />
+              <div className="h-6 w-2/3 rounded bg-muted" />
+              <div className="h-14 rounded bg-muted" />
+            </div>
+          ))}
+        {!loading && list.length === 0 && (
           <EmptyState
             icon={Boxes}
             title="Под ваши фильтры грузов нет"
@@ -196,7 +224,7 @@ export function CarrierFeedScreen() {
             }
           />
         )}
-        {list.map((o, i) => (
+        {!loading && list.map((o, i) => (
           <div
             key={o.id}
             className="animate-in fade-in slide-in-from-bottom-1 fill-mode-both"
@@ -485,14 +513,21 @@ export function MyOffersScreen() {
 }
 
 export function CargoDetailScreen({ orderId }: { orderId: string }) {
-  const { getOrder, pop, push, setTab, makeOffer, confirmCounter, declineMyOffer, showToast } =
+  const { getOrder, pop, push, setTab, makeOffer, skipOrder, confirmCounter, declineMyOffer, showToast } =
     useCnKz()
   const order = getOrder(orderId)
   const [counter, setCounter] = useState("")
   const [declineConfirm, setDeclineConfirm] = useState(false)
+  // По умолчанию — фура парка под тип груза, иначе первая.
+  const [truckId, setTruckId] = useState(
+    () => MY_FLEET.find((t) => order && t.type === order.truckType)?.id ?? MY_FLEET[0].id
+  )
   if (!order) return null
 
   const alreadyOffered = !!order.myOfferStatus
+  const selectedTruck = MY_FLEET.find((t) => t.id === truckId) ?? MY_FLEET[0]
+  const overCapacity =
+    order.weightKg > selectedTruck.maxWeightKg || order.volumeM3 > selectedTruck.maxVolumeM3
 
   return (
     <div className="flex h-full flex-col">
@@ -581,6 +616,12 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                     label="Ваша цена"
                     value={money(order.myOfferPriceUsd ?? order.priceUsd)}
                   />
+                  {order.myOfferTruck && (
+                    <DetailRow
+                      label="Ваша фура"
+                      value={`${order.myOfferTruck.type} · ${order.myOfferTruck.plate}`}
+                    />
+                  )}
                   <p className="text-xs text-muted-foreground">Ждём ответа заказчика…</p>
                 </>
               )}
@@ -641,9 +682,24 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
 
       {!alreadyOffered && (
         <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-border bg-card p-3">
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Фура из парка</p>
+            <ChipRow>
+              {MY_FLEET.map((t) => (
+                <Chip key={t.id} active={truckId === t.id} onClick={() => setTruckId(t.id)}>
+                  {t.type} · {t.plate}
+                </Chip>
+              ))}
+            </ChipRow>
+            {overCapacity && (
+              <p className="text-xs text-amber-500">
+                Груз превышает вместимость этой фуры — выберите другую
+              </p>
+            )}
+          </div>
           <Button
             className="w-full"
-            onClick={() => makeOffer(order.id, "accept", order.priceUsd)}
+            onClick={() => makeOffer(order.id, "accept", order.priceUsd, truckId)}
           >
             <Check className="size-4" /> Принять цену {money(order.priceUsd)}
           </Button>
@@ -660,11 +716,14 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
               variant="outline"
               size="lg"
               disabled={!counter || Number(counter) <= 0}
-              onClick={() => makeOffer(order.id, "counter", Number(counter))}
+              onClick={() => makeOffer(order.id, "counter", Number(counter), truckId)}
             >
               Предложить
             </Button>
           </div>
+          <Button variant="ghost" className="w-full" onClick={() => { skipOrder(order.id); pop() }}>
+            Пропустить груз
+          </Button>
         </div>
       )}
     </div>

@@ -138,7 +138,7 @@ export function CarrierProfileScreen({
           >
             {offer.kind === "accept"
               ? `Принять отклик ${money(offer.priceUsd)}`
-              : `Выбрать ${money(offer.priceUsd)} · 15 мин`}
+              : `Выбрать ${money(offer.priceUsd)}`}
           </Button>
         )}
         <div className="flex gap-2">

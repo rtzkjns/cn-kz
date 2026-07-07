@@ -13,6 +13,7 @@ import {
   LOADING_TYPES,
   matchesFilters,
   POPULAR_BODY_TYPES,
+  POPULAR_DEST_CITIES,
   TEMP_MODES,
   TONNAGE_TIERS,
   VOLUME_TIERS,
@@ -73,7 +74,7 @@ export function FilterSheet() {
       const arr = d[key]
       return { ...d, [key]: arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v] }
     })
-  const setOne = (key: "tonnage" | "volume" | "adr" | "cargo", v: string) =>
+  const setOne = (key: "tonnage" | "volume" | "adr" | "cargo" | "destination", v: string) =>
     setDraft((d) => ({ ...d, [key]: d[key] === v ? null : v }))
 
   const tempApplies = draft.bodyTypes.some((b) => b.includes("реф") || b === "изотерм")
@@ -97,6 +98,14 @@ export function FilterSheet() {
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
+          <Group title="Куда (город назначения)">
+            {POPULAR_DEST_CITIES.map((c) => (
+              <Pill key={c} active={draft.destination === c} onClick={() => setOne("destination", c)}>
+                {c}
+              </Pill>
+            ))}
+          </Group>
+
           <Group title="Тип кузова">
             {(showAllTypes ? [] : POPULAR_BODY_TYPES).map((t) => (
               <Pill key={t} active={draft.bodyTypes.includes(t)} onClick={() => toggleArr("bodyTypes", t)}>
