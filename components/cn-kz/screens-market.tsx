@@ -59,7 +59,7 @@ export function MarketFeedScreen() {
     <div className="flex h-full flex-col">
       <ScreenHeader
         title="Главная"
-        subtitle={`${list.length} ${plural(list.length, "груз", "груза", "грузов")} на маршруте · по всей СНГ`}
+        subtitle={`${list.length} ${plural(list.length, "открытый груз", "открытых груза", "открытых грузов")} · по всей СНГ`}
         action={
           <div className="flex items-center gap-1.5">
             <button

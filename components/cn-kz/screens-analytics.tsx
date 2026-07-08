@@ -59,7 +59,7 @@ function Bar({ label, value, max, suffix }: { label: string; value: number; max:
 }
 
 export function AnalyticsScreen() {
-  const { myOrders } = useCnKz()
+  const { myOrders, setTab } = useCnKz()
   const [period, setPeriod] = useState("all")
 
   const completed = myOrders.filter((o) => o.deal?.status === "completed")
@@ -100,7 +100,7 @@ export function AnalyticsScreen() {
 
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title="Аналитика" subtitle="Ваша логистика в цифрах" />
+      <ScreenHeader title="Аналитика" subtitle="Ваша логистика в цифрах" onBack={() => setTab("profile")} />
 
       <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-24">
         <ChipRow>

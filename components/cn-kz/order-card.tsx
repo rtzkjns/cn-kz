@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Box, Calendar, Check, ChevronRight, Heart, MessageCircle, Pin, Plus, Star, Truck, Weight } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
@@ -27,6 +28,7 @@ export function OrderCard({
   onAddToTrip,
   inTrip = false,
   browse = false,
+  onQuickAccept,
 }: {
   order: Order
   onClick: () => void
@@ -39,7 +41,9 @@ export function OrderCard({
   inTrip?: boolean
   // browse = маркетплейс «Главная»: чужие грузы, без статуса/счётчика откликов — только просмотр.
   browse?: boolean
+  onQuickAccept?: () => void // перевозчик: принять цену заказчика в один тап прямо из ленты
 }) {
+  const [confirmAccept, setConfirmAccept] = useState(false)
   const newOffers = order.offers.filter((o) => o.status === "pending").length
   const hasUnread = order.deal?.chat.some((m) => !m.fromMe)
   const mine = showMyOffer && !!order.myOfferStatus
@@ -168,6 +172,24 @@ export function OrderCard({
             {newOffers} {newOffers === 1 ? "отклик" : newOffers < 5 ? "отклика" : "откликов"}
             <ChevronRight className="size-3.5" />
           </span>
+        ) : showMyOffer && onQuickAccept ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              if (confirmAccept) {
+                onQuickAccept()
+                setConfirmAccept(false)
+              } else {
+                setConfirmAccept(true)
+              }
+            }}
+            className={cn(
+              "inline-flex items-center gap-1 rounded-md px-4 py-2.5 text-[13px] font-bold text-white shadow-key transition-transform hover:brightness-110 active:scale-95",
+              confirmAccept ? "bg-emerald-600" : "bg-emerald-500"
+            )}
+          >
+            <Check className="size-4" /> {confirmAccept ? "Точно?" : "Принять"}
+          </button>
         ) : showMyOffer ? (
           <span className="inline-flex items-center gap-1 rounded-md bg-primary px-3.5 py-2.5 text-[13px] font-semibold text-primary-foreground shadow-key transition-transform group-active:scale-95">
             Откликнуться

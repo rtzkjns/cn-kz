@@ -16,8 +16,8 @@ const mono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CN-KZ — Грузоперевозки Хоргос → СНГ",
-  description: "Маркетплейс грузоперевозок Китай → СНГ",
+  title: "CN-KZ — Грузоперевозки по всей СНГ",
+  description: "Маркетплейс грузоперевозок по всей СНГ — из любого города в любой",
 };
 
 export default function RootLayout({

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Bookmark, Boxes, Check, ChevronRight, Heart, Phone, Plus, RefreshCw, Search, SlidersHorizontal, Tag, Truck, X } from "lucide-react"
+import { Boxes, Check, ChevronRight, Heart, MessageCircle, Phone, Plus, RefreshCw, Search, SlidersHorizontal, Tag, Truck, X } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -22,8 +22,12 @@ const FLEET_MAX_VOLUME = Math.max(...MY_FLEET.map((t) => t.maxVolumeM3))
 const fitsFleet = (weightKg: number, volumeM3: number) =>
   weightKg <= FLEET_MAX_WEIGHT && volumeM3 <= FLEET_MAX_VOLUME
 
-// Домашний город перевозчика (мок из профиля) — для «по моему маршруту» / «обратный груз».
-const CARRIER_HOME = "Алматы"
+// Подбор фуры под груз для быстрого «Принять»: сначала по типу+вместимости, иначе любая, что влезает.
+const pickTruckFor = (o: { truckType: string; weightKg: number; volumeM3: number }) => {
+  const fits = (t: (typeof MY_FLEET)[number]) =>
+    t.maxWeightKg >= o.weightKg && t.maxVolumeM3 >= o.volumeM3
+  return MY_FLEET.find((t) => t.type === o.truckType && fits(t)) ?? MY_FLEET.find(fits)
+}
 
 // Realtime identity made tangible — a pulsing green dot reinforces the live feed (MVP §4).
 function LiveBadge() {
@@ -39,7 +43,7 @@ function LiveBadge() {
 }
 
 export function CarrierFeedScreen() {
-  const { feedOrders, push, setTab, toggleFavorite, isFavorite, tripDraft, isInTrip, addToTrip, filters, setFilters, openFilters, isSkipped, showToast } =
+  const { feedOrders, push, setTab, toggleFavorite, isFavorite, tripDraft, isInTrip, addToTrip, filters, setFilters, openFilters, isSkipped, makeOffer } =
     useCnKz()
   // Сборный рейс: докидывать можно только грузы в тот же город назначения (решение — same destination).
   const tripDest = feedOrders.find((o) => o.id === tripDraft[0])?.destination
@@ -53,8 +57,6 @@ export function CarrierFeedScreen() {
     return () => clearTimeout(t)
   }, [loading])
   const refresh = () => setLoading(true)
-  // Домашний город перевозчика — из профиля (мок). Питает «по моему маршруту» / «обратный груз».
-  const [routeMode, setRouteMode] = useState<"all" | "my" | "back">("all")
 
   const toggleBody = (t: string) =>
     setFilters({
@@ -70,12 +72,10 @@ export function CarrierFeedScreen() {
       if (o.deal) return false
       if (isSkipped(o.id)) return false // «Пропущенные» грузы скрыты из ленты
       if (!matchesFilters(o, filters)) return false
-      if (routeMode === "my" && o.origin !== CARRIER_HOME) return false // грузы из моего города
-      if (routeMode === "back" && o.destination !== CARRIER_HOME) return false // обратно домой
       const hay = `${o.origin} ${o.destination} ${o.cargo} ${o.truckType}`.toLowerCase()
       return words.length === 0 || words.every((w) => hay.includes(w))
     })
-  }, [feedOrders, filters, q, routeMode, isSkipped])
+  }, [feedOrders, filters, q, isSkipped])
   const hiddenCount = byType.filter((o) => !fitsFleet(o.weightKg, o.volumeM3)).length
   const list = showOverCap
     ? byType
@@ -83,7 +83,11 @@ export function CarrierFeedScreen() {
 
   // Сводка сверху ленты.
   const available = feedOrders.filter(
-    (o) => !o.deal && fitsFleet(o.weightKg, o.volumeM3) && matchesFilters(o, filters)
+    (o) =>
+      !o.deal &&
+      !isSkipped(o.id) &&
+      fitsFleet(o.weightKg, o.volumeM3) &&
+      matchesFilters(o, filters)
   ).length
   const myOffers = feedOrders.filter(
     (o) => o.myOfferStatus === "pending" || o.myOfferStatus === "countered"
@@ -129,39 +133,6 @@ export function CarrierFeedScreen() {
           },
         ]}
       />
-
-      {/* Сегменты маршрута — ядро лоуд-борда (ATI/Uber Freight): все / из моего города / обратно домой */}
-      <div className="flex gap-1 px-4 pb-2">
-        {(
-          [
-            ["all", "Все грузы"],
-            ["my", "По маршруту"],
-            ["back", "Обратный груз"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setRouteMode(id)}
-            className={
-              "flex-1 rounded-md px-2 py-1.5 text-[12px] font-medium transition-colors " +
-              (routeMode === id
-                ? "bg-brand text-white"
-                : "bg-secondary text-muted-foreground hover:text-foreground")
-            }
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {routeMode !== "all" && (
-        <button
-          onClick={() => showToast("Направление сохранено · пришлём новые подходящие грузы")}
-          className="mx-4 mb-2 inline-flex w-fit items-center gap-1.5 self-start rounded-md border border-dashed border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground active:scale-[0.97]"
-        >
-          <Bookmark className="size-3.5 text-brand" /> Сохранить направление · уведомлять о новых
-        </button>
-      )}
 
       <div className="px-4 pb-2">
         <div className="relative">
@@ -242,6 +213,11 @@ export function CarrierFeedScreen() {
               onAddToTrip={
                 tripDraft.length === 0 || o.destination === tripDest
                   ? () => addToTrip(o.id)
+                  : undefined
+              }
+              onQuickAccept={
+                pickTruckFor(o)
+                  ? () => makeOffer(o.id, "accept", o.priceUsd, pickTruckFor(o)!.id)
                   : undefined
               }
               onClick={() => push({ type: "cargoDetail", orderId: o.id })}
@@ -421,7 +397,7 @@ export function TripBuilderScreen() {
 
 // «Избранное» — грузы, которые перевозчик лайкнул в ленте, чтобы вернуться позже.
 export function FavoritesScreen() {
-  const { feedOrders, push, toggleFavorite, isFavorite, favorites } = useCnKz()
+  const { feedOrders, push, toggleFavorite, isFavorite, favorites, makeOffer } = useCnKz()
   const list = feedOrders.filter((o) => favorites.includes(o.id) && !o.deal)
 
   return (
@@ -449,64 +425,14 @@ export function FavoritesScreen() {
             showMyOffer
             favorited={isFavorite(o.id)}
             onToggleFavorite={() => toggleFavorite(o.id)}
+            onQuickAccept={
+              pickTruckFor(o)
+                ? () => makeOffer(o.id, "accept", o.priceUsd, pickTruckFor(o)!.id)
+                : undefined
+            }
             onClick={() => push({ type: "cargoDetail", orderId: o.id })}
           />
         ))}
-      </div>
-    </div>
-  )
-}
-
-export function MyOffersScreen() {
-  const { feedOrders, push } = useCnKz()
-  const offers = feedOrders.filter((o) => o.myOfferStatus)
-  const active = offers.filter(
-    (o) => o.myOfferStatus === "pending" || o.myOfferStatus === "countered"
-  )
-  const settled = offers.filter(
-    (o) =>
-      o.myOfferStatus === "accepted" ||
-      o.myOfferStatus === "rejected" ||
-      o.myOfferStatus === "expired"
-  )
-
-  return (
-    <div className="flex h-full flex-col">
-      <ScreenHeader title="Мои отклики" subtitle="Ваши ставки на грузы" />
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 pt-2 pb-24">
-        {offers.length === 0 && (
-          <p className="pt-10 text-center text-sm text-muted-foreground">
-            Пока нет откликов. Откликнитесь на груз в ленте.
-          </p>
-        )}
-        {active.length > 0 && (
-          <Section title="Активные">
-            <div className="space-y-3">
-              {active.map((o) => (
-                <OrderCard
-                  key={o.id}
-                  order={o}
-                  showMyOffer
-                  onClick={() => push({ type: "cargoDetail", orderId: o.id })}
-                />
-              ))}
-            </div>
-          </Section>
-        )}
-        {settled.length > 0 && (
-          <Section title="История">
-            <div className="space-y-3">
-              {settled.map((o) => (
-                <OrderCard
-                  key={o.id}
-                  order={o}
-                  showMyOffer
-                  onClick={() => push({ type: "cargoDetail", orderId: o.id })}
-                />
-              ))}
-            </div>
-          </Section>
-        )}
       </div>
     </div>
   )
@@ -591,7 +517,16 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
               <Button
                 size="sm"
                 variant="outline"
+                onClick={() => showToast("Чат откроется после создания сделки")}
+                aria-label="Чат"
+              >
+                <MessageCircle className="size-3.5" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => showToast("Звоним через приложение · номер скрыт")}
+                aria-label="Позвонить"
               >
                 <Phone className="size-3.5" />
               </Button>

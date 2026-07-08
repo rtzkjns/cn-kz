@@ -201,7 +201,9 @@ export function DealScreen({ orderId }: { orderId: string }) {
   // Открыли сделку → события прочитаны (сбрасывает «новое» и счётчик колокольчика).
   useEffect(() => {
     markSeen(orderId)
-  }, [orderId, markSeen])
+    // markSeen — идемпотентный функциональный апдейт; зависим только от orderId.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId])
   const [stars, setStars] = useState(0)
   const [comment, setComment] = useState("")
   const [criteria, setCriteria] = useState<string[]>([])
@@ -301,8 +303,20 @@ export function DealScreen({ orderId }: { orderId: string }) {
               variant="outline"
               onClick={(e) => {
                 e.stopPropagation()
+                push({ type: "chat", orderId: order.id })
+              }}
+              aria-label="Чат"
+            >
+              <MessageCircle className="size-3.5" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation()
                 showToast("Звоним (номер скрыт для безопасности)")
               }}
+              aria-label="Позвонить"
             >
               <Phone className="size-3.5" />
             </Button>

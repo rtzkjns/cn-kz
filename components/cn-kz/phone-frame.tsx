@@ -356,10 +356,10 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
         {/* Content */}
         <main className="relative flex-1 overflow-y-auto">{children}</main>
 
-        {/* Toast */}
+        {/* Toast — z-50 + top placement so it's never hidden behind a fixed bottom action bar */}
         {toast && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-16 z-20 flex justify-center px-4">
-            <div className="rounded-lg bg-foreground px-3 py-2 text-center text-xs font-medium text-background shadow-lg">
+          <div className="pointer-events-none absolute inset-x-0 top-16 z-50 flex justify-center px-4">
+            <div className="animate-in fade-in slide-in-from-top-2 rounded-lg bg-foreground px-3 py-2 text-center text-xs font-medium text-background shadow-lg">
               {toast}
             </div>
           </div>

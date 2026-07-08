@@ -185,7 +185,9 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
   // Открыли заказ → новые отклики прочитаны.
   useEffect(() => {
     markSeen(orderId)
-  }, [orderId, markSeen])
+    // markSeen — идемпотентный функциональный апдейт; зависим только от orderId.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId])
   if (!order) return null
 
   const visible = order.offers.filter(
@@ -248,7 +250,11 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
         >
           {visible.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              Пока нет откликов. Пуш ушёл подходящим перевозчикам.
+              {order.deal
+                ? "Сделка заключена — остальные отклики отклонены."
+                : order.status === "archived"
+                  ? "Заказ в архиве — откликов не было."
+                  : "Пока нет откликов. Пуш ушёл подходящим перевозчикам."}
             </p>
           )}
           <div className="space-y-2">
@@ -533,7 +539,6 @@ export function CreateOrderScreen({
 
   const valid =
     d.origin.trim() &&
-    d.pickupPoint.trim() &&
     d.destination.trim() &&
     d.cargo.trim() &&
     d.weightKg > 0 &&
