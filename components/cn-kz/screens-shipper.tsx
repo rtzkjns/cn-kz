@@ -536,6 +536,7 @@ export function CreateOrderScreen({
   const [readyIso, setReadyIso] = useState(() =>
     srcOrder ? readyIsoFromDisplay(srcOrder.readyDate) : ""
   )
+  const [attested, setAttested] = useState(!!editId) // подтверждение, что груз не запрещён
   const set = <K extends keyof NewOrderDraft>(k: K, v: NewOrderDraft[K]) =>
     setD((cur) => ({ ...cur, [k]: v }))
 
@@ -545,7 +546,8 @@ export function CreateOrderScreen({
     d.cargo.trim() &&
     d.weightKg > 0 &&
     d.priceUsd > 0 &&
-    d.readyDate.trim()
+    d.readyDate.trim() &&
+    attested
 
   return (
     <div className="flex h-full flex-col">
@@ -691,30 +693,17 @@ export function CreateOrderScreen({
           </ChipRow>
         </Field>
 
-        {/* Гарантия оплаты — деньги под защитой до подтверждения доставки (модель ATI). */}
-        <button
-          type="button"
-          onClick={() => set("safePay", !d.safePay)}
-          className="flex w-full items-start gap-3 rounded-md border border-border p-3 text-left"
-        >
-          <span
-            className={
-              "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border " +
-              (d.safePay ? "border-brand bg-brand text-brand-foreground" : "border-border")
-            }
-          >
-            {d.safePay && <Check className="size-3.5" />}
-          </span>
-          <span className="min-w-0">
-            <span className="flex items-center gap-1.5 text-sm font-medium">
-              <ShieldCheck className="size-4 text-brand" /> Безопасная оплата (Гарантия оплаты)
-            </span>
+        {/* Честно для нейтральной площадки: денег не держим. Защита = проверка + записи + совет. */}
+        <div className="flex w-full items-start gap-3 rounded-md border border-brand/30 bg-brand/8 p-3">
+          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand" />
+          <div className="min-w-0">
+            <span className="block text-sm font-medium">Безопасная сделка</span>
             <span className="mt-0.5 block text-xs text-muted-foreground">
-              Оплата резервируется и переходит перевозчику только после подтверждения доставки.
-              Защищает обе стороны. Комиссия ~3%.
+              Перевозчик проверяется по БИН, переписка и фото сохраняются — это ваша защита при споре.
+              Оплата напрямую: платите на счёт компании (по БИН), <span className="font-medium text-foreground">не на личную карту</span>. Площадка деньги не держит.
             </span>
-          </span>
-        </button>
+          </div>
+        </div>
 
         <Field label="Примечание">
           <Textarea
@@ -723,9 +712,34 @@ export function CreateOrderScreen({
             placeholder="Ограничения и требования: растаможка, пропуск, хрупкое, простой…"
           />
         </Field>
+
+        {/* Декларация запрещённых грузов — переносит ответственность на заказчика, площадка нейтральна. */}
+        <button
+          type="button"
+          onClick={() => setAttested((v) => !v)}
+          className="flex w-full items-start gap-3 rounded-md border border-border p-3 text-left"
+        >
+          <span
+            className={
+              "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border " +
+              (attested ? "border-brand bg-brand text-brand-foreground" : "border-border")
+            }
+          >
+            {attested && <Check className="size-3.5" />}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            Подтверждаю: груз <span className="font-medium text-foreground">не запрещён и не под
+            санкциями</span> — без оружия, наркотиков, контрабанды и товаров двойного назначения в РФ.
+            Указанные вес и документы — верные.
+          </span>
+        </button>
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 border-t border-border bg-card p-3">
+      <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-border bg-card p-3">
+        <p className="text-center text-[11px] leading-snug text-muted-foreground">
+          CN-KZ — площадка для поиска, а не перевозчик и не гарант доставки. Проверяйте контрагента и
+          груз сами.
+        </p>
         <Button
           className="w-full"
           disabled={!valid}

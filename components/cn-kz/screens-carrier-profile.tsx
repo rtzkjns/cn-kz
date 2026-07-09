@@ -1,6 +1,6 @@
 "use client"
 
-import { BadgeCheck, MessageCircle, Phone, ShieldCheck, Star, Truck } from "lucide-react"
+import { BadgeCheck, MessageCircle, Phone, ShieldAlert, ShieldCheck, Star, Truck } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -151,6 +151,12 @@ export function CarrierProfileScreen({
             <Phone className="size-4" /> Позвонить
           </Button>
         </div>
+        <button
+          onClick={() => showToast("Жалоба отправлена — модерация проверит профиль")}
+          className="flex w-full items-center justify-center gap-1.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-destructive"
+        >
+          <ShieldAlert className="size-3.5" /> Пожаловаться на пользователя
+        </button>
       </div>
     </div>
   )

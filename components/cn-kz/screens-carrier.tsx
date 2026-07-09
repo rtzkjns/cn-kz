@@ -493,9 +493,10 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
             <DetailRow label="Адрес доставки" value={order.address} />
             {order.notes && <DetailRow label="Примечание" value={order.notes} />}
             {order.safePay !== false && (
-              <div className="mt-1 flex items-center gap-1.5 rounded-md bg-brand/10 px-2.5 py-1.5 text-xs font-medium text-foreground">
-                <ShieldCheck className="size-3.5 text-brand" /> Оплата под защитой — деньги
-                зарезервированы, получите после подтверждения доставки
+              <div className="mt-1 flex items-start gap-1.5 rounded-md bg-brand/10 px-2.5 py-1.5 text-xs text-foreground">
+                <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-brand" /> Безопасная сделка:
+                заказчик проверен по БИН, переписка и фото сохраняются. Берите аванс на счёт компании
+                по БИН, не на личную карту.
               </div>
             )}
           </CardContent>

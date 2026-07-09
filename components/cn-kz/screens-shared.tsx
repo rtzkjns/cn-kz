@@ -227,7 +227,6 @@ export function DealScreen({ orderId }: { orderId: string }) {
   const cancelled = deal.status === "cancelled"
   const completed = deal.status === "completed"
   const other = role === "shipper" ? deal.carrier : order.shipper
-  const protectedPay = order.safePay !== false // «Гарантия оплаты» включена (по умолчанию да)
   // Привязка «кто реально везёт» — против переуступки/двойного брокериджа.
   const acceptedOffer = order.offers.find((o) => o.status === "accepted")
   const boundTruckType = acceptedOffer?.truck ?? order.myOfferTruck?.type ?? order.truckType
@@ -358,30 +357,15 @@ export function DealScreen({ orderId }: { orderId: string }) {
             <ShieldAlert className="size-3.5 shrink-0" /> Перевозчик опаздывает к сроку доставки. Напишите в чат или согласуйте новый срок.
           </div>
         )}
-        <div
-          className={
-            "flex items-start gap-2 rounded-md px-3 py-2 text-xs " +
-            (protectedPay
-              ? "bg-brand/10 text-foreground"
-              : "bg-secondary text-muted-foreground")
-          }
-        >
+        <div className="flex items-start gap-2 rounded-md bg-brand/10 px-3 py-2 text-xs text-foreground">
           <Lock className="mt-0.5 size-3.5 shrink-0 text-brand" />
           <span>
-            {protectedPay && (
-              <span className="font-medium">Оплата под защитой (Гарантия оплаты). </span>
-            )}
-            {protectedPay
-              ? cancelled
-                ? `Сделка отменена — ${money(deal.agreedPriceUsd)} возвращены заказчику.`
-                : completed
-                  ? `Доставка подтверждена — ${money(deal.agreedPriceUsd)} переведены перевозчику.`
-                  : `${money(deal.agreedPriceUsd)} зарезервированы платформой и уйдут перевозчику после подтверждения доставки.`
-              : cancelled
-                ? "Сделка отменена — оплата не проводится."
-                : completed
-                  ? `Доставка подтверждена — оплату ${money(deal.agreedPriceUsd)} можно провести.`
-                  : `Прямая оплата — проводите ${money(deal.agreedPriceUsd)} после подтверждения доставки.`}
+            <span className="font-medium">Безопасная сделка. </span>
+            {cancelled
+              ? "Сделка отменена — оплата не проводится."
+              : completed
+                ? `Доставка подтверждена — можно провести оплату ${money(deal.agreedPriceUsd)}.`
+                : `Стороны проверены, переписка и фото сохранены. Оплату ${money(deal.agreedPriceUsd)} проводите после подтверждения доставки — на счёт компании по БИН, не на личную карту. Площадка деньги не держит.`}
           </span>
         </div>
         {!cancelled && !completed && (
@@ -409,6 +393,28 @@ export function DealScreen({ orderId }: { orderId: string }) {
             </Badge>
           )}
         </Button>
+
+        {/* Физическая безопасность: SOS + шаринг поездки доверенному лицу. */}
+        {!cancelled && !completed && (
+          <div className="flex gap-2">
+            <button
+              onClick={() =>
+                showToast("SOS отправлен · геопозиция и данные рейса ушли доверенным контактам")
+              }
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/10"
+            >
+              <ShieldAlert className="size-3.5" /> SOS
+            </button>
+            <button
+              onClick={() =>
+                showToast("Ссылка на поездку скопирована — близкий увидит маршрут, машину и ETA")
+              }
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Send className="size-3.5" /> Поделиться поездкой
+            </button>
+          </div>
+        )}
 
         {/* Отметки рейса — таймстампы прибытия/простоя (защита перевозчика на детеншене). */}
         {!cancelled && (
@@ -814,6 +820,28 @@ export function ProfileScreen() {
             </button>
           </CardContent>
         </Card>
+
+        {/* Безопасность — образование дешевле любой защиты: главные красные флаги. */}
+        <Section title="Как не попасться мошенникам">
+          <Card size="sm">
+            <CardContent className="space-y-2 py-1 text-xs text-muted-foreground">
+              {[
+                ["Оставайтесь в приложении", "Уводят в WhatsApp/на звонок до сделки — почти всегда мошенник."],
+                ["Платите на счёт компании по БИН", "Просят перевод на личную карту или «задаток» до сделки — это развод."],
+                ["Проверяйте значок «Бизнес проверен»", "Нет БИН и истории сделок — работайте осторожно, аванс не давайте."],
+                ["Цена сильно ниже рынка = приманка", "Подозрительно дёшево + спешка = классическая схема."],
+                ["Сверяйте машину и водителя при погрузке", "Везти должен тот, кто в сделке — переуступка запрещена."],
+              ].map(([t, d]) => (
+                <div key={t} className="flex items-start gap-2 border-b border-border/60 py-1.5 last:border-0">
+                  <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-brand" />
+                  <span>
+                    <span className="font-medium text-foreground">{t}.</span> {d}
+                  </span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </Section>
 
         {/* Честная проверка — без госбаз: телефон, фото, сверка селфи с документом, отзывы */}
         <Section title="Проверка профиля">
