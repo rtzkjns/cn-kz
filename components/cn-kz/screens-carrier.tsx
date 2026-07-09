@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Boxes, Check, ChevronRight, Heart, MessageCircle, Phone, Plus, RefreshCw, Search, SlidersHorizontal, Tag, Truck, X } from "lucide-react"
+import { Boxes, Check, ChevronRight, Heart, MessageCircle, Phone, Plus, RefreshCw, Search, ShieldCheck, SlidersHorizontal, Tag, Truck, X } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -492,6 +492,12 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
             )}
             <DetailRow label="Адрес доставки" value={order.address} />
             {order.notes && <DetailRow label="Примечание" value={order.notes} />}
+            {order.safePay !== false && (
+              <div className="mt-1 flex items-center gap-1.5 rounded-md bg-brand/10 px-2.5 py-1.5 text-xs font-medium text-foreground">
+                <ShieldCheck className="size-3.5 text-brand" /> Оплата под защитой — деньги
+                зарезервированы, получите после подтверждения доставки
+              </div>
+            )}
           </CardContent>
         </Card>
 

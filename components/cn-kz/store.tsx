@@ -65,6 +65,7 @@ function draftToFields(d: NewOrderDraft) {
     recipientName: d.recipientName,
     recipientPhone: d.recipientPhone,
     payment: d.payment,
+    safePay: d.safePay,
   }
 }
 
@@ -92,6 +93,7 @@ export interface NewOrderDraft {
   recipientName: string
   recipientPhone: string
   payment: Order["payment"]
+  safePay: boolean
 }
 
 interface CnKzStore {
@@ -136,6 +138,8 @@ interface CnKzStore {
   submitRating: (orderId: string, stars: number) => void
   confirmDelivery: (orderId: string) => void
   cancelDeal: (orderId: string) => void
+  logDealEvent: (orderId: string, label: string) => void // отметка рейса с таймстампом
+  fileClaim: (orderId: string, reason: string, note: string) => void // структурная претензия
   reliability: number // живая надёжность текущего перевозчика (падает при отмене)
   cancelCount: number // сколько сделок отменил
   sendMessage: (orderId: string, text: string) => void
@@ -519,6 +523,24 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       showToast("Сделка отменена. Рейтинг снижен")
     }
 
+    // Отметка рейса с таймстампом (прибытие/убытие/простой/срыв) — защита перевозчика на простое.
+    function logDealEvent(orderId: string, label: string) {
+      updateOrder(orderId, (o) =>
+        o.deal
+          ? { ...o, deal: { ...o.deal, log: [...(o.deal.log ?? []), { label, time: nowTime() }] } }
+          : o
+      )
+      showToast(`Отметка зафиксирована: ${label}`)
+    }
+
+    // Структурная претензия — фиксируется «на рассмотрении», оплата остаётся заморожена.
+    function fileClaim(orderId: string, reason: string, note: string) {
+      updateOrder(orderId, (o) =>
+        o.deal ? { ...o, deal: { ...o.deal, claim: { reason, note } } } : o
+      )
+      showToast("Претензия отправлена. Оплата заморожена до решения")
+    }
+
     function sendMessage(orderId: string, text: string) {
       const msg: ChatMessage = {
         id: `m-${++MSG_SEQ}`,
@@ -664,6 +686,8 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       submitRating,
       confirmDelivery,
       cancelDeal,
+      logDealEvent,
+      fileClaim,
       reliability,
       cancelCount,
       sendMessage,

@@ -54,27 +54,29 @@ export function CarrierProfileScreen({
             <div className="flex items-center gap-2">
               {c.verified ? (
                 <Badge variant="success">
-                  <ShieldCheck className="size-3" /> Реальный перевозчик
+                  <ShieldCheck className="size-3" /> Бизнес проверен · БИН
                 </Badge>
               ) : (
-                <Badge variant="warning">Новичок</Badge>
+                <Badge variant="warning">Новичок · без БИН</Badge>
               )}
               {c.onTimeRate != null && <Badge variant="muted">{c.onTimeRate}% вовремя</Badge>}
             </div>
           </CardContent>
         </Card>
 
-        {/* Честная проверка — без госбаз (телефон, фото, сверка селфи с документом) */}
+        {/* Проверка: БИН/ИНН сверяется с реестром юрлиц; личность — селфи + удостоверение. */}
         <Section title="Проверка профиля">
           <Card size="sm">
             <CardContent className="space-y-2 text-sm">
               <VerifyRow ok label="Телефон подтверждён" />
+              <VerifyRow ok={!!c.verified} label="БИН/ИНН сверен с реестром юрлиц" />
+              <VerifyRow ok={!!c.verified} label="Селфи сверено с удостоверением" />
               <VerifyRow ok label="Профиль с фото (селфи)" />
-              <VerifyRow ok={!!c.verified} label="Селфи сверено с документом" />
               <VerifyRow ok={!!(c.trucks && c.trucks.length)} label="Транспорт · фото на файле" />
               <p className="pt-1 text-[11px] leading-snug text-muted-foreground">
-                Мы не сверяем документы с госбазами. Доверие — из подтверждённого телефона, фото,
-                отзывов и {c.dealsCount} сделок.
+                Значок «Бизнес проверен» = БИН/ИНН найден в реестре юрлиц и селфи совпало с
+                удостоверением. Доступ к базам МВД/розыска подключаем поэтапно — проверка снижает
+                риск, но не гарантия.
               </p>
             </CardContent>
           </Card>

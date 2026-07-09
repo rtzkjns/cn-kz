@@ -175,6 +175,7 @@ export interface Order {
   recipientName: string
   recipientPhone: string
   payment: "cash" | "transfer"
+  safePay?: boolean // «Гарантия оплаты»: деньги под защитой платформы до подтверждения доставки
   createdAgo: string
   offers: Offer[]
   // present once status === "deal"
@@ -185,6 +186,8 @@ export interface Order {
     chat: ChatMessage[]
     tripId?: string // сборный рейс: несколько грузов в одной фуре
     escrow?: "held" | "released" // безопасная сделка: оплата в эскроу до завершения
+    log?: { label: string; time: string }[] // отметки рейса с таймстампом (прибытие/простой)
+    claim?: { reason: string; note: string } // претензия «на рассмотрении» (структурный спор)
   }
   ratedStars?: number // оценка, которую МЫ поставили второй стороне (сохраняется в истории)
   counterpartRating?: number // оценка, которую вторая сторона поставила НАМ — раскрывается после обоюдной (§8)

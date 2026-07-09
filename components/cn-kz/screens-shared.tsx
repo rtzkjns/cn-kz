@@ -193,6 +193,8 @@ export function DealScreen({ orderId }: { orderId: string }) {
     completeDeal,
     confirmDelivery,
     cancelDeal,
+    logDealEvent,
+    fileClaim,
     submitRating,
     showToast,
     markSeen,
@@ -210,6 +212,9 @@ export function DealScreen({ orderId }: { orderId: string }) {
   const [showCancel, setShowCancel] = useState(false)
   const [podStep, setPodStep] = useState(false)
   const [podAdded, setPodAdded] = useState(false)
+  const [showClaim, setShowClaim] = useState(false)
+  const [claimReason, setClaimReason] = useState("")
+  const [claimNote, setClaimNote] = useState("")
   // Низкая оценка (1–2★) требует комментарий — MVP §8.
   const commentRequired = stars > 0 && stars <= 2
   const canSubmitRating = stars > 0 && (!commentRequired || comment.trim().length > 0)
@@ -222,6 +227,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
   const cancelled = deal.status === "cancelled"
   const completed = deal.status === "completed"
   const other = role === "shipper" ? deal.carrier : order.shipper
+  const protectedPay = order.safePay !== false // «Гарантия оплаты» включена (по умолчанию да)
   // Привязка «кто реально везёт» — против переуступки/двойного брокериджа.
   const acceptedOffer = order.offers.find((o) => o.status === "accepted")
   const boundTruckType = acceptedOffer?.truck ?? order.myOfferTruck?.type ?? order.truckType
@@ -352,13 +358,31 @@ export function DealScreen({ orderId }: { orderId: string }) {
             <ShieldAlert className="size-3.5 shrink-0" /> Перевозчик опаздывает к сроку доставки. Напишите в чат или согласуйте новый срок.
           </div>
         )}
-        <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-xs text-muted-foreground">
-          <Lock className="size-3.5 shrink-0 text-brand" />
-          {cancelled
-            ? "Сделка отменена — оплата не проводится"
-            : completed
-              ? `Доставка подтверждена — оплату ${money(deal.agreedPriceUsd)} можно провести`
-              : `Безопасная сделка — оплату ${money(deal.agreedPriceUsd)} проводите после подтверждения доставки`}
+        <div
+          className={
+            "flex items-start gap-2 rounded-md px-3 py-2 text-xs " +
+            (protectedPay
+              ? "bg-brand/10 text-foreground"
+              : "bg-secondary text-muted-foreground")
+          }
+        >
+          <Lock className="mt-0.5 size-3.5 shrink-0 text-brand" />
+          <span>
+            {protectedPay && (
+              <span className="font-medium">Оплата под защитой (Гарантия оплаты). </span>
+            )}
+            {protectedPay
+              ? cancelled
+                ? `Сделка отменена — ${money(deal.agreedPriceUsd)} возвращены заказчику.`
+                : completed
+                  ? `Доставка подтверждена — ${money(deal.agreedPriceUsd)} переведены перевозчику.`
+                  : `${money(deal.agreedPriceUsd)} зарезервированы платформой и уйдут перевозчику после подтверждения доставки.`
+              : cancelled
+                ? "Сделка отменена — оплата не проводится."
+                : completed
+                  ? `Доставка подтверждена — оплату ${money(deal.agreedPriceUsd)} можно провести.`
+                  : `Прямая оплата — проводите ${money(deal.agreedPriceUsd)} после подтверждения доставки.`}
+          </span>
         </div>
         {!cancelled && !completed && (
           <div className="flex items-start gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-500">
@@ -381,6 +405,67 @@ export function DealScreen({ orderId }: { orderId: string }) {
             </Badge>
           )}
         </Button>
+
+        {/* Отметки рейса — таймстампы прибытия/простоя (защита перевозчика на детеншене). */}
+        {!cancelled && (
+          <Card size="sm">
+            <CardContent className="space-y-2">
+              <p className="text-sm font-medium">Отметки рейса</p>
+              {deal.log && deal.log.length > 0 ? (
+                <div className="space-y-1">
+                  {deal.log.map((e, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs">
+                      <span className="text-foreground">{e.label}</span>
+                      <span className="font-mono-tech text-muted-foreground">{e.time}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Отмечайте прибытие и простой — фиксируется со временем и защищает вас при споре.
+                </p>
+              )}
+              {role === "carrier" && !completed && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {["Прибыл на погрузку", "Забрал груз", "Прибыл на выгрузку"].map((l) => (
+                    <button
+                      key={l}
+                      onClick={() => logDealEvent(order.id, l)}
+                      className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {l}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => logDealEvent(order.id, "Простой / срыв погрузки")}
+                    className="rounded-md border border-amber-500/40 px-2.5 py-1 text-xs font-medium text-amber-500"
+                  >
+                    Зафиксировать простой
+                  </button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Претензия — структурный спор с доказательствами; оплата заморожена до решения. */}
+        {!cancelled &&
+          (deal.claim ? (
+            <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-600 dark:text-amber-500">
+              <ShieldAlert className="mt-0.5 size-3.5 shrink-0" />
+              <span>
+                <span className="font-medium">Претензия на рассмотрении: {deal.claim.reason}.</span>{" "}
+                Оплата заморожена, чат и фото приложены как доказательства. Решение — в течение 3 дней.
+              </span>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowClaim(true)}
+              className="w-full rounded-md border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Подать претензию
+            </button>
+          ))}
 
         {/* rating after completion */}
         {completed && !rated && (
@@ -553,6 +638,61 @@ export function DealScreen({ orderId }: { orderId: string }) {
           </div>
         </div>
       )}
+
+      {/* Претензия — структурная форма: причина + описание + авто-доказательства. */}
+      {showClaim && (
+        <div
+          className="animate-in fade-in absolute inset-0 z-50 flex items-end bg-black/50"
+          onClick={() => setShowClaim(false)}
+        >
+          <div
+            className="animate-in slide-in-from-bottom w-full space-y-3 rounded-t-2xl border-t border-border bg-card p-4 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-base font-semibold">Претензия по сделке</p>
+            <div className="flex flex-wrap gap-1.5">
+              {["Не оплатили", "Груз повреждён", "Срыв погрузки", "Вес не совпал", "Другое"].map(
+                (r) => (
+                  <button
+                    key={r}
+                    onClick={() => setClaimReason(r)}
+                    className={
+                      "rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors " +
+                      (claimReason === r
+                        ? "border-brand/40 bg-brand/15 text-brand"
+                        : "border-border text-muted-foreground hover:text-foreground")
+                    }
+                  >
+                    {r}
+                  </button>
+                )
+              )}
+            </div>
+            <Textarea
+              value={claimNote}
+              onChange={(e) => setClaimNote(e.target.value)}
+              placeholder="Опишите, что произошло…"
+              className="min-h-16"
+            />
+            <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-xs text-muted-foreground">
+              <Camera className="size-3.5 shrink-0 text-brand" /> Чат и фото выгрузки приложатся
+              автоматически как доказательства.
+            </div>
+            <Button
+              className="w-full"
+              disabled={!claimReason}
+              onClick={() => {
+                fileClaim(order.id, claimReason, claimNote)
+                setShowClaim(false)
+                setClaimReason("")
+                setClaimNote("")
+              }}
+            >
+              Отправить претензию
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -680,6 +820,12 @@ export function ProfileScreen() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-2">
+                  <ShieldCheck className="size-4 text-brand" /> БИН/ИНН сверен с реестром юрлиц
+                </span>
+                <Badge variant="success">Проверен</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-2">
                   <BadgeCheck className="size-4 text-brand" /> Профиль с фото (селфи)
                 </span>
                 <Badge variant="success">Есть</Badge>
@@ -702,7 +848,9 @@ export function ProfileScreen() {
                 </button>
               )}
               <p className="pt-1 text-[11px] leading-snug text-muted-foreground">
-                Мы не сверяем документы с госбазами. Доверие строится на подтверждённом телефоне, фото, сверке селфи с документом, отзывах и истории сделок.
+                Значок «Бизнес проверен» = БИН/ИНН найден в реестре юрлиц и селфи совпало с
+                удостоверением. Базы МВД/розыска подключаем поэтапно — проверка снижает риск, но не
+                даёт 100% гарантии.
               </p>
             </CardContent>
           </Card>

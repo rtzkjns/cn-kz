@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { BadgeCheck, Check, Copy, Gavel, MessageCircle, Package, Pencil, Phone, RefreshCw, Search, Tag, Truck, X } from "lucide-react"
+import { BadgeCheck, Check, Copy, Gavel, MessageCircle, Package, Pencil, Phone, RefreshCw, Search, ShieldCheck, Tag, Truck, X } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -497,6 +497,7 @@ function orderToDraft(o: Order): NewOrderDraft {
     recipientName: o.recipientName,
     recipientPhone: o.recipientPhone,
     payment: o.payment,
+    safePay: o.safePay ?? true,
   }
 }
 
@@ -516,6 +517,7 @@ const emptyDraft: NewOrderDraft = {
   recipientName: "",
   recipientPhone: "",
   payment: "transfer",
+  safePay: true,
 }
 
 export function CreateOrderScreen({
@@ -688,6 +690,31 @@ export function CreateOrderScreen({
             </Chip>
           </ChipRow>
         </Field>
+
+        {/* Гарантия оплаты — деньги под защитой до подтверждения доставки (модель ATI). */}
+        <button
+          type="button"
+          onClick={() => set("safePay", !d.safePay)}
+          className="flex w-full items-start gap-3 rounded-md border border-border p-3 text-left"
+        >
+          <span
+            className={
+              "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border " +
+              (d.safePay ? "border-brand bg-brand text-brand-foreground" : "border-border")
+            }
+          >
+            {d.safePay && <Check className="size-3.5" />}
+          </span>
+          <span className="min-w-0">
+            <span className="flex items-center gap-1.5 text-sm font-medium">
+              <ShieldCheck className="size-4 text-brand" /> Безопасная оплата (Гарантия оплаты)
+            </span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              Оплата резервируется и переходит перевозчику только после подтверждения доставки.
+              Защищает обе стороны. Комиссия ~3%.
+            </span>
+          </span>
+        </button>
 
         <Field label="Примечание">
           <Textarea
