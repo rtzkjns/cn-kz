@@ -163,10 +163,6 @@ export function OrderCard({
             {hasUnread && <MessageCircle className="size-4 text-brand" />}
             Открыть <ChevronRight className="size-4" />
           </span>
-        ) : mine ? (
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-[13px] font-semibold text-brand">
-            Ваш отклик
-          </span>
         ) : newOffers > 0 ? (
           <span className="inline-flex items-center gap-1 rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-[13px] font-semibold text-brand tabular-nums">
             {newOffers} {newOffers === 1 ? "отклик" : newOffers < 5 ? "отклика" : "откликов"}
