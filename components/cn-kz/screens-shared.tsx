@@ -386,8 +386,12 @@ export function DealScreen({ orderId }: { orderId: string }) {
         </div>
         {!cancelled && !completed && (
           <div className="flex items-start gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-500">
-            <ShieldAlert className="size-3.5 shrink-0" />
-            Никогда не переводите предоплату или «депозит» на карту вне приложения — так работают мошенники.
+            <ShieldAlert className="mt-0.5 size-3.5 shrink-0" />
+            <span>
+              Аванс на топливо — обычное дело. Проводите его через приложение проверенному
+              перевозчику (по БИН), <span className="font-medium">не на личную карту и не по просьбе
+              вне сделки</span> — задаток на карту незнакомцу до сделки берут мошенники.
+            </span>
           </div>
         )}
 
@@ -448,22 +452,22 @@ export function DealScreen({ orderId }: { orderId: string }) {
           </Card>
         )}
 
-        {/* Претензия — структурный спор с доказательствами; оплата заморожена до решения. */}
+        {/* «Что-то не так со сделкой?» — дружелюбный вход в поддержку/спор с доказательствами. */}
         {!cancelled &&
           (deal.claim ? (
             <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-600 dark:text-amber-500">
               <ShieldAlert className="mt-0.5 size-3.5 shrink-0" />
               <span>
-                <span className="font-medium">Претензия на рассмотрении: {deal.claim.reason}.</span>{" "}
-                Оплата заморожена, чат и фото приложены как доказательства. Решение — в течение 3 дней.
+                <span className="font-medium">Поддержка разбирается: {deal.claim.reason}.</span>{" "}
+                Оплата на паузе, переписку и фото уже приложили — свяжемся в течение 3 дней.
               </span>
             </div>
           ) : (
             <button
               onClick={() => setShowClaim(true)}
-              className="w-full rounded-md border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="flex w-full items-center justify-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Подать претензию
+              <ShieldAlert className="size-3.5" /> Что-то не так со сделкой?
             </button>
           ))}
 
@@ -649,7 +653,10 @@ export function DealScreen({ orderId }: { orderId: string }) {
             className="animate-in slide-in-from-bottom w-full space-y-3 rounded-t-2xl border-t border-border bg-card p-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-base font-semibold">Претензия по сделке</p>
+            <p className="text-base font-semibold">Что случилось?</p>
+            <p className="-mt-1 text-xs text-muted-foreground">
+              Опишите проблему — поддержка поможет и, если нужно, придержит оплату до решения.
+            </p>
             <div className="flex flex-wrap gap-1.5">
               {["Не оплатили", "Груз повреждён", "Срыв погрузки", "Вес не совпал", "Другое"].map(
                 (r) => (
