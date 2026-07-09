@@ -1,6 +1,6 @@
 "use client"
 
-import { Boxes, ChevronRight, Globe, HelpCircle, Heart, Info, MessageCircle, ShieldCheck, Tag, User } from "lucide-react"
+import { Boxes, ChevronRight, FileText, Globe, HelpCircle, Heart, Info, MessageCircle, ShieldCheck, Tag, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -78,7 +78,7 @@ function ValueRow({ icon: Icon, title, hint }: { icon: typeof Boxes; title: stri
 }
 
 export function GuestProfileScreen() {
-  const { openAuth, showToast } = useCnKz()
+  const { openAuth, showToast, push } = useCnKz()
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader title="Профиль" />
@@ -124,6 +124,7 @@ export function GuestProfileScreen() {
         <Card size="sm">
           <CardContent className="divide-y divide-border py-1">
             <SettingRow icon={Globe} label="Язык" value="Русский" onClick={() => showToast("Русский · Қазақша · 中文")} />
+            <SettingRow icon={FileText} label="Условия и оферта" onClick={() => push({ type: "terms" })} />
             <SettingRow icon={HelpCircle} label="Помощь и поддержка" onClick={() => showToast("Открываем чат поддержки")} />
             <SettingRow icon={Info} label="О приложении" value="v1.0" onClick={() => showToast("CN-KZ · Грузоперевозки по всей СНГ")} />
           </CardContent>

@@ -193,6 +193,10 @@ export function OnboardingFlow() {
           <Button className="w-full" onClick={() => setStep("role")}>
             Зарегистрироваться
           </Button>
+          <p className="text-center text-[11px] leading-snug text-muted-foreground">
+            Регистрируясь, вы принимаете <span className="font-medium text-foreground">Условия и
+            публичную оферту</span>: CN-KZ — площадка для поиска, не перевозчик и не гарант доставки.
+          </p>
         </div>
       )}
 

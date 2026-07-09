@@ -5,6 +5,7 @@ import {
   Bell,
   ChevronRight,
   CreditCard,
+  FileText,
   Globe,
   HelpCircle,
   Info,
@@ -71,7 +72,7 @@ function Row({
 }
 
 export function SettingsScreen() {
-  const { setTab, resetOnboarding, showToast } = useCnKz()
+  const { setTab, resetOnboarding, showToast, push } = useCnKz()
   const back = () => setTab("profile")
   return (
     <div className="flex h-full flex-col">
@@ -123,6 +124,7 @@ export function SettingsScreen() {
             <CardContent className="divide-y divide-border">
               <Row icon={Shield} label="Конфиденциальность" onClick={() => showToast("Кто видит ваш профиль и телефон")} />
               <Row icon={HelpCircle} label="Помощь и поддержка" onClick={() => showToast("Открываем чат поддержки")} />
+              <Row icon={FileText} label="Условия и оферта" onClick={() => push({ type: "terms" })} />
               <Row icon={Info} label="О приложении" value={<span className="text-xs text-muted-foreground">v1.0</span>} onClick={() => showToast("CN-KZ · Грузоперевозки по СНГ")} />
             </CardContent>
           </Card>

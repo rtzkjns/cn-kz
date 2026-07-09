@@ -30,6 +30,7 @@ export type Screen =
   | { type: "marketOrder"; orderId: string }
   | { type: "tripBuilder" }
   | { type: "createOrder"; prefillFrom?: string; editId?: string } // дубль/редактирование
+  | { type: "terms" } // условия / публичная оферта
 
 export type Tab =
   | "feed"

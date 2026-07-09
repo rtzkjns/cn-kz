@@ -25,6 +25,7 @@ import { CarrierProfileScreen } from "./screens-carrier-profile"
 import { SettingsScreen, HistoryScreen } from "./screens-account"
 import { MarketFeedScreen, MarketOrderScreen } from "./screens-market"
 import { GuestChatsScreen, GuestFavoritesScreen, GuestProfileScreen } from "./screens-guest"
+import { TermsScreen } from "./screens-terms"
 import { CnKzProvider, useCnKz } from "./store"
 
 function Router() {
@@ -55,6 +56,8 @@ function Router() {
         return <MarketOrderScreen orderId={top.orderId} />
       case "tripBuilder":
         return <TripBuilderScreen />
+      case "terms":
+        return <TermsScreen />
     }
   }
 
