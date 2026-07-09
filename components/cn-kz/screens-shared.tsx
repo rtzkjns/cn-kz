@@ -222,6 +222,10 @@ export function DealScreen({ orderId }: { orderId: string }) {
   const cancelled = deal.status === "cancelled"
   const completed = deal.status === "completed"
   const other = role === "shipper" ? deal.carrier : order.shipper
+  // Привязка «кто реально везёт» — против переуступки/двойного брокериджа.
+  const acceptedOffer = order.offers.find((o) => o.status === "accepted")
+  const boundTruckType = acceptedOffer?.truck ?? order.myOfferTruck?.type ?? order.truckType
+  const boundPlate = acceptedOffer?.plate ?? order.myOfferTruck?.plate
 
   return (
     <div className="flex h-full flex-col">
@@ -327,6 +331,22 @@ export function DealScreen({ orderId }: { orderId: string }) {
         <DetailRow label="Груз" value={order.cargo} />
         <DetailRow label="Согласованная цена" value={money(deal.agreedPriceUsd)} />
         {order.deliverBy && <DetailRow label="Срок доставки" value={order.deliverBy} />}
+
+        {/* Анти-переуступка (двойной брокеридж) — кто реально везёт закреплён за сделкой. */}
+        {!cancelled && (
+          <div className="space-y-1 rounded-md border border-border px-3 py-2.5 text-xs">
+            <div className="flex items-center gap-1.5 font-medium text-foreground">
+              <Truck className="size-3.5 text-brand" /> Рейс выполняет: {deal.carrier.name}
+              {boundPlate && <span className="font-mono-tech text-muted-foreground">· {boundPlate}</span>}
+            </div>
+            <p className="text-muted-foreground">
+              {boundTruckType} · переуступка груза запрещена.{" "}
+              {role === "shipper"
+                ? "Сверьте гос.номер и водителя при погрузке — везти должна эта машина."
+                : "Везти должны вы на этой машине, передавать заказ нельзя."}
+            </p>
+          </div>
+        )}
         {order.overdue && !completed && !cancelled && (
           <div className="flex items-center gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-500">
             <ShieldAlert className="size-3.5 shrink-0" /> Перевозчик опаздывает к сроку доставки. Напишите в чат или согласуйте новый срок.
@@ -340,6 +360,12 @@ export function DealScreen({ orderId }: { orderId: string }) {
               ? `Доставка подтверждена — оплату ${money(deal.agreedPriceUsd)} можно провести`
               : `Безопасная сделка — оплату ${money(deal.agreedPriceUsd)} проводите после подтверждения доставки`}
         </div>
+        {!cancelled && !completed && (
+          <div className="flex items-start gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-500">
+            <ShieldAlert className="size-3.5 shrink-0" />
+            Никогда не переводите предоплату или «депозит» на карту вне приложения — так работают мошенники.
+          </div>
+        )}
 
         {/* chat entry */}
         <Button
@@ -602,7 +628,8 @@ export function ChatScreen({ orderId }: { orderId: string }) {
 // ---------- Profile ----------
 
 export function ProfileScreen() {
-  const { role, me, resetOnboarding, setTab, showToast } = useCnKz()
+  const { role, me, resetOnboarding, setTab, showToast, reliability, cancelCount } = useCnKz()
+  const reliable = reliability >= 90
   const [quiet, setQuiet] = useState(true)
 
   return (
@@ -708,14 +735,21 @@ export function ProfileScreen() {
               <Card size="sm">
                 <CardContent className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono-tech text-lg font-bold">98 / 100</span>
-                    <Badge variant="success">Надёжный ✓</Badge>
+                    <span className="font-mono-tech text-lg font-bold">{reliability} / 100</span>
+                    <Badge variant={reliable ? "success" : "warning"}>
+                      {reliable ? "Надёжный ✓" : "Снижена"}
+                    </Badge>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full bg-brand" style={{ width: "98%" }} />
+                    <div
+                      className={"h-full rounded-full " + (reliable ? "bg-brand" : "bg-amber-500")}
+                      style={{ width: `${reliability}%` }}
+                    />
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    За последние 20 заказов · 0 отмен. Высокая надёжность = приоритет в ленте и доступ к премиум-грузам.
+                    За последние 20 заказов · {cancelCount}{" "}
+                    {cancelCount === 1 ? "отмена" : cancelCount >= 2 && cancelCount <= 4 ? "отмены" : "отмен"}.
+                    Каждая отмена принятого заказа: −10. Высокая надёжность = приоритет в ленте и доступ к премиум-грузам.
                   </p>
                 </CardContent>
               </Card>

@@ -136,6 +136,8 @@ interface CnKzStore {
   submitRating: (orderId: string, stars: number) => void
   confirmDelivery: (orderId: string) => void
   cancelDeal: (orderId: string) => void
+  reliability: number // живая надёжность текущего перевозчика (падает при отмене)
+  cancelCount: number // сколько сделок отменил
   sendMessage: (orderId: string, text: string) => void
   togglePin: (orderId: string) => void // закрепить/открепить заказ
   toggleFavorite: (orderId: string) => void // добавить/убрать из «Избранного»
@@ -185,6 +187,9 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
   const [feedOrders, setFeedOrders] = useState<Order[]>(FEED_ORDERS)
   const [favorites, setFavorites] = useState<string[]>([]) // «Избранное» перевозчика (id заказов)
   const [skipped, setSkipped] = useState<string[]>([]) // грузы, которые перевозчик «Пропустил»
+  // Надёжность — ЖИВОЙ показатель: отмена принятого заказа реально бьёт по нему (не косметика).
+  const [reliability, setReliability] = useState(98)
+  const [cancelCount, setCancelCount] = useState(0)
   const [tripDraft, setTripDraft] = useState<string[]>([]) // грузы, собираемые в один рейс (сборный груз)
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS)
   const [showFilters, setShowFilters] = useState(false)
@@ -505,6 +510,9 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
     }
 
     function cancelDeal(orderId: string) {
+      // Реальный штраф: надёжность −10 (пол 0), счётчик отмен +1. Не «безнаказанно».
+      setReliability((r) => Math.max(0, r - 10))
+      setCancelCount((c) => c + 1)
       updateOrder(orderId, (o) =>
         o.deal ? { ...o, deal: { ...o.deal, status: "cancelled" } } : o
       )
@@ -656,6 +664,8 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       submitRating,
       confirmDelivery,
       cancelDeal,
+      reliability,
+      cancelCount,
       sendMessage,
       togglePin,
       counterOffer,
@@ -676,7 +686,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       rejectOffer,
       getCarrier,
     }
-  }, [authed, showAuth, role, tab, dealsNewOnly, seen, stack, toast, myOrders, feedOrders, favorites, skipped, tripDraft, filters, showFilters, profile])
+  }, [authed, showAuth, role, tab, dealsNewOnly, seen, stack, toast, myOrders, feedOrders, favorites, skipped, reliability, cancelCount, tripDraft, filters, showFilters, profile])
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>
 }

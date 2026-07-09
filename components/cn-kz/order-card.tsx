@@ -46,15 +46,13 @@ export function OrderCard({
   const [confirmAccept, setConfirmAccept] = useState(false)
   const newOffers = order.offers.filter((o) => o.status === "pending").length
   const hasUnread = order.deal?.chat.some((m) => !m.fromMe)
-  const mine = showMyOffer && !!order.myOfferStatus
   const price = money(order.deal?.agreedPriceUsd ?? order.priceUsd)
 
   return (
     <div
       onClick={onClick}
       className={cn(
-        "group cursor-pointer rounded-md p-3.5 transition-transform duration-150 active:scale-[0.99]",
-        mine ? "surface-glass-brand" : "surface-glass"
+        "surface-glass group cursor-pointer rounded-md p-3.5 transition-transform duration-150 active:scale-[0.99]"
       )}
     >
       {/* Trust header: shipper + rating · freshness, status */}

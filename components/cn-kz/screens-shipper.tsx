@@ -634,6 +634,10 @@ export function CreateOrderScreen({
             placeholder="напр. 1500"
             onChange={(e) => set("priceUsd", Number(e.target.value))}
           />
+          <p className="text-xs text-muted-foreground">
+            Ориентир по похожим маршрутам. Слишком низкая ставка = меньше откликов, а подозрительно
+            дешёвые заказы перевозчики обходят как приманку.
+          </p>
         </Field>
 
         <Field label="Дата готовности к погрузке">
