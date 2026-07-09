@@ -27,6 +27,7 @@ export type Screen =
   | { type: "deal"; orderId: string }
   | { type: "chat"; orderId: string }
   | { type: "carrierProfile"; carrierId: string; orderId?: string; offerId?: string }
+  | { type: "shipperProfile"; orderId: string } // профиль заказчика (для перевозчика)
   | { type: "marketOrder"; orderId: string }
   | { type: "tripBuilder" }
   | { type: "createOrder"; prefillFrom?: string; editId?: string } // дубль/редактирование

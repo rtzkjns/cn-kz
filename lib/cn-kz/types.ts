@@ -57,8 +57,6 @@ export const ALL_CITIES: string[] = [
   "Кишинёв", "Бельцы", "Тирасполь",
 ]
 
-export const ORIGIN = "Хоргос"
-
 export type TruckType =
   | "рефрижератор"
   | "тент"
@@ -89,8 +87,6 @@ export type DealStatus =
   | "accepted" // Принято
   | "completed" // Завершено
   | "cancelled" // Отменено
-
-export const DEAL_FLOW: DealStatus[] = ["accepted", "completed"]
 
 export const DEAL_STATUS_LABEL: Record<DealStatus, string> = {
   accepted: "Принято",

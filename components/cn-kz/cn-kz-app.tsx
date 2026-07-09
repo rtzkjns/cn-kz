@@ -22,6 +22,7 @@ import {
 import { AnalyticsScreen } from "./screens-analytics"
 import { ChatsListScreen } from "./screens-chats"
 import { CarrierProfileScreen } from "./screens-carrier-profile"
+import { ShipperProfileScreen } from "./screens-shipper-profile"
 import { SettingsScreen, HistoryScreen, SecurityScreen } from "./screens-account"
 import { MarketFeedScreen, MarketOrderScreen } from "./screens-market"
 import { GuestChatsScreen, GuestFavoritesScreen, GuestProfileScreen } from "./screens-guest"
@@ -54,6 +55,8 @@ function Router() {
         )
       case "marketOrder":
         return <MarketOrderScreen orderId={top.orderId} />
+      case "shipperProfile":
+        return <ShipperProfileScreen orderId={top.orderId} />
       case "tripBuilder":
         return <TripBuilderScreen />
       case "terms":

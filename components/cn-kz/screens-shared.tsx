@@ -286,15 +286,15 @@ export function DealScreen({ orderId }: { orderId: string }) {
           </CardContent>
         </Card>
 
-        {/* other party — tap opens the carrier profile (shipper side) */}
+        {/* other party — обе стороны могут открыть профиль контрагента (симметрия проверки/жалобы) */}
         <Card
           size="sm"
           onClick={
             role === "shipper"
               ? () => push({ type: "carrierProfile", carrierId: deal.carrier.id })
-              : undefined
+              : () => push({ type: "shipperProfile", orderId: order.id })
           }
-          className={role === "shipper" ? "cursor-pointer hover:ring-foreground/20" : ""}
+          className="cursor-pointer hover:ring-foreground/20"
         >
           <CardContent className="flex items-center gap-2">
             <Avatar name={other.name} className="size-8" />
@@ -330,7 +330,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
             >
               <Phone className="size-3.5" />
             </Button>
-            {role === "shipper" && <ChevronRight className="size-4 text-muted-foreground" />}
+            <ChevronRight className="size-4 text-muted-foreground" />
           </CardContent>
         </Card>
 
