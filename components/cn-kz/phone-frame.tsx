@@ -242,45 +242,20 @@ const NAV: Record<"shipper" | "carrier", NavItem[]> = {
   ],
 }
 
+// Гость видит ПОЛНУЮ навигацию (не 2 таба): открытый браузинг + вход в табе «Профиль».
+const GUEST_NAV: NavItem[] = [
+  { id: "feed", label: "Главная", icon: Home },
+  { id: "favorites", label: "Избранное", icon: Heart },
+  { id: "chats", label: "Чат", icon: MessageCircle },
+  { id: "profile", label: "Профиль", icon: User },
+]
+
 function BottomNav() {
-  const { role, tab, setTab, push, authed, openAuth } = useCnKz()
-  // Гость (не залогинен): та же нижняя навигация, но действия ведут на вход.
-  if (!authed) {
-    const guestNav = [
-      { id: "feed", label: "Главная", icon: Home, active: true, action: () => {} },
-      { id: "login", label: "Войти в аккаунт", icon: User, active: false, action: openAuth },
-    ]
-    return (
-      <nav className="flex shrink-0 items-stretch border-t border-border bg-card px-2 pt-2 pb-3">
-        {guestNav.map((t) => {
-          const Icon = t.icon
-          return (
-            <button key={t.id} onClick={t.action} className="flex flex-1 flex-col items-center gap-1">
-              <span
-                className={cn(
-                  "flex h-8 w-16 items-center justify-center rounded-md transition-colors",
-                  t.active ? "bg-brand/12 text-brand" : "text-muted-foreground"
-                )}
-              >
-                <Icon className="size-5" />
-              </span>
-              <span
-                className={cn(
-                  "text-[11px] font-medium transition-colors",
-                  t.active ? "text-brand" : "text-muted-foreground"
-                )}
-              >
-                {t.label}
-              </span>
-            </button>
-          )
-        })}
-      </nav>
-    )
-  }
+  const { role, tab, setTab, push, authed } = useCnKz()
+  const items = authed ? NAV[role] : GUEST_NAV
   return (
     <nav className="flex shrink-0 items-stretch border-t border-border bg-card px-2 pt-2 pb-3">
-      {NAV[role].map((t) => {
+      {items.map((t) => {
         const Icon = t.icon
         if (t.center) {
           return (

@@ -24,6 +24,7 @@ import { ChatsListScreen } from "./screens-chats"
 import { CarrierProfileScreen } from "./screens-carrier-profile"
 import { SettingsScreen, HistoryScreen } from "./screens-account"
 import { MarketFeedScreen, MarketOrderScreen } from "./screens-market"
+import { GuestChatsScreen, GuestFavoritesScreen, GuestProfileScreen } from "./screens-guest"
 import { CnKzProvider, useCnKz } from "./store"
 
 function Router() {
@@ -57,8 +58,14 @@ function Router() {
     }
   }
 
-  // Гость (не залогинен) — тот же самый app-shell, но домашний экран = маркетплейс «Главная».
-  if (!authed) return <MarketFeedScreen />
+  // Гость (не залогинен) — ПОЛНАЯ нижняя навигация (best-practice: не 2 таба, а полноценный
+  // шелл), браузинг открыт, действия/вход гейтятся. Вход живёт в табе «Профиль».
+  if (!authed) {
+    if (tab === "favorites") return <GuestFavoritesScreen />
+    if (tab === "chats") return <GuestChatsScreen />
+    if (tab === "profile") return <GuestProfileScreen />
+    return <MarketFeedScreen /> // «Главная» — открытая биржа грузов
+  }
   if (tab === "myorders") return <ShipperOrdersScreen />
   if (tab === "analytics") return <AnalyticsScreen />
   if (tab === "chats") return <ChatsListScreen />
