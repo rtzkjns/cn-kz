@@ -12,6 +12,7 @@ import {
   Lock,
   LogOut,
   Shield,
+  Smartphone,
   Trash2,
   User as UserIcon,
 } from "lucide-react"
@@ -83,7 +84,7 @@ export function SettingsScreen() {
             <CardContent className="divide-y divide-border">
               <Row icon={UserIcon} label="Профиль" onClick={() => setTab("profile")} />
               <Row icon={Bell} label="Номер телефона" value={<span className="text-xs text-muted-foreground">+7 ··· 34</span>} onClick={() => showToast("Изменение номера — по SMS")} />
-              <Row icon={Lock} label="Пароль и безопасность" onClick={() => showToast("Ссылка для смены пароля отправлена")} />
+              <Row icon={Lock} label="Вход и безопасность" onClick={() => push({ type: "security" })} />
             </CardContent>
           </Card>
         </Section>
@@ -142,6 +143,75 @@ export function SettingsScreen() {
 }
 
 // ---------- History (past orders / hauls) ----------
+
+// Вход и безопасность — защита от угона аккаунта (SIM-swap): 2FA, список устройств.
+export function SecurityScreen() {
+  const { pop, showToast } = useCnKz()
+  return (
+    <div className="flex h-full flex-col">
+      <ScreenHeader title="Вход и безопасность" subtitle="Защита аккаунта от угона" onBack={pop} />
+      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 pb-24">
+        <Card size="sm">
+          <CardContent className="space-y-1 py-1">
+            <div className="flex items-center gap-3 py-2.5 text-sm">
+              <Lock className="size-4 text-muted-foreground" />
+              <span className="flex-1">Вход по коду из SMS + PIN</span>
+              <Toggle on label="Двухфакторный вход" />
+            </div>
+            <div className="flex items-center gap-3 py-2.5 text-sm">
+              <Shield className="size-4 text-muted-foreground" />
+              <span className="flex-1">Просить подтверждение при смене номера и реквизитов</span>
+              <Toggle on label="Подтверждение важных действий" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div>
+          <p className="mb-1.5 px-1 text-xs font-medium text-muted-foreground">Активные устройства</p>
+          <Card size="sm">
+            <CardContent className="divide-y divide-border py-1">
+              {[
+                ["iPhone · Алматы", "это устройство · сейчас", true],
+                ["Android · Астана", "был вход 2 дня назад", false],
+              ].map(([name, when, current]) => (
+                <div key={name as string} className="flex items-center gap-3 py-2.5 text-sm">
+                  <Smartphone className="size-4 text-muted-foreground" />
+                  <span className="flex-1">
+                    {name}
+                    <span className="block text-xs text-muted-foreground">{when}</span>
+                  </span>
+                  {current ? (
+                    <span className="text-xs font-medium text-brand">активно</span>
+                  ) : (
+                    <button
+                      onClick={() => showToast("Устройство отключено от аккаунта")}
+                      className="text-xs font-medium text-destructive"
+                    >
+                      Выйти
+                    </button>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        <button
+          onClick={() => showToast("Ссылка для смены пароля отправлена по SMS")}
+          className="w-full rounded-md border border-border py-2.5 text-sm font-medium text-foreground"
+        >
+          Сменить пароль
+        </button>
+        <button
+          onClick={() => showToast("Вы вышли на всех устройствах, кроме этого")}
+          className="flex w-full items-center justify-center gap-1.5 py-1 text-xs font-medium text-destructive"
+        >
+          <LogOut className="size-3.5" /> Выйти на всех устройствах
+        </button>
+      </div>
+    </div>
+  )
+}
 
 const HFILTERS = [
   { id: "all", label: "Все" },

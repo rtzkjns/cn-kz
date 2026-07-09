@@ -22,7 +22,7 @@ import {
 import { AnalyticsScreen } from "./screens-analytics"
 import { ChatsListScreen } from "./screens-chats"
 import { CarrierProfileScreen } from "./screens-carrier-profile"
-import { SettingsScreen, HistoryScreen } from "./screens-account"
+import { SettingsScreen, HistoryScreen, SecurityScreen } from "./screens-account"
 import { MarketFeedScreen, MarketOrderScreen } from "./screens-market"
 import { GuestChatsScreen, GuestFavoritesScreen, GuestProfileScreen } from "./screens-guest"
 import { TermsScreen } from "./screens-terms"
@@ -58,6 +58,8 @@ function Router() {
         return <TripBuilderScreen />
       case "terms":
         return <TermsScreen />
+      case "security":
+        return <SecurityScreen />
     }
   }
 

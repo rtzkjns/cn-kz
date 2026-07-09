@@ -6,7 +6,7 @@ import { Box, Calendar, Check, ChevronRight, Heart, MessageCircle, Pin, Plus, St
 import { Avatar } from "@/components/ui/avatar"
 import type { Order } from "@/lib/cn-kz/types"
 import { cn } from "@/lib/utils"
-import { DealStatusBadge, OrderStatusBadge, money } from "./shared"
+import { DealStatusBadge, OfferStatusBadge, OrderStatusBadge, money } from "./shared"
 
 function MetaPill({ icon: Icon, children }: { icon: typeof Truck; children: React.ReactNode }) {
   return (
@@ -166,6 +166,9 @@ export function OrderCard({
             {newOffers} {newOffers === 1 ? "отклик" : newOffers < 5 ? "отклика" : "откликов"}
             <ChevronRight className="size-3.5" />
           </span>
+        ) : showMyOffer && order.myOfferStatus ? (
+          // Уже откликнулись — показываем СТАТУС отклика, а не повторную «Принять» (иначе двойная ставка).
+          <OfferStatusBadge status={order.myOfferStatus} />
         ) : showMyOffer && onQuickAccept ? (
           <button
             onClick={(e) => {

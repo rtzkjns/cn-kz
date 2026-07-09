@@ -31,6 +31,7 @@ export type Screen =
   | { type: "tripBuilder" }
   | { type: "createOrder"; prefillFrom?: string; editId?: string } // дубль/редактирование
   | { type: "terms" } // условия / публичная оферта
+  | { type: "security" } // вход и безопасность аккаунта (2FA, сессии)
 
 export type Tab =
   | "feed"
@@ -47,6 +48,7 @@ export type Tab =
 // дубликаты React key при быстрых действиях. Стартуют выше всех сидов.
 let ORDER_SEQ = 9000
 let MSG_SEQ = 0
+let MARK_CLOCK = 9 * 60 + 41 // мок-часы для отметок рейса (в тон статус-бара 9:41), а не реальные
 
 // Общие поля заказа из черновика — используются и при публикации, и при редактировании.
 function draftToFields(d: NewOrderDraft) {
@@ -408,11 +410,10 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
             carrier: chosen.carrier,
             agreedPriceUsd: chosen.priceUsd,
             chat: [],
-            escrow: "held",
           },
         }
       })
-      showToast("Сделка создана. Оплата зарезервирована в эскроу")
+      showToast("Сделка создана — договоритесь об оплате напрямую")
     }
 
     // Перевозчик выигрывает заказ → на заказе появляется сделка (carrier = ME_CARRIER).
@@ -427,7 +428,6 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
           agreedPriceUsd: price,
           chat: [],
           tripId,
-          escrow: "held",
         },
       }))
     }
@@ -490,16 +490,16 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
     // Перевозчик завершает заказ (кнопка «Завершил»). Трекинг между этим не делаем.
     function completeDeal(orderId: string) {
       updateOrder(orderId, (o) =>
-        o.deal ? { ...o, deal: { ...o.deal, status: "completed", escrow: "released" } } : o
+        o.deal ? { ...o, deal: { ...o.deal, status: "completed" } } : o
       )
-      showToast("Заказ завершён · оплата переведена перевозчику")
+      showToast("Заказ завершён · можно провести оплату")
     }
 
     function confirmDelivery(orderId: string) {
       updateOrder(orderId, (o) =>
-        o.deal ? { ...o, deal: { ...o.deal, status: "completed", escrow: "released" } } : o
+        o.deal ? { ...o, deal: { ...o.deal, status: "completed" } } : o
       )
-      showToast("Получение подтверждено · оплата переведена перевозчику")
+      showToast("Получение подтверждено · можно провести оплату")
     }
 
     // Оценка сохраняется на заказе (видно в истории). §8: взаимная СЛЕПАЯ оценка —
@@ -515,9 +515,11 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
     }
 
     function cancelDeal(orderId: string) {
-      // Реальный штраф: надёжность −10 (пол 0), счётчик отмен +1. Не «безнаказанно».
-      setReliability((r) => Math.max(0, r - 10))
-      setCancelCount((c) => c + 1)
+      // Реальный штраф надёжности — только для перевозчика (у заказчика её нет).
+      if (role === "carrier") {
+        setReliability((r) => Math.max(0, r - 10))
+        setCancelCount((c) => c + 1)
+      }
       updateOrder(orderId, (o) =>
         o.deal ? { ...o, deal: { ...o.deal, status: "cancelled" } } : o
       )
@@ -526,9 +528,11 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
 
     // Отметка рейса с таймстампом (прибытие/убытие/простой/срыв) — защита перевозчика на простое.
     function logDealEvent(orderId: string, label: string) {
+      MARK_CLOCK += 13
+      const time = `${String(Math.floor(MARK_CLOCK / 60) % 24).padStart(2, "0")}:${String(MARK_CLOCK % 60).padStart(2, "0")}`
       updateOrder(orderId, (o) =>
         o.deal
-          ? { ...o, deal: { ...o.deal, log: [...(o.deal.log ?? []), { label, time: nowTime() }] } }
+          ? { ...o, deal: { ...o.deal, log: [...(o.deal.log ?? []), { label, time }] } }
           : o
       )
       showToast(`Отметка зафиксирована: ${label}`)
@@ -539,7 +543,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       updateOrder(orderId, (o) =>
         o.deal ? { ...o, deal: { ...o.deal, claim: { reason, note } } } : o
       )
-      showToast("Претензия отправлена. Оплата заморожена до решения")
+      showToast("Отправили в поддержку — поможем с доказательствами и посредничеством")
     }
 
     function sendMessage(orderId: string, text: string) {
@@ -636,7 +640,6 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
                 carrier: chosen.carrier,
                 agreedPriceUsd: priceUsd,
                 chat: [],
-                escrow: "held",
               },
             }
           })

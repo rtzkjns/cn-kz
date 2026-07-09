@@ -130,6 +130,9 @@ function DealRow({
   isNew: boolean
   onClick: () => void
 }) {
+  const { role } = useCnKz()
+  // Показываем ВТОРУЮ сторону: перевозчику — заказчика, заказчику — перевозчика.
+  const counterpart = role === "carrier" ? order.shipper.name : order.deal!.carrier.name
   return (
     <Card size="sm" onClick={onClick} className="cursor-pointer hover:ring-foreground/20">
       <CardContent className="space-y-1.5">
@@ -146,9 +149,7 @@ function DealRow({
         </div>
         <p className="line-clamp-1 text-xs text-muted-foreground">{order.cargo}</p>
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">
-            {order.deal!.carrier.name}
-          </span>
+          <span className="text-xs text-muted-foreground">{counterpart}</span>
           <span className="font-mono-tech text-sm font-semibold text-foreground">
             {money(order.deal!.agreedPriceUsd)}
           </span>
@@ -465,7 +466,8 @@ export function DealScreen({ orderId }: { orderId: string }) {
               <ShieldAlert className="mt-0.5 size-3.5 shrink-0" />
               <span>
                 <span className="font-medium">Поддержка разбирается: {deal.claim.reason}.</span>{" "}
-                Оплата на паузе, переписку и фото уже приложили — свяжемся в течение 3 дней.
+                Переписку и фото приложили как доказательства — поможем с посредничеством. Оплату до
+                решения лучше придержать.
               </span>
             </div>
           ) : (
@@ -661,7 +663,8 @@ export function DealScreen({ orderId }: { orderId: string }) {
           >
             <p className="text-base font-semibold">Что случилось?</p>
             <p className="-mt-1 text-xs text-muted-foreground">
-              Опишите проблему — поддержка поможет и, если нужно, придержит оплату до решения.
+              Опишите проблему — поможем с доказательствами и посредничеством. Площадка деньги не
+              держит, поэтому оплату до решения придержите сами.
             </p>
             <div className="flex flex-wrap gap-1.5">
               {["Не оплатили", "Груз повреждён", "Срыв погрузки", "Вес не совпал", "Другое"].map(
@@ -701,8 +704,14 @@ export function DealScreen({ orderId }: { orderId: string }) {
                 setClaimNote("")
               }}
             >
-              Отправить претензию
+              Отправить в поддержку
             </Button>
+            <button
+              onClick={() => setShowClaim(false)}
+              className="w-full py-1 text-center text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Отмена
+            </button>
           </div>
         </div>
       )}

@@ -43,13 +43,15 @@ function Kpi({
 }
 
 // Simple CSS bar row for a horizontal chart.
-function Bar({ label, value, max, suffix }: { label: string; value: number; max: number; suffix?: string }) {
+function Bar({ label, value, max, suffix, asMoney }: { label: string; value: number; max: number; suffix?: string; asMoney?: boolean }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-xs">
         <span className="text-muted-foreground">{label}</span>
-        <span className="font-mono-tech text-foreground">{suffix ? `${value}${suffix}` : value}</span>
+        <span className="font-mono-tech text-foreground">
+          {asMoney ? money(value) : suffix ? `${value}${suffix}` : value}
+        </span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-muted">
         <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${pct}%` }} />
@@ -136,7 +138,7 @@ export function AnalyticsScreen() {
             <CardContent className="space-y-3">
               {months.length === 0 && <p className="text-sm text-muted-foreground">Нет завершённых заказов</p>}
               {months.map(([m, v]) => (
-                <Bar key={m} label={m} value={v} max={maxMonth} suffix="" />
+                <Bar key={m} label={m} value={v} max={maxMonth} asMoney />
               ))}
             </CardContent>
           </Card>

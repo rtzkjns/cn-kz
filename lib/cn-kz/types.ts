@@ -123,6 +123,7 @@ export interface User {
   reviews?: Review[] // отзывы (для профиля)
   onTimeRate?: number // % вовремя
   memberSince?: string
+  insured?: boolean // страховка ответственности перевозчика / груза (CMR) — на файле
 }
 
 export interface Truck {
@@ -175,7 +176,7 @@ export interface Order {
   recipientName: string
   recipientPhone: string
   payment: "cash" | "transfer"
-  safePay?: boolean // «Гарантия оплаты»: деньги под защитой платформы до подтверждения доставки
+  safePay?: boolean // «Безопасная сделка»: стороны проверены + записи сохранены (НЕ кастоди денег)
   createdAgo: string
   offers: Offer[]
   // present once status === "deal"
@@ -185,7 +186,6 @@ export interface Order {
     agreedPriceUsd: number
     chat: ChatMessage[]
     tripId?: string // сборный рейс: несколько грузов в одной фуре
-    escrow?: "held" | "released" // безопасная сделка: оплата в эскроу до завершения
     log?: { label: string; time: string }[] // отметки рейса с таймстампом (прибытие/простой)
     claim?: { reason: string; note: string } // претензия «на рассмотрении» (структурный спор)
   }

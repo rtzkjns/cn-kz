@@ -641,6 +641,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
           </div>
           <Button
             className="w-full"
+            disabled={overCapacity}
             onClick={() => makeOffer(order.id, "accept", order.priceUsd, truckId)}
           >
             <Check className="size-4" /> Принять цену {money(order.priceUsd)}
@@ -657,7 +658,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
             <Button
               variant="outline"
               size="lg"
-              disabled={!counter || Number(counter) <= 0}
+              disabled={!counter || Number(counter) <= 0 || overCapacity}
               onClick={() => makeOffer(order.id, "counter", Number(counter), truckId)}
             >
               Предложить

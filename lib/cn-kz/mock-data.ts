@@ -30,7 +30,7 @@ export const WATCHED_ROUTES = ["Алматы → Москва", "Астана �
 export const carriers: User[] = [
   {
     id: "c1", name: "Бауыржан Нур", phone: "+7 705 333 88 11", rating: 4.9, dealsCount: 124,
-    role: "carrier", verified: true, onTimeRate: 97, memberSince: "2023",
+    role: "carrier", verified: true, onTimeRate: 97, memberSince: "2023", insured: true,
     trucks: [
       { id: "c1t1", type: "тент", maxWeightKg: 20000, maxVolumeM3: 86, plate: "777 ABC 02" },
       { id: "c1t2", type: "рефрижератор", maxWeightKg: 18000, maxVolumeM3: 80, plate: "012 KZA 05" },
@@ -43,7 +43,7 @@ export const carriers: User[] = [
   },
   {
     id: "c2", name: "Ерлан Қасым", phone: "+7 707 121 45 67", rating: 4.6, dealsCount: 58,
-    role: "carrier", verified: true, onTimeRate: 91, memberSince: "2024",
+    role: "carrier", verified: true, onTimeRate: 91, memberSince: "2024", insured: true,
     trucks: [{ id: "c2t1", type: "тент", maxWeightKg: 22000, maxVolumeM3: 90, plate: "555 KZB 09" }],
     reviews: [
       { id: "rv4", author: "Айдос С.", rating: 5, text: "Быстро откликнулся, честная цена.", ago: "3 нед назад" },

@@ -1,6 +1,7 @@
 "use client"
 
-import { BadgeCheck, MessageCircle, Phone, ShieldAlert, ShieldCheck, Star, Truck } from "lucide-react"
+import { useState } from "react"
+import { Ban, BadgeCheck, MessageCircle, Phone, ShieldAlert, ShieldCheck, Star, Truck } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +22,7 @@ export function CarrierProfileScreen({
   offerId?: string
 }) {
   const { getCarrier, getOrder, pop, push, acceptOffer, showToast } = useCnKz()
+  const [showReport, setShowReport] = useState(false)
   const c = getCarrier(carrierId)
   if (!c) return null
 
@@ -58,6 +60,11 @@ export function CarrierProfileScreen({
                 </Badge>
               ) : (
                 <Badge variant="warning">Новичок · без БИН</Badge>
+              )}
+              {c.insured && (
+                <Badge variant="muted">
+                  <ShieldCheck className="size-3" /> Страховка · CMR
+                </Badge>
               )}
               {c.onTimeRate != null && <Badge variant="muted">{c.onTimeRate}% вовремя</Badge>}
             </div>
@@ -152,12 +159,64 @@ export function CarrierProfileScreen({
           </Button>
         </div>
         <button
-          onClick={() => showToast("Жалоба отправлена — модерация проверит профиль")}
+          onClick={() => setShowReport(true)}
           className="flex w-full items-center justify-center gap-1.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-destructive"
         >
           <ShieldAlert className="size-3.5" /> Пожаловаться на пользователя
         </button>
       </div>
+
+      {/* Жалоба / блокировка — реальное действие, а не мёртвый тост. */}
+      {showReport && (
+        <div
+          className="animate-in fade-in absolute inset-0 z-50 flex items-end bg-black/50"
+          onClick={() => setShowReport(false)}
+        >
+          <div
+            className="animate-in slide-in-from-bottom w-full space-y-2 rounded-t-2xl border-t border-border bg-card p-4 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-base font-semibold">Пожаловаться на {c.name}</p>
+            <div className="flex flex-wrap gap-1.5 pb-1">
+              {["Мошенничество", "Не выходит на связь", "Обман по грузу", "Оскорбления", "Другое"].map(
+                (r) => (
+                  <span
+                    key={r}
+                    className="rounded-full border border-border px-3 py-1.5 text-[13px] font-medium text-muted-foreground"
+                  >
+                    {r}
+                  </span>
+                )
+              )}
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => {
+                setShowReport(false)
+                showToast("Жалоба отправлена — модерация проверит профиль")
+              }}
+            >
+              <ShieldAlert className="size-4" /> Отправить жалобу
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setShowReport(false)
+                showToast(`${c.name} заблокирован — вы не увидите его грузы и отклики`)
+              }}
+            >
+              <Ban className="size-4" /> Заблокировать пользователя
+            </Button>
+            <button
+              onClick={() => setShowReport(false)}
+              className="w-full py-1 text-center text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Отмена
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
