@@ -1,13 +1,12 @@
 "use client"
 
-import { useState } from "react"
 import { AlertTriangle, Clock, Package, Star, Tag, TrendingUp } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { ScreenHeader } from "./phone-frame"
 import { money } from "./shared"
-import { Chip, ChipRow, Section } from "./ui-bits"
+import { Section } from "./ui-bits"
 import { useCnKz } from "./store"
 
 function Kpi({
@@ -62,7 +61,6 @@ function Bar({ label, value, max, suffix, asMoney }: { label: string; value: num
 
 export function AnalyticsScreen() {
   const { myOrders, setTab } = useCnKz()
-  const [period, setPeriod] = useState("all")
 
   const completed = myOrders.filter((o) => o.deal?.status === "completed")
   const active = myOrders.filter(
@@ -105,12 +103,6 @@ export function AnalyticsScreen() {
       <ScreenHeader title="Аналитика" subtitle="Ваша логистика в цифрах" onBack={() => setTab("profile")} />
 
       <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-24">
-        <ChipRow>
-          <Chip active={period === "all"} onClick={() => setPeriod("all")}>Всё время</Chip>
-          <Chip active={period === "30"} onClick={() => setPeriod("30")}>30 дней</Chip>
-          <Chip active={period === "q"} onClick={() => setPeriod("q")}>Квартал</Chip>
-        </ChipRow>
-
         <div className="grid grid-cols-2 gap-2">
           <Kpi label="Всего заказов" value={String(myOrders.length)} icon={Package} />
           <Kpi label="Завершено" value={String(completed.length)} sub={`${active.length} в работе`} icon={TrendingUp} />

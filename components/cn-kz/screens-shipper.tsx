@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { BadgeCheck, Check, Copy, Gavel, MessageCircle, Package, Pencil, Phone, RefreshCw, Search, ShieldCheck, Tag, Truck, X } from "lucide-react"
+import { BadgeCheck, Check, Copy, Gavel, MessageCircle, Package, Pencil, Phone, RefreshCw, Search, ShieldCheck, Tag, Trash2, Truck, X } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -177,10 +177,11 @@ export function ShipperOrdersScreen() {
 }
 
 export function OrderDetailScreen({ orderId }: { orderId: string }) {
-  const { getOrder, pop, push, acceptOffer, rejectOffer, counterOffer, republishOrder, showToast, markSeen } = useCnKz()
+  const { getOrder, pop, push, acceptOffer, rejectOffer, counterOffer, republishOrder, deleteOrder, showToast, markSeen } = useCnKz()
   const [counterFor, setCounterFor] = useState<string | null>(null)
   const [counterVal, setCounterVal] = useState("")
   const [rejectFor, setRejectFor] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const order = getOrder(orderId)
   // Открыли заказ → новые отклики прочитаны.
   useEffect(() => {
@@ -450,6 +451,17 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
             }}
           >
             <RefreshCw className="size-4" /> Перепубликовать заказ
+          </Button>
+        )}
+
+        {!order.deal && (
+          <Button
+            variant="outline"
+            size="sm"
+            className={`w-full ${confirmDelete ? "border-destructive text-destructive" : "text-muted-foreground"}`}
+            onClick={() => (confirmDelete ? deleteOrder(order.id) : setConfirmDelete(true))}
+          >
+            <Trash2 className="size-3.5" /> {confirmDelete ? "Точно удалить заказ?" : "Удалить заказ"}
           </Button>
         )}
       </div>

@@ -132,6 +132,7 @@ interface CnKzStore {
   publishOrder: (d: NewOrderDraft) => void
   saveOrderEdit: (orderId: string, d: NewOrderDraft) => void // редактирование заказа
   republishOrder: (orderId: string) => void // архивный заказ → снова в ленту
+  deleteOrder: (orderId: string) => void // удалить заказ до сделки (PRD §3)
   acceptOffer: (orderId: string, offerId: string) => void
   makeOffer: (orderId: string, kind: OfferKind, priceUsd: number, truckId?: string) => void
   skipOrder: (orderId: string) => void // «Пропустить» груз (без отклика)
@@ -393,6 +394,13 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
         offers: [],
       }))
       showToast("Заказ снова в ленте перевозчиков")
+    }
+
+    // Удаление заказа заказчиком — только до сделки (PRD §3). После сделки — только отмена сделки.
+    function deleteOrder(orderId: string) {
+      setMyOrders((list) => list.filter((o) => !(o.id === orderId && !o.deal)))
+      pop()
+      showToast("Заказ удалён")
     }
 
     function acceptOffer(orderId: string, offerId: string) {
@@ -681,6 +689,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       publishOrder,
       saveOrderEdit,
       republishOrder,
+      deleteOrder,
       acceptOffer,
       makeOffer,
       skipOrder,
