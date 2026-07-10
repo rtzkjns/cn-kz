@@ -16,6 +16,7 @@ import { useCnKz } from "./store"
 export function ShipperProfileScreen({ orderId }: { orderId: string }) {
   const { getOrder, pop, showToast } = useCnKz()
   const [showReport, setShowReport] = useState(false)
+  const [reportReason, setReportReason] = useState<string | null>(null)
   const s = getOrder(orderId)?.shipper
   if (!s) return null
 
@@ -115,12 +116,20 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
             <p className="text-base font-semibold">Пожаловаться на {s.name}</p>
             <div className="flex flex-wrap gap-1.5 pb-1">
               {["Не платит", "Мошенничество", "Груз не тот", "Не выходит на связь", "Другое"].map((r) => (
-                <span key={r} className="rounded-full border border-border px-3 py-1.5 text-[13px] font-medium text-muted-foreground">
+                <button
+                  key={r}
+                  onClick={() => setReportReason(r)}
+                  className={`rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                    reportReason === r
+                      ? "border-brand bg-brand/15 text-brand"
+                      : "border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
                   {r}
-                </span>
+                </button>
               ))}
             </div>
-            <Button className="w-full" onClick={() => { setShowReport(false); showToast("Жалоба отправлена — модерация проверит профиль") }}>
+            <Button className="w-full" disabled={!reportReason} onClick={() => { setShowReport(false); showToast(`Жалоба отправлена (${reportReason}) — модерация проверит профиль`); setReportReason(null) }}>
               <ShieldAlert className="size-4" /> Отправить жалобу
             </Button>
             <Button variant="outline" className="w-full" onClick={() => { setShowReport(false); showToast(`${s.name} заблокирован — вы не увидите его заказы`) }}>

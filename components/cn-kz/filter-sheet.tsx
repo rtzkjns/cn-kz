@@ -36,7 +36,7 @@ function Pill({
       className={cn(
         "rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors",
         active
-          ? "border-brand/40 bg-brand/15 text-brand"
+          ? "border-transparent bg-brand text-white"
           : "border-border text-muted-foreground hover:text-foreground"
       )}
     >

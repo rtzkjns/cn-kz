@@ -616,6 +616,7 @@ export function CreateOrderScreen({
             <Input
               type="number"
               inputMode="numeric"
+              value={d.weightKg || ""}
               onChange={(e) => set("weightKg", Number(e.target.value))}
             />
           </Field>
@@ -623,6 +624,7 @@ export function CreateOrderScreen({
             <Input
               type="number"
               inputMode="numeric"
+              value={d.volumeM3 || ""}
               onChange={(e) => set("volumeM3", Number(e.target.value))}
             />
           </Field>
@@ -647,6 +649,7 @@ export function CreateOrderScreen({
             type="number"
             inputMode="numeric"
             placeholder="напр. 1500"
+            value={d.priceUsd || ""}
             onChange={(e) => set("priceUsd", Number(e.target.value))}
           />
           <p className="text-xs text-muted-foreground">

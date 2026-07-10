@@ -70,6 +70,8 @@
   --accent: #1b1c1e;
   --accent-foreground: #f7f8f8;
   --destructive: #d05a52; /* desaturated — danger only */
+  --success: #10b981; /* positive/accept — the one green in the system (carrier quick-accept) */
+  --success-strong: #059669; /* pressed/confirm state of --success */
   --border: #23252a; /* graphite */
   --input: #2a2c30;
   --ring: #5e6ad2; /* indigo focus */
