@@ -81,18 +81,36 @@ export type OrderStatus =
   | "deal" // Сделка создана
   | "archived" // Архив (истёк срок без откликов)
 
-// Lifecycle of a deal (after an offer is accepted).
-// Трекинг доставки не делаем (нет GPS) → только 2 рабочих статуса + отмена.
+// Lifecycle of a deal (after an offer is accepted). PRD §6 — forward-only pipeline.
+// Перевозчик двигает статус вручную («Следующий этап»); заказчик подтверждает получение.
 export type DealStatus =
   | "accepted" // Принято
+  | "picked_up" // Забрал заказ
+  | "in_transit" // В пути
+  | "at_border" // На границе
+  | "delivered" // Доставлено
   | "completed" // Завершено
   | "cancelled" // Отменено
 
 export const DEAL_STATUS_LABEL: Record<DealStatus, string> = {
   accepted: "Принято",
+  picked_up: "Забрал заказ",
+  in_transit: "В пути",
+  at_border: "На границе",
+  delivered: "Доставлено",
   completed: "Завершено",
   cancelled: "Отменено",
 }
+
+// Порядок этапов доставки (без «Отменено»). Последний шаг «Завершено» подтверждает заказчик.
+export const DEAL_FLOW: DealStatus[] = [
+  "accepted",
+  "picked_up",
+  "in_transit",
+  "at_border",
+  "delivered",
+  "completed",
+]
 
 export type OfferKind = "accept" | "counter" // «Принять цену» | «Своя цена»
 

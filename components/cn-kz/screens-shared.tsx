@@ -9,6 +9,7 @@ import {
   Check,
   ChevronRight,
   Clock,
+  FileText,
   Plus,
   Settings as SettingsIcon,
   Lock,
@@ -34,7 +35,7 @@ import {
   ME_SHIPPER,
   WATCHED_ROUTES,
 } from "@/lib/cn-kz/mock-data"
-import { type Order } from "@/lib/cn-kz/types"
+import { DEAL_FLOW, DEAL_STATUS_LABEL, type Order } from "@/lib/cn-kz/types"
 import { ScreenHeader } from "./phone-frame"
 import { deals, DealStatusBadge, OfferStatusBadge, Rating, Route, money } from "./shared"
 import { Chip, ChipRow, DetailRow, Section } from "./ui-bits"
@@ -191,7 +192,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
     pop,
     push,
     role,
-    completeDeal,
+    advanceDeal,
     confirmDelivery,
     cancelDeal,
     logDealEvent,
@@ -211,7 +212,6 @@ export function DealScreen({ orderId }: { orderId: string }) {
   const [comment, setComment] = useState("")
   const [criteria, setCriteria] = useState<string[]>([])
   const [showCancel, setShowCancel] = useState(false)
-  const [podStep, setPodStep] = useState(false)
   const [podAdded, setPodAdded] = useState(false)
   const [showClaim, setShowClaim] = useState(false)
   const [claimReason, setClaimReason] = useState("")
@@ -227,6 +227,10 @@ export function DealScreen({ orderId }: { orderId: string }) {
   const rated = order.ratedStars != null
   const cancelled = deal.status === "cancelled"
   const completed = deal.status === "completed"
+  const curIdx = DEAL_FLOW.indexOf(deal.status)
+  const canCarrierAdvance = role === "carrier" && !completed && !cancelled && curIdx < DEAL_FLOW.indexOf("delivered")
+  const canConfirmDelivery = role === "shipper" && deal.status === "delivered"
+  const canCancel = deal.status === "accepted" // §6: отмена только до «Забрал заказ»
   const other = role === "shipper" ? deal.carrier : order.shipper
   // Привязка «кто реально везёт» — против переуступки/двойного брокериджа.
   const acceptedOffer = order.offers.find((o) => o.status === "accepted")
@@ -247,41 +251,44 @@ export function DealScreen({ orderId }: { orderId: string }) {
       />
 
       <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-6">
-        {/* status — 2 состояния, без трекинга доставки */}
+        {/* status — полный пайплайн доставки (PRD §6) */}
         <Card size="sm">
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Статус</span>
+              <span className="text-sm font-medium">Статус доставки</span>
               <DealStatusBadge status={deal.status} />
             </div>
             {cancelled ? (
               <p className="text-sm text-destructive">Сделка отменена</p>
             ) : (
-              <div className="flex items-center gap-2 text-xs font-medium">
-                <span className="inline-flex items-center gap-1.5 text-brand">
-                  <span className="flex size-5 items-center justify-center rounded-full bg-brand text-brand-foreground">
-                    <Check className="size-3" />
-                  </span>
-                  Принято
-                </span>
-                <span className={"h-0.5 flex-1 " + (completed ? "bg-brand" : "bg-border")} />
-                <span
-                  className={
-                    "inline-flex items-center gap-1.5 " +
-                    (completed ? "text-brand" : "text-muted-foreground")
-                  }
-                >
-                  <span
-                    className={
-                      "flex size-5 items-center justify-center rounded-full text-[10px] " +
-                      (completed ? "bg-brand text-brand-foreground" : "bg-muted text-muted-foreground")
-                    }
-                  >
-                    {completed ? <Check className="size-3" /> : "2"}
-                  </span>
-                  Завершено
-                </span>
-              </div>
+              <ol className="space-y-2.5">
+                {DEAL_FLOW.map((st, i) => {
+                  const done = completed || i < curIdx
+                  const current = !completed && i === curIdx
+                  return (
+                    <li key={st} className="flex items-center gap-2.5 text-sm">
+                      <span
+                        className={
+                          "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-medium " +
+                          (done
+                            ? "bg-brand text-brand-foreground"
+                            : current
+                              ? "border border-brand text-brand"
+                              : "bg-muted text-muted-foreground")
+                        }
+                      >
+                        {done ? <Check className="size-3" /> : i + 1}
+                      </span>
+                      <span className={done || current ? "font-medium text-foreground" : "text-muted-foreground"}>
+                        {DEAL_STATUS_LABEL[st]}
+                      </span>
+                      {current && (
+                        <span className="ml-auto text-[11px] font-medium text-brand">сейчас</span>
+                      )}
+                    </li>
+                  )
+                })}
+              </ol>
             )}
           </CardContent>
         </Card>
@@ -560,42 +567,63 @@ export function DealScreen({ orderId }: { orderId: string }) {
           </Card>
         )}
 
-        {/* actions — 2 состояния (перевозчик завершает, заказчик может подтвердить) */}
+        {/* actions — пайплайн доставки (PRD §6): перевозчик двигает статус, заказчик подтверждает */}
         {!cancelled && !completed && (
           <div className="space-y-2 pt-1">
+            {role === "carrier" && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => push({ type: "borderDocs", orderId: order.id })}
+              >
+                <FileText className="size-4" /> Документы для границы
+              </Button>
+            )}
+
             {role === "carrier" ? (
-              podStep ? (
+              curIdx === DEAL_FLOW.indexOf("at_border") ? (
                 <Card size="sm" className="ring-brand/40">
                   <CardContent className="space-y-2">
-                    <p className="text-sm font-medium">Подтверждение доставки (POD)</p>
+                    <p className="text-sm font-medium">Отметить доставку</p>
                     <p className="text-xs text-muted-foreground">
-                      Приложите фото выгруженного груза или накладной — заказчик увидит, что доставлено, и подтвердит.
+                      Можно приложить фото выгрузки или накладной (POD) — заказчик увидит и подтвердит получение.
                     </p>
                     <Button variant="outline" className="w-full" onClick={() => setPodAdded(true)}>
                       <Camera className="size-4" /> {podAdded ? "Фото добавлено ✓" : "Добавить фото выгрузки"}
                     </Button>
-                    <Button className="w-full" disabled={!podAdded} onClick={() => completeDeal(order.id)}>
-                      <Check className="size-4" /> Завершить заказ
+                    <Button className="w-full" onClick={() => advanceDeal(order.id)}>
+                      <Check className="size-4" /> Отметить доставленным
                     </Button>
                   </CardContent>
                 </Card>
-              ) : (
-                <Button className="w-full" onClick={() => setPodStep(true)}>
-                  <Check className="size-4" /> Завершил заказ
+              ) : canCarrierAdvance ? (
+                <Button className="w-full" onClick={() => advanceDeal(order.id)}>
+                  <ChevronRight className="size-4" /> Следующий этап: {DEAL_STATUS_LABEL[DEAL_FLOW[curIdx + 1]]}
                 </Button>
+              ) : (
+                <p className="rounded-md bg-muted px-3 py-2 text-center text-xs text-muted-foreground">
+                  Груз доставлен — ждём подтверждения получения заказчиком.
+                </p>
               )
-            ) : (
+            ) : canConfirmDelivery ? (
               <Button className="w-full" onClick={() => confirmDelivery(order.id)}>
                 <Check className="size-4" /> Подтвердить получение
               </Button>
+            ) : (
+              <p className="rounded-md bg-muted px-3 py-2 text-center text-xs text-muted-foreground">
+                Перевозчик обновляет статус доставки — изменения появятся здесь.
+              </p>
             )}
-            <Button
-              variant="destructive"
-              className="w-full"
-              onClick={() => setShowCancel(true)}
-            >
-              Отменить сделку
-            </Button>
+
+            {canCancel && (
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={() => setShowCancel(true)}
+              >
+                Отменить сделку
+              </Button>
+            )}
           </div>
         )}
       </div>

@@ -12,6 +12,8 @@ import {
 } from "@/lib/cn-kz/mock-data"
 import {
   type ChatMessage,
+  DEAL_FLOW,
+  DEAL_STATUS_LABEL,
   type OfferKind,
   type Order,
   type Role,
@@ -33,6 +35,7 @@ export type Screen =
   | { type: "createOrder"; prefillFrom?: string; editId?: string } // дубль/редактирование
   | { type: "terms" } // условия / публичная оферта
   | { type: "security" } // вход и безопасность аккаунта (2FA, сессии)
+  | { type: "borderDocs"; orderId: string } // чеклист документов для границы (PRD §9)
 
 export type Tab =
   | "feed"
@@ -140,6 +143,7 @@ interface CnKzStore {
   confirmCounter: (orderId: string) => void // перевозчик принимает встречную цену заказчика
   declineMyOffer: (orderId: string) => void // перевозчик снимает свой отклик
   completeDeal: (orderId: string) => void
+  advanceDeal: (orderId: string) => void // перевозчик двигает статус доставки (PRD §6)
   submitRating: (orderId: string, stars: number) => void
   confirmDelivery: (orderId: string) => void
   cancelDeal: (orderId: string) => void
@@ -504,6 +508,18 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       showToast("Заказ завершён · можно провести оплату")
     }
 
+    // PRD §6 — перевозчик двигает статус вперёд («Следующий этап»), forward-only, до «Доставлено».
+    // Финальное «Завершено» подтверждает ЗАКАЗЧИК через confirmDelivery («Подтвердить получение»).
+    function advanceDeal(orderId: string) {
+      const cur = getOrder(orderId)?.deal?.status
+      if (!cur) return
+      const idx = DEAL_FLOW.indexOf(cur)
+      if (idx < 0 || idx >= DEAL_FLOW.indexOf("delivered")) return
+      const next = DEAL_FLOW[idx + 1]
+      updateOrder(orderId, (o) => (o.deal ? { ...o, deal: { ...o.deal, status: next } } : o))
+      showToast(`Статус: ${DEAL_STATUS_LABEL[next]}`)
+    }
+
     function confirmDelivery(orderId: string) {
       updateOrder(orderId, (o) =>
         o.deal ? { ...o, deal: { ...o.deal, status: "completed" } } : o
@@ -524,6 +540,12 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
     }
 
     function cancelDeal(orderId: string) {
+      // §6: отмена доступна обеим сторонам только ДО статуса «Забрал заказ».
+      const cur = getOrder(orderId)?.deal?.status
+      if (cur !== "accepted") {
+        showToast("Отмена уже недоступна — груз в пути. Спорные ситуации — через претензию.")
+        return
+      }
       // Реальный штраф надёжности — только для перевозчика (у заказчика её нет).
       if (role === "carrier") {
         setReliability((r) => Math.max(0, r - 10))
@@ -697,6 +719,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       confirmCounter,
       declineMyOffer,
       completeDeal,
+      advanceDeal,
       submitRating,
       confirmDelivery,
       cancelDeal,

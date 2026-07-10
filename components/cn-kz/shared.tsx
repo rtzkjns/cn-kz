@@ -43,6 +43,10 @@ const DEAL_STATUS_VARIANT: Record<
   React.ComponentProps<typeof Badge>["variant"]
 > = {
   accepted: "info",
+  picked_up: "info",
+  in_transit: "info",
+  at_border: "warning",
+  delivered: "success",
   completed: "success",
   cancelled: "destructive",
 }
