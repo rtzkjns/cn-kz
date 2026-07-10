@@ -75,5 +75,12 @@ box-shadow:
 **Do:** near-black neutral surfaces only · layered black/white shadows for depth · green for CTA/price/active · `tabular-nums` on all live numbers · concentric radii · scale-on-press.
 **Don't:** colored section backgrounds · radius > 20px on cards · tinted (slate/zinc) near-blacks · `#ff6363` for buttons/large fills (status dots only) · `transition: all` · pure-white button fills.
 
-## Current state vs target
-The wireframe currently uses a lighter neutral dark (`oklch(0.16 0 0)` ≈ #1f1f1f) with `ring-1` separation. Moving toward this system means: deepen the canvas to near-black `#040506`, layer the surface stack (#07080a → #111214 → #1b1c1e), and add the keyboard-key shadow to pressables. Green accent + Manrope stay.
+## Current state vs target — READ THIS FIRST
+⚠️ **The shipped code does NOT implement the green/Manrope system described above.** As of now (`app/globals.css`, `app/layout.tsx`) the wireframe ships a **"Linear midnight" theme**, not the Raycast/green one:
+- **Accent:** indigo `--brand: #5e6ad2` (light `:root`) / acid-lime `#e4f222` (`.dark`) — NOT green `#25b06a`.
+- **Font:** **Inter** (via `--font-sans`) — NOT Manrope.
+- **Radius:** `--radius: 0.375rem` (6px, sharp) — the code favours crisp corners + 1px borders over the shadow-elevation model above.
+- **Success/accept:** the carrier quick-accept button uses a dedicated green token `--success` (#10b981) — the one green in the shipped system.
+- Surfaces are near-black (`#08090a` canvas, `#0f1011` cards) with `--border` separation.
+
+**Open brand decision:** green (this doc / "Bolt identity") vs the shipped indigo-lime "Linear" look. Until that's decided, **build new components against the shipped `globals.css` tokens (indigo/`--brand`)**, not the green spec above, so the app stays coherent. The green section is kept as the alternative direction, not current truth.
