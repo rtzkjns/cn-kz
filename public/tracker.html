@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CN-KZ — Трекер работы</title>
+<meta name="description" content="Прогресс разработки маркетплейса грузоперевозок CN-KZ.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0c; --s1:#111114; --s2:#17171b; --s3:#1e1e23;
+    --border:rgba(255,255,255,.06); --border-h:rgba(255,255,255,.10);
+    --fg:#f4f4f5; --fg2:#e4e4e7; --muted:#a1a1aa; --subtle:#8b8b94;
+    --accent:#5e6ad2; --accent-h:#6c78e6; --accent-fg:#fff;
+    --done:#3fb950; --wip:#d29922; --next:#7d8590;
+    --card-sh:inset 0 1px 0 rgba(255,255,255,.05), 0 1px 2px rgba(0,0,0,.45);
+    --r1:4px; --r2:8px; --r3:12px;
+    --ease:cubic-bezier(.16,1,.3,1);
+    --m1:#60a5fa; --m2:#fb923c; --m3:#facc15; --m4:#fb7185; --m5:#c084fc; --mb:#8b8b94;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:var(--bg); color:var(--fg);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
+    font-variant-numeric:tabular-nums; letter-spacing:-.006em;
+  }
+  body::before{ /* faint instrumentation dot-grid */
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:radial-gradient(rgba(255,255,255,.018) 1px, transparent 1px);
+    background-size:26px 26px; mask-image:linear-gradient(to bottom, #000, transparent 92%);
+  }
+  .wrap{position:relative; z-index:1; max-width:1160px; margin:0 auto; padding:0 22px 40px;}
+  .num,.mono{font-family:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace; font-variant-numeric:tabular-nums;}
+  a{color:inherit;}
+
+  /* topbar */
+  header{position:sticky; top:0; z-index:20; background:color-mix(in srgb,var(--bg) 78%,transparent); backdrop-filter:saturate(140%) blur(12px); border-bottom:1px solid var(--border);}
+  .bar{max-width:1160px; margin:0 auto; padding:13px 22px; display:flex; align-items:center; gap:13px;}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:600; letter-spacing:-.02em;}
+  .logo{width:29px; height:29px; border-radius:var(--r2); display:grid; place-items:center; font-size:15px;
+    background:linear-gradient(155deg,var(--accent),#3c4699); box-shadow:var(--card-sh);}
+  .brand small{display:block; color:var(--subtle); font-weight:450; font-size:11.5px; letter-spacing:0; margin-top:1px;}
+  .sp{flex:1;}
+  .live{display:inline-flex; align-items:center; gap:7px; color:var(--muted); font-size:12px; padding:5px 10px; border:1px solid var(--border); border-radius:99px; background:var(--s1); box-shadow:var(--card-sh);}
+  .live .d{width:6px; height:6px; border-radius:50%; background:var(--done); box-shadow:0 0 0 3px color-mix(in srgb,var(--done) 20%,transparent); animation:breathe 2.4s ease-in-out infinite;}
+  @keyframes breathe{50%{opacity:.5;}}
+
+  h1{font-size:21px; font-weight:600; letter-spacing:-.03em; margin:26px 0 5px; text-wrap:balance;}
+  .lede{color:var(--muted); margin:0 0 20px; max-width:64ch;}
+  .lede b{color:var(--fg2); font-weight:600;}
+
+  /* cards base */
+  .card{background:var(--s1); border:1px solid var(--border); border-radius:var(--r3); box-shadow:var(--card-sh);}
+  .kpis{display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:12px;}
+  .kpi{padding:15px 17px; display:flex; flex-direction:column; min-height:118px;}
+  .klabel{color:var(--subtle); font-size:11px; font-weight:500; letter-spacing:.05em; text-transform:uppercase; display:flex; align-items:center; gap:7px;}
+  .kswatch{width:8px; height:8px; border-radius:2px;}
+  .krow{display:flex; align-items:flex-end; gap:9px; margin-top:auto;}
+  .kbig{font-size:31px; font-weight:600; letter-spacing:-.03em; line-height:1;}
+  .kbig .u{font-size:15px; color:var(--muted); margin-left:1px;}
+  .delta{font-size:11px; font-weight:500; padding:2px 6px; border-radius:var(--r1); margin-bottom:4px;
+    color:var(--done); background:color-mix(in srgb,var(--done) 12%,transparent);}
+  .ksub{color:var(--subtle); font-size:12px; margin-top:9px;}
+  .track{height:6px; border-radius:99px; background:rgba(255,255,255,.07); overflow:hidden; margin-top:13px;}
+  .fill{height:100%; border-radius:99px; background:linear-gradient(90deg,var(--accent),var(--accent-h)); width:0; transition:width 1s var(--ease) .15s;}
+  .spark{margin-top:12px; width:100%; height:34px; overflow:visible;}
+  .spark path.line{fill:none; stroke:var(--accent); stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; opacity:.85;}
+  .spark path.area{fill:url(#sg); stroke:none; opacity:.5;}
+  .spark circle{fill:var(--accent);}
+
+  /* sections */
+  .sec{margin-top:34px;}
+  .shead{display:flex; align-items:baseline; gap:11px; margin-bottom:13px;}
+  .shead h2{font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--fg2); margin:0;}
+  .shead .hint{color:var(--subtle); font-size:12px;}
+
+  /* milestones */
+  .miles{display:grid; grid-template-columns:repeat(5,1fr); gap:11px;}
+  .mile{padding:14px; position:relative; overflow:hidden;}
+  .mile::before{content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--mc);}
+  .mcode{font-family:"Geist Mono",monospace; font-size:11px; font-weight:600; letter-spacing:.02em; color:var(--mc);}
+  .mname{font-weight:500; margin-top:3px; font-size:13px; color:var(--fg2);}
+  .mfoot{display:flex; align-items:center; justify-content:space-between; margin-top:15px;}
+  .mcnt{color:var(--subtle); font-size:11.5px;}
+
+  /* badges */
+  .badge{display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:500; padding:2px 8px; border-radius:99px; border:1px solid transparent; white-space:nowrap; line-height:1.5;}
+  .badge .bd{width:5px; height:5px; border-radius:50%; background:currentColor;}
+  .badge.done{color:var(--done); background:color-mix(in srgb,var(--done) 12%,transparent); border-color:color-mix(in srgb,var(--done) 22%,transparent);}
+  .badge.wip{color:var(--wip); background:color-mix(in srgb,var(--wip) 13%,transparent); border-color:color-mix(in srgb,var(--wip) 24%,transparent);}
+  .badge.next{color:var(--next); background:color-mix(in srgb,var(--next) 14%,transparent); border-color:color-mix(in srgb,var(--next) 26%,transparent);}
+  .tag{display:inline-flex; align-items:center; font-size:11px; color:var(--muted); background:var(--s2); border:1px solid var(--border); padding:1px 7px; border-radius:var(--r1); white-space:nowrap;}
+  .mtag{font-family:"Geist Mono",monospace; font-weight:500;}
+
+  /* board */
+  .board{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start;}
+  .chead{display:flex; align-items:center; gap:8px; margin-bottom:9px; padding:0 2px;}
+  .chead .c{margin-left:auto; color:var(--subtle); font-size:11.5px; background:var(--s2); border:1px solid var(--border); border-radius:var(--r1); padding:0 6px;}
+  .stack{display:flex; flex-direction:column; gap:9px;}
+  .item{padding:12px; border-radius:var(--r3); background:var(--s1); border:1px solid var(--border); box-shadow:var(--card-sh); transition:border-color .16s, background .16s;}
+  .item:hover{border-color:var(--border-h); background:var(--s2);}
+  .ititle{font-weight:500; font-size:13px; color:var(--fg);}
+  .idesc{color:var(--muted); font-size:12px; margin-top:6px; line-height:1.45;}
+  .imeta{display:flex; align-items:center; gap:7px; margin-top:10px; color:var(--subtle); font-size:11px;}
+
+  /* toolbar */
+  .toolbar{display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin-bottom:12px;}
+  .seg{position:relative; display:inline-flex; background:var(--s1); border:1px solid var(--border); border-radius:var(--r2); padding:3px; box-shadow:var(--card-sh);}
+  .seg .ind{position:absolute; top:3px; bottom:3px; border-radius:6px; background:var(--accent); transition:left .22s var(--ease), width .22s var(--ease); z-index:0;}
+  .seg button{position:relative; z-index:1; appearance:none; border:0; background:none; cursor:pointer; font:inherit; font-size:12.5px; font-weight:500; color:var(--muted); padding:5px 12px; border-radius:6px; transition:color .18s; white-space:nowrap;}
+  .seg button[aria-pressed="true"]{color:var(--accent-fg);}
+  .search{position:relative; flex:1; min-width:170px;}
+  .search input{width:100%; background:var(--s1); border:1px solid var(--border); color:var(--fg); border-radius:var(--r2); padding:8px 12px 8px 33px; font:inherit; font-size:13px; box-shadow:var(--card-sh);}
+  .search input::placeholder{color:var(--subtle);}
+  .search input:focus-visible{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent);}
+  .search svg{position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--subtle);}
+  .chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .chip{appearance:none; cursor:pointer; font:inherit; font-size:12px; font-weight:500; background:rgba(255,255,255,.04); color:var(--muted); border:1px solid var(--border); padding:5px 10px; border-radius:var(--r2); transition:all .15s;}
+  .chip:hover{color:var(--fg); border-color:var(--border-h);}
+  .chip[aria-pressed="true"]{color:var(--accent); background:color-mix(in srgb,var(--accent) 12%,transparent); border-color:color-mix(in srgb,var(--accent) 32%,transparent);}
+
+  /* table */
+  .tcard{overflow:hidden; padding:0;}
+  .tscroll{overflow:auto; max-height:440px;}
+  table{width:100%; border-collapse:collapse; min-width:680px;}
+  thead th{position:sticky; top:0; z-index:2; text-align:left; font-size:10.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--subtle); padding:10px 15px; background:color-mix(in srgb,var(--s2) 92%,transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); white-space:nowrap;}
+  thead th.r{text-align:right;}
+  tbody td{padding:0 15px; height:40px; border-bottom:1px solid rgba(255,255,255,.05); vertical-align:middle; white-space:nowrap;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr{transition:background .12s;}
+  tbody tr:hover{background:rgba(255,255,255,.03);}
+  td.tt{white-space:normal; padding:9px 15px;}
+  .ttitle{font-weight:500; color:var(--fg);}
+  .tdesc{color:var(--subtle); font-size:12px; margin-top:2px; max-width:42ch; white-space:normal;}
+  td.r{text-align:right;}
+  td.dt{color:var(--muted); font-size:12.5px;}
+  .empty{padding:44px 16px; text-align:center; color:var(--subtle);}
+  .empty svg{opacity:.5; margin-bottom:10px;}
+  .empty button{margin-top:10px; appearance:none; background:none; border:0; color:var(--accent); cursor:pointer; font:inherit; font-size:12.5px;}
+
+  footer{margin-top:32px; padding-top:18px; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; gap:14px 22px; align-items:center; color:var(--subtle); font-size:12px;}
+  footer a{color:var(--muted); text-decoration:none; border-bottom:1px solid transparent; transition:color .15s,border-color .15s;}
+  footer a:hover{color:var(--fg); border-color:var(--border-h);}
+  footer .r{margin-left:auto;}
+
+  .reveal{opacity:0; transform:translateY(6px); animation:rise .5s var(--ease) forwards;}
+  @keyframes rise{to{opacity:1; transform:none;}}
+
+  @media (max-width:900px){.kpis{grid-template-columns:1fr 1fr;} .miles{grid-template-columns:repeat(2,1fr);} .board{grid-template-columns:1fr;}}
+  @media (max-width:540px){.wrap{padding:0 14px 34px;} .bar{padding:11px 14px;} .brand small{display:none;} .kbig{font-size:27px;}}
+  @media (prefers-reduced-motion:reduce){.reveal{animation:none; opacity:1; transform:none;} .fill{transition:none;} .live .d{animation:none;} .spark path.line{stroke-dasharray:none !important;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand"><span class="logo">🚚</span><span>CN-KZ<small>Трекер работы</small></span></div>
+    <span class="sp"></span>
+    <span class="live"><span class="d"></span>MVP в разработке · 07.2026</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <h1 class="reveal">Где мы сейчас</h1>
+  <p class="lede reveal" style="animation-delay:.03s">Маркетплейс грузоперевозок Китай ↔ Казахстан ↔ СНГ. <b>MVP готов на 85%</b> — прототип обеих ролей, гостевой режим и безопасность закрыты, бэкенд Supabase живой, идёт связка мобильного приложения.</p>
+
+  <div class="kpis reveal" style="animation-delay:.06s">
+    <div class="card kpi">
+      <div class="klabel">Прогресс MVP</div>
+      <div class="krow"><span class="kbig num">85<span class="u">%</span></span></div>
+      <svg class="spark" id="spark" viewBox="0 0 260 34" preserveAspectRatio="none" aria-hidden="true">
+        <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".28"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+      </svg>
+    </div>
+    <div class="card kpi">
+      <div class="klabel"><span class="kswatch" style="background:var(--done)"></span>Готово</div>
+      <div class="krow"><span class="kbig num" id="k-done">19</span><span class="delta" id="k-delta">↑ 0</span></div>
+      <div class="ksub">отгружено задач</div>
+    </div>
+    <div class="card kpi">
+      <div class="klabel"><span class="kswatch" style="background:var(--wip)"></span>В работе</div>
+      <div class="krow"><span class="kbig num" id="k-wip">1</span></div>
+      <div class="ksub">прямо сейчас</div>
+    </div>
+    <div class="card kpi">
+      <div class="klabel"><span class="kswatch" style="background:var(--next)"></span>Дальше</div>
+      <div class="krow"><span class="kbig num" id="k-next">3</span></div>
+      <div class="ksub">в бэклоге</div>
+    </div>
+  </div>
+
+  <section class="sec reveal" style="animation-delay:.1s">
+    <div class="shead"><h2>Майлстоны</h2><span class="hint">путь от прототипа к бэкенду</span></div>
+    <div class="miles" id="miles"></div>
+  </section>
+
+  <section class="sec reveal" style="animation-delay:.14s">
+    <div class="shead"><h2>Что происходит</h2><span class="hint">актуальное — без листания всей истории</span></div>
+    <div class="board" id="board"></div>
+  </section>
+
+  <section class="sec reveal" style="animation-delay:.18s">
+    <div class="shead"><h2>Вся работа</h2><span class="hint" id="cnt"></span></div>
+    <div class="toolbar">
+      <label class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="q" type="search" placeholder="Поиск по задачам…" autocomplete="off">
+      </label>
+      <div class="seg" id="seg"></div>
+      <div class="chips" id="mich"></div>
+    </div>
+    <div class="card tcard">
+      <div class="tscroll">
+        <table>
+          <thead><tr><th>Задача</th><th>Майлстон</th><th>Тип</th><th>Кто</th><th class="r">Дата</th><th class="r">Статус</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <a href="https://cn-kz.vercel.app" target="_blank" rel="noopener">Прототип ↗</a>
+    <span>Репозиторий · rtzkjns/cn-kz</span>
+    <span>Supabase · Frankfurt</span>
+    <span class="r">данные: Obsidian → Notion</span>
+  </footer>
+</div>
+
+<script>
+  const MILES={M1:{n:"Прототип",c:"var(--m1)",st:"done"},M2:{n:"Перевозчик+Гость",c:"var(--m2)",st:"done"},M3:{n:"Аудит+Полиш",c:"var(--m3)",st:"done"},M4:{n:"Безопасность",c:"var(--m4)",st:"done"},M5:{n:"Бэкенд",c:"var(--m5)",st:"wip"}};
+  const ST={done:{t:"Готово",cls:"done"},wip:{t:"В работе",cls:"wip"},next:{t:"Дальше",cls:"next"}};
+  const P=[
+    ["Кликабельный прототип","M1","done","Фича","Основатель","2026-06-10","","Next.js, тёмная Linear-тема, мок-данные; полные потоки заказчика, перевозчика и гостя."],
+    ["Дизайн-система (Linear + indigo)","M1","done","Дизайн","Основатель","2026-06-12","","Много итераций до финального strict-Linear + indigo-акцент."],
+    ["Редизайн карточки груза","M1","done","Дизайн","Основатель","2026-06-15","","Реальная переработка: trust-хедер, маршрут, мета-пиллы, цена и CTA."],
+    ["Редизайн перевозчика (7 фаз)","M2","done","Фича","Оба","2026-06-30","e29f471","Из Figma: 2 статуса, любой город, навигация, рейтинг, сборный рейс, фильтры, онбординг."],
+    ["Гостевой браузинг + маскировка PII","M2","done","Фича","Основатель","2026-07-01","e29f471","Открытая лента без входа, контакты замаскированы, действия ведут ко входу."],
+    ["Batch A фиксы","M3","done","Фикс","Основатель","2026-07-01","e29f471","Перепубликовать, двухтап-отклонение, date-picker, уведомления; фикс тупика встречной цены."],
+    ["Batch B","M3","done","Фича","Основатель","2026-07-02","5984433","Выбор фуры, поиск в «Мои заказы», дубль/редакт заказа, фасет города, взаимная оценка."],
+    ["Фидбек-правки + ре-чек","M3","done","Фикс","Основатель","2026-07-03","31f37f7","Убраны режимы маршрута, зелёная «Принять», чат, «Назад» в Аналитике, «по всей СНГ»."],
+    ["Гостевой шелл: 4 таба","M3","done","Фича","Основатель","2026-07-04","ea5f934","2 таба → 4 (вход в Профиле); по ресёрчу NN/g + Material/Apple."],
+    ["«Ваш отклик» → зелёная «Принять»","M3","done","Фикс","Основатель","2026-07-04","800fe39","Пассивный бейдж → яркая зелёная кнопка с двухтап-подтверждением."],
+    ["Аудит рисков безопасности","M4","done","Ресёрч","Основатель","2026-07-05","","3+ агента + red-team: катастрофичны неоплата, двойной брокеридж, кража личности."],
+    ["Гардрейлы: надёжность-переуступка-аванс","M4","done","Фича","Основатель","2026-07-05","ed2596c","Живая надёжность (−10 за отмену), анти-переуступка, анти-предоплата, рейт-хинт."],
+    ["Гардрейлы: оплата-БИН-KYC-споры","M4","done","Фича","Основатель","2026-07-05","7de7020","Защита оплаты, БИН/ИИН-проверка и значок, споры и отметки рейса."],
+    ["Нейтральный слой безопасности","M4","done","Фича","Основатель","2026-07-06","3951eaa","Безопасность дизайном: проверка, записи, советы, декларации, SOS."],
+    ["Фикс аванса + переделка «претензии»","M4","done","Фикс","Основатель","2026-07-06","7ec6208","Аванс = норма (исправил ошибку); «претензия» → «Что-то не так со сделкой?»."],
+    ["Публичная оферта","M4","done","Фича","Основатель","2026-07-06","c2e998d","Нейтральная площадка, без гарантий, оплата напрямую, запрещённые грузы, данные."],
+    ["Глобальный ре-чек","M4","done","Фикс","Основатель","2026-07-07","8073786","Де-кастоди тексты, фикс двойной ставки, «Вход и безопасность», жалоба и блок, страховка."],
+    ["Финиш безопасности","M4","done","Фича","Основатель","2026-07-07","9d71cd0","Профиль заказчика (симметрия) + санкц-подсказка для грузов в РФ."],
+    ["Бэкенд Supabase","M5","done","Бэкенд","Основатель","2026-06-28","","Схема/RLS/RPC/сиды/realtime/push, USD; проверено под RLS."],
+    ["Expo-приложение: связка экранов","M5","wip","Фича","Оба","2026-07-08","","Экраны на реальных hooks, онбординг. Осталось: Phone-провайдер, eas init."],
+    ["Локализация данных в KZ","Бэклог","next","Бэкенд","Основатель","","","Supabase во Франкфурте нарушает закон РК о ПД — перенос в KZ."],
+    ["Реальный БИН-API + эскроу через партнёра","Бэклог","next","Бэкенд","Основатель","","","egov API + adata/kompra; эскроу через банк-партнёр, не своя лицензия."],
+    ["Натив-релиз + Phone-eas","Бэклог","next","Фича","Оба","","","Phone-провайдер, eas init, прод-alias, релиз в сторы."],
+  ].map(([title,ms,status,kind,who,date,commit,desc])=>({title,ms,status,kind,who,date,commit,desc}));
+
+  const $=(s,r=document)=>r.querySelector(s);
+  const el=(t,c,h)=>{const n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n;};
+  const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+  const fd=d=>d?d.slice(8,10)+"."+d.slice(5,7):"—";
+  const mtag=ms=>ms==="Бэклог"?`<span class="tag mtag" style="color:var(--mb)">Бэклог</span>`:`<span class="tag mtag" style="color:${MILES[ms].c}">${ms} · ${esc(MILES[ms].n)}</span>`;
+  const badge=st=>`<span class="badge ${ST[st].cls}"><span class="bd"></span>${ST[st].t}</span>`;
+
+  const counts={done:0,wip:0,next:0}; P.forEach(p=>counts[p.status]++);
+  $("#k-done").textContent=counts.done; $("#k-wip").textContent=counts.wip; $("#k-next").textContent=counts.next;
+
+  // real "this week" delta: done items within 7 days of the latest date
+  const dates=P.filter(p=>p.date).map(p=>p.date).sort();
+  const last=dates[dates.length-1];
+  const wk=(()=>{const d=new Date(last); d.setDate(d.getDate()-7); const c=d.toISOString().slice(0,10);
+    return P.filter(p=>p.status==="done"&&p.date&&p.date>=c).length;})();
+  $("#k-delta").textContent=`↑ ${wk} за неделю`;
+
+  // sparkline: cumulative completed over time (real data)
+  (()=>{
+    const done=P.filter(p=>p.status==="done"&&p.date).sort((a,b)=>a.date.localeCompare(b.date));
+    const pts=[]; done.forEach((p,i)=>pts.push([i,i+1]));
+    const W=260,H=34,pad=2,n=pts.length; if(!n)return;
+    const maxY=n; const x=i=>pad+(i/(n-1))*(W-2*pad); const y=v=>H-pad-(v/maxY)*(H-2*pad);
+    let line=`M ${x(0)} ${y(1)}`; for(let i=1;i<n;i++)line+=` L ${x(i)} ${y(i+1)}`;
+    const area=line+` L ${x(n-1)} ${H} L ${x(0)} ${H} Z`;
+    const svg=$("#spark");
+    svg.insertAdjacentHTML("beforeend",`<path class="area" d="${area}"/><path class="line" d="${line}"/><circle cx="${x(n-1)}" cy="${y(n)}" r="2.4"/>`);
+    const L=svg.querySelector(".line"); const len=L.getTotalLength();
+    if(!matchMedia("(prefers-reduced-motion:reduce)").matches){L.style.strokeDasharray=len; L.style.strokeDashoffset=len; L.getBoundingClientRect(); L.style.transition="stroke-dashoffset 1.1s var(--ease) .25s"; L.style.strokeDashoffset=0;}
+  })();
+
+  const milesEl=$("#miles");
+  Object.entries(MILES).forEach(([code,m])=>{
+    const c=el("div","card mile",`<div class="mcode">${code}</div><div class="mname">${esc(m.n)}</div><div class="mfoot">${badge(m.st)}<span class="mcnt num">${P.filter(p=>p.ms===code).length} задач</span></div>`);
+    c.style.setProperty("--mc",m.c); milesEl.append(c);
+  });
+
+  const board=$("#board");
+  const recent=P.filter(p=>p.status==="done").sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  [{k:"wip",items:P.filter(p=>p.status==="wip")},{k:"next",items:P.filter(p=>p.status==="next")},{k:"done",title:"Недавно готово",items:recent}].forEach(col=>{
+    const w=el("div"); w.innerHTML=`<div class="chead">${badge(col.k)}<span class="c num">${col.items.length}</span></div>`;
+    const st=el("div","stack");
+    col.items.forEach(p=>st.append(el("div","item",`<div class="ititle">${esc(p.title)}</div><div class="idesc">${esc(p.desc)}</div><div class="imeta">${mtag(p.ms)}<span>·</span>${esc(p.who)}${p.date?` · <span class="num">${fd(p.date)}</span>`:""}</div>`)));
+    w.append(st); board.append(w);
+  });
+
+  // filters
+  let fS="all",fM="all",fQ="";
+  const seg=$("#seg"), ind=el("div","ind"); seg.append(ind);
+  [["all","Все"],["done","Готово"],["wip","В работе"],["next","Дальше"]].forEach(([v,l],i)=>{
+    const b=el("button",null,l); b.type="button"; b.dataset.v=v; b.setAttribute("aria-pressed",String(i===0));
+    b.onclick=()=>{fS=v; [...seg.querySelectorAll("button")].forEach(x=>x.setAttribute("aria-pressed",String(x===b))); moveInd(b); render();};
+    seg.append(b);
+  });
+  function moveInd(b){ind.style.left=b.offsetLeft+"px"; ind.style.width=b.offsetWidth+"px";}
+  const mich=$("#mich");
+  [["all","Все"],["M1","M1"],["M2","M2"],["M3","M3"],["M4","M4"],["M5","M5"],["Бэклог","Бэклог"]].forEach(([v,l],i)=>{
+    const b=el("button","chip",l); b.type="button"; b.setAttribute("aria-pressed",String(i===0));
+    b.onclick=()=>{fM=v; [...mich.children].forEach(x=>x.setAttribute("aria-pressed","false")); b.setAttribute("aria-pressed","true"); render();};
+    mich.append(b);
+  });
+  $("#q").addEventListener("input",e=>{fQ=e.target.value.trim().toLowerCase(); render();});
+
+  const rows=$("#rows");
+  function render(){
+    const list=P.filter(p=>(fS==="all"||p.status===fS)&&(fM==="all"||p.ms===fM)&&(!fQ||(p.title+" "+p.desc+" "+p.who+" "+p.kind).toLowerCase().includes(fQ))).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+    $("#cnt").textContent=list.length===P.length?`${P.length} задач`:`${list.length} из ${P.length}`;
+    rows.innerHTML="";
+    if(!list.length){rows.innerHTML=`<tr><td colspan="6"><div class="empty"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><div>Ничего не найдено под эти фильтры.</div><button id="clr">Сбросить фильтры</button></div></td></tr>`; $("#clr").onclick=reset; return;}
+    list.forEach(p=>{
+      const tr=el("tr");
+      tr.innerHTML=`<td class="tt"><div class="ttitle">${esc(p.title)}</div><div class="tdesc">${esc(p.desc)}</div></td><td>${mtag(p.ms)}</td><td><span class="tag">${esc(p.kind)}</span></td><td style="color:var(--muted)">${esc(p.who)}</td><td class="r dt num">${p.date?fd(p.date):"—"}${p.commit?` · <span class="mono" style="color:var(--subtle)">${esc(p.commit)}</span>`:""}</td><td class="r">${badge(p.status)}</td>`;
+      rows.append(tr);
+    });
+  }
+  function reset(){fS="all";fM="all";fQ="";$("#q").value="";[...seg.querySelectorAll("button")].forEach((x,i)=>x.setAttribute("aria-pressed",String(i===0)));moveInd(seg.querySelector("button"));[...mich.children].forEach((x,i)=>x.setAttribute("aria-pressed",String(i===0)));render();}
+  render();
+  requestAnimationFrame(()=>{moveInd(seg.querySelector('button')); document.querySelectorAll(".fill").forEach(f=>f.style.width="85%");});
+  window.addEventListener("resize",()=>moveInd(seg.querySelector('[aria-pressed="true"]')||seg.querySelector("button")));
+</script>
+</body>
+</html>
