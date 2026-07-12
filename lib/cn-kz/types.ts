@@ -81,32 +81,31 @@ export type OrderStatus =
   | "deal" // Сделка создана
   | "archived" // Архив (истёк срок без откликов)
 
-// Lifecycle of a deal (after an offer is accepted). PRD §6 — forward-only pipeline.
-// Перевозчик двигает статус вручную («Следующий этап»); заказчик подтверждает получение.
+// Lifecycle of a deal. Driver-simple model (research-backed: inDrive/Yandex/Uber Freight/Convoy):
+// водитель делает 2 обязательных тапа в естественные моменты — «Забрал груз» и «Доставил» —
+// одной большой кнопкой «следующее действие». «Принято» ставится авто при принятии оффера;
+// «На границе» — НЕобязательный тап; «Завершено» подтверждает заказчик.
 export type DealStatus =
-  | "accepted" // Принято
-  | "picked_up" // Забрал заказ
-  | "in_transit" // В пути
-  | "at_border" // На границе
-  | "delivered" // Доставлено
-  | "completed" // Завершено
+  | "accepted" // Принято (авто при принятии оффера)
+  | "picked_up" // В пути (тап водителя «Забрал груз»)
+  | "at_border" // На границе (необязательный тап «Прошёл границу»)
+  | "delivered" // Доставлено (тап водителя «Доставил»)
+  | "completed" // Завершено (заказчик подтвердил получение)
   | "cancelled" // Отменено
 
 export const DEAL_STATUS_LABEL: Record<DealStatus, string> = {
   accepted: "Принято",
-  picked_up: "Забрал заказ",
-  in_transit: "В пути",
+  picked_up: "В пути",
   at_border: "На границе",
   delivered: "Доставлено",
   completed: "Завершено",
   cancelled: "Отменено",
 }
 
-// Порядок этапов доставки (без «Отменено»). Последний шаг «Завершено» подтверждает заказчик.
+// Узлы степпера для ЗАКАЗЧИКА (без «Отменено»). «На границе» — мягкий/необязательный узел.
 export const DEAL_FLOW: DealStatus[] = [
   "accepted",
   "picked_up",
-  "in_transit",
   "at_border",
   "delivered",
   "completed",
@@ -203,6 +202,8 @@ export interface Order {
     agreedPriceUsd: number
     chat: ChatMessage[]
     tripId?: string // сборный рейс: несколько грузов в одной фуре
+    crossedBorder?: boolean // водитель отметил «Прошёл границу» (необязательный шаг)
+    updatedAgo?: string // «обновлено N назад» — когда водитель последний раз двигал статус
     log?: { label: string; time: string }[] // отметки рейса с таймстампом (прибытие/простой)
     claim?: { reason: string; note: string } // претензия «на рассмотрении» (структурный спор)
   }

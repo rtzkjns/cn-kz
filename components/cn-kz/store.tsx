@@ -12,8 +12,7 @@ import {
 } from "@/lib/cn-kz/mock-data"
 import {
   type ChatMessage,
-  DEAL_FLOW,
-  DEAL_STATUS_LABEL,
+  type DealStatus,
   type OfferKind,
   type Order,
   type Role,
@@ -35,7 +34,6 @@ export type Screen =
   | { type: "createOrder"; prefillFrom?: string; editId?: string } // дубль/редактирование
   | { type: "terms" } // условия / публичная оферта
   | { type: "security" } // вход и безопасность аккаунта (2FA, сессии)
-  | { type: "borderDocs"; orderId: string } // чеклист документов для границы (PRD §9)
 
 export type Tab =
   | "feed"
@@ -145,7 +143,8 @@ interface CnKzStore {
   confirmCounter: (orderId: string) => void // перевозчик принимает встречную цену заказчика
   declineMyOffer: (orderId: string) => void // перевозчик снимает свой отклик
   completeDeal: (orderId: string) => void
-  advanceDeal: (orderId: string) => void // перевозчик двигает статус доставки (PRD §6)
+  advanceDeal: (orderId: string) => void // основная кнопка водителя: Забрал груз / Доставил
+  markAtBorder: (orderId: string) => void // необязательный тап водителя «Прошёл границу»
   submitRating: (orderId: string, stars: number) => void
   confirmDelivery: (orderId: string) => void
   cancelDeal: (orderId: string) => void
@@ -587,21 +586,36 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       showToast("Заказ завершён · можно провести оплату")
     }
 
-    // PRD §6 — перевозчик двигает статус вперёд («Следующий этап»), forward-only, до «Доставлено».
-    // Финальное «Завершено» подтверждает ЗАКАЗЧИК через confirmDelivery («Подтвердить получение»).
+    // Основная кнопка водителя «следующее действие» — 2 обязательных тапа в естественные моменты:
+    // accepted → picked_up («Забрал груз»), picked_up|at_border → delivered («Доставил»). Больше ничего.
     function advanceDeal(orderId: string) {
       const cur = getOrder(orderId)?.deal?.status
-      if (!cur) return
-      const idx = DEAL_FLOW.indexOf(cur)
-      if (idx < 0 || idx >= DEAL_FLOW.indexOf("delivered")) return
-      const next = DEAL_FLOW[idx + 1]
-      updateOrder(orderId, (o) => (o.deal ? { ...o, deal: { ...o.deal, status: next } } : o))
-      showToast(`Статус: ${DEAL_STATUS_LABEL[next]}`)
+      const next: DealStatus | null =
+        cur === "accepted"
+          ? "picked_up"
+          : cur === "picked_up" || cur === "at_border"
+            ? "delivered"
+            : null
+      if (!next) return
+      updateOrder(orderId, (o) =>
+        o.deal ? { ...o, deal: { ...o.deal, status: next, updatedAgo: "только что" } } : o
+      )
+      showToast(next === "picked_up" ? "Груз забран — в пути" : "Груз доставлен — ждём подтверждения заказчика")
+    }
+
+    // Необязательный тап водителя «Прошёл границу» — не блокирует пайплайн, лишь помечает узел.
+    function markAtBorder(orderId: string) {
+      updateOrder(orderId, (o) =>
+        o.deal && o.deal.status === "picked_up"
+          ? { ...o, deal: { ...o.deal, status: "at_border", crossedBorder: true, updatedAgo: "только что" } }
+          : o
+      )
+      showToast("Отмечено: на границе")
     }
 
     function confirmDelivery(orderId: string) {
       updateOrder(orderId, (o) =>
-        o.deal ? { ...o, deal: { ...o.deal, status: "completed" } } : o
+        o.deal ? { ...o, deal: { ...o.deal, status: "completed", updatedAgo: "только что" } } : o
       )
       showToast("Получение подтверждено · можно провести оплату")
     }
@@ -801,6 +815,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       declineMyOffer,
       completeDeal,
       advanceDeal,
+      markAtBorder,
       submitRating,
       confirmDelivery,
       cancelDeal,

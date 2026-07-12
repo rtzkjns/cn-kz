@@ -75,10 +75,16 @@ Name-your-price + 1 counter-offer + **15-minute confirmation window** (inDrive m
   - **Вариант Б (Counter-offer):** carrier gets a 15-min window to confirm (truck may be taken). Confirm → deal. No confirm → offer expires, order returns to feed.
 - Picking one offer auto-rejects the rest (push: "выбран другой перевозчик").
 
-### 6. Сделка и статусы доставки
-`Принято → Забрал заказ → В пути → На границе → Доставлено → Завершено`
-- Carrier advances status manually via **«Следующий этап»**. Statuses are **forward-only** (mistake → cancel deal and restart).
-- Shipper sees real-time updates, confirms with **«Подтвердить получение»** (Доставлено → Завершено).
+### 6. Сделка и статусы доставки  — DRIVER-SIMPLE (updated 2026-07-12)
+`Принято → В пути → [На границе] → Доставлено → Завершено`
+Truck drivers are a low-tech audience and won't tap a button per micro-status (research: inDrive/Yandex/Uber Freight/Convoy converge on **2 required driver taps at physical handoffs**). So:
+- **Принято** — AUTO the instant the offer is accepted (no driver tap).
+- **«Забрал груз»** — driver **tap #1** (required) at pickup → shipper reads this as **«В пути»**.
+- **«Прошёл границу»** — **optional** driver tap; never blocks the pipeline. Shows as a soft node shipper-side, greyed if skipped.
+- **«Доставил груз»** — driver **tap #2** (required) at delivery. Optional POD photo at this step.
+- **Завершено** — the **shipper** confirms with **«Подтвердить получение»**.
+- The carrier UI shows **one big "next action" button** (the single next step only) with a **confirm step** (two-tap «Точно?» — not swipe, which fails with gloves/cold). Forward-only; no intermediate "В пути"/"На границе" as *required* driver actions.
+- Shipper sees a coarse timestamped stepper + «Обновлено N назад» + chat/call as the fallback when the driver goes quiet.
 - Deals dashboard for both roles (active + completed). Colored status badges.
 - **Cancel deal:** available to both sides **until "Забрал заказ"**. Requires confirmation ("снизит ваш рейтинг"); cancelling side loses N rating (floor 0). Deal → "Отменено" with who cancelled.
 - **Claims (претензии):** no auto-arbiter in MVP. **«Подать претензию»** button in deal detail (from "Забрал заказ" onward) → support ticket (email to admin) with chat history + deal data attached. Covers damage / loss / shortage / delay / cargo mismatch. Runs parallel to the order status.
@@ -92,10 +98,8 @@ Name-your-price + 1 counter-offer + **15-minute confirmation window** (inDrive m
 - A side's rating is revealed only after **both** rate. Average updates in profile automatically.
 - 7-day window; after that the partner's rating shows without exchange. Low rating (1–2) requires a comment. No editing after submit.
 
-### 9. Чеклист документов для границы
-Informational screen, **no file storage**. Reminds the carrier what to have before the border.
-- CMR, Commercial Invoice, Packing List, TIR Carnet / transit declaration, phytosanitary cert (perishables), driver passport + KZ visa.
-- Checkboxes; state stored **locally on device**. Optional — doesn't block "На границе". Items can be marked "не нужен".
+### 9. ~~Чеклист документов для границы~~ — DROPPED (2026-07-12)
+Cut after research: the driver doesn't *produce* border documents (the shipper / freight-forwarder / customs broker does), a static list is wrong for the specific load (phyto only for perishables, TIR only under the TIR regime — much China↔KZ freight now clears via ASTANA-1 digital customs), and regular-corridor drivers know the docs cold. Real freight apps ship document **upload (POD)**, not a static pre-border checklist. The actionable, kept equivalent = the **optional POD photo** at the «Доставил груз» step (§6). No dedicated checklist screen.
 
 ### 10. Push-уведомления
 Liquidity-critical. **Trigger "new matching cargo"**: on publish, push goes to carriers matching truck type + watched destination + cargo type.

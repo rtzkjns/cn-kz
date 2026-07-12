@@ -9,7 +9,6 @@ import {
   Check,
   ChevronRight,
   Clock,
-  FileText,
   Plus,
   Settings as SettingsIcon,
   Lock,
@@ -193,6 +192,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
     push,
     role,
     advanceDeal,
+    markAtBorder,
     confirmDelivery,
     cancelDeal,
     logDealEvent,
@@ -213,6 +213,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
   const [criteria, setCriteria] = useState<string[]>([])
   const [showCancel, setShowCancel] = useState(false)
   const [podAdded, setPodAdded] = useState(false)
+  const [confirmAdvance, setConfirmAdvance] = useState(false)
   const [showClaim, setShowClaim] = useState(false)
   const [claimReason, setClaimReason] = useState("")
   const [claimNote, setClaimNote] = useState("")
@@ -228,14 +229,29 @@ export function DealScreen({ orderId }: { orderId: string }) {
   const cancelled = deal.status === "cancelled"
   const completed = deal.status === "completed"
   const curIdx = DEAL_FLOW.indexOf(deal.status)
-  const canCarrierAdvance = role === "carrier" && !completed && !cancelled && curIdx < DEAL_FLOW.indexOf("delivered")
+  // Основное действие водителя — одна кнопка «следующее действие» (2 обязательных тапа):
+  const driverNext: "pickup" | "deliver" | null =
+    deal.status === "accepted"
+      ? "pickup"
+      : deal.status === "picked_up" || deal.status === "at_border"
+        ? "deliver"
+        : null
   const canConfirmDelivery = role === "shipper" && deal.status === "delivered"
-  const canCancel = deal.status === "accepted" // §6: отмена только до «Забрал заказ»
+  const canCancel = deal.status === "accepted" // отмена только до «Забрал груз»
   const other = role === "shipper" ? deal.carrier : order.shipper
   // Привязка «кто реально везёт» — против переуступки/двойного брокериджа.
   const acceptedOffer = order.offers.find((o) => o.status === "accepted")
   const boundTruckType = acceptedOffer?.truck ?? order.myOfferTruck?.type ?? order.truckType
   const boundPlate = acceptedOffer?.plate ?? order.myOfferTruck?.plate
+  // Большая кнопка «следующее действие» с подтверждением в 2 тапа (без свайпа — он плохо в перчатках/мороз).
+  const tapAdvance = () => {
+    if (confirmAdvance) {
+      advanceDeal(order.id)
+      setConfirmAdvance(false)
+    } else {
+      setConfirmAdvance(true)
+    }
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -251,7 +267,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
       />
 
       <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-6">
-        {/* status — полный пайплайн доставки (PRD §6) */}
+        {/* status — простой степпер: «На границе» мягкий/необязательный узел */}
         <Card size="sm">
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
@@ -261,34 +277,44 @@ export function DealScreen({ orderId }: { orderId: string }) {
             {cancelled ? (
               <p className="text-sm text-destructive">Сделка отменена</p>
             ) : (
-              <ol className="space-y-2.5">
-                {DEAL_FLOW.map((st, i) => {
-                  const done = completed || i < curIdx
-                  const current = !completed && i === curIdx
-                  return (
-                    <li key={st} className="flex items-center gap-2.5 text-sm">
-                      <span
-                        className={
-                          "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-medium " +
-                          (done
-                            ? "bg-brand text-brand-foreground"
-                            : current
-                              ? "border border-brand text-brand"
-                              : "bg-muted text-muted-foreground")
-                        }
-                      >
-                        {done ? <Check className="size-3" /> : i + 1}
-                      </span>
-                      <span className={done || current ? "font-medium text-foreground" : "text-muted-foreground"}>
-                        {DEAL_STATUS_LABEL[st]}
-                      </span>
-                      {current && (
-                        <span className="ml-auto text-[11px] font-medium text-brand">сейчас</span>
-                      )}
-                    </li>
-                  )
-                })}
-              </ol>
+              <>
+                <ol className="space-y-2.5">
+                  {DEAL_FLOW.map((st, i) => {
+                    const isBorder = st === "at_border"
+                    const passed = completed || i < curIdx
+                    const done = isBorder ? !!deal.crossedBorder : passed
+                    const current = !completed && i === curIdx
+                    return (
+                      <li key={st} className="flex items-center gap-2.5 text-sm">
+                        <span
+                          className={
+                            "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-medium " +
+                            (done
+                              ? "bg-brand text-brand-foreground"
+                              : current
+                                ? "border border-brand text-brand"
+                                : "bg-muted text-muted-foreground")
+                          }
+                        >
+                          {done ? <Check className="size-3" /> : i + 1}
+                        </span>
+                        <span className={done || current ? "font-medium text-foreground" : "text-muted-foreground"}>
+                          {DEAL_STATUS_LABEL[st]}
+                        </span>
+                        {current && (
+                          <span className="ml-auto text-[11px] font-medium text-brand">сейчас</span>
+                        )}
+                        {isBorder && !done && !current && (
+                          <span className="ml-auto text-[11px] text-muted-foreground">необязательно</span>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ol>
+                {deal.updatedAgo && (
+                  <p className="text-[11px] text-muted-foreground">Обновлено: {deal.updatedAgo}</p>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
@@ -567,47 +593,36 @@ export function DealScreen({ orderId }: { orderId: string }) {
           </Card>
         )}
 
-        {/* actions — пайплайн доставки (PRD §6): перевозчик двигает статус, заказчик подтверждает */}
+        {/* actions — водитель делает 2 тапа в естественные моменты (Забрал/Доставил); заказчик подтверждает */}
         {!cancelled && !completed && (
           <div className="space-y-2 pt-1">
-            {role === "carrier" && (
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => push({ type: "borderDocs", orderId: order.id })}
-              >
-                <FileText className="size-4" /> Документы для границы
-              </Button>
-            )}
-
             {role === "carrier" ? (
-              curIdx === DEAL_FLOW.indexOf("at_border") ? (
-                <Card size="sm" className="ring-brand/40">
-                  <CardContent className="space-y-2">
-                    <p className="text-sm font-medium">Отметить доставку</p>
-                    <p className="text-xs text-muted-foreground">
-                      Можно приложить фото выгрузки или накладной (POD) — заказчик увидит и подтвердит получение.
-                    </p>
-                    <Button variant="outline" className="w-full" onClick={() => setPodAdded(true)}>
-                      <Camera className="size-4" /> {podAdded ? "Фото добавлено ✓" : "Добавить фото выгрузки"}
-                    </Button>
-                    <Button className="w-full" onClick={() => advanceDeal(order.id)}>
-                      <Check className="size-4" /> Отметить доставленным
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : canCarrierAdvance ? (
-                <Button className="w-full" onClick={() => advanceDeal(order.id)}>
-                  <ChevronRight className="size-4" /> Следующий этап: {DEAL_STATUS_LABEL[DEAL_FLOW[curIdx + 1]]}
+              driverNext === "pickup" ? (
+                <Button className="h-14 w-full text-base font-bold" onClick={tapAdvance}>
+                  <Check className="size-5" /> {confirmAdvance ? "Точно забрали груз?" : "Забрал груз"}
                 </Button>
+              ) : driverNext === "deliver" ? (
+                <div className="space-y-2">
+                  {deal.status === "picked_up" && (
+                    <Button variant="outline" className="w-full" onClick={() => markAtBorder(order.id)}>
+                      Прошёл границу
+                    </Button>
+                  )}
+                  <Button variant="outline" className="w-full" onClick={() => setPodAdded(true)}>
+                    <Camera className="size-4" /> {podAdded ? "Фото выгрузки добавлено ✓" : "Фото выгрузки (по желанию)"}
+                  </Button>
+                  <Button className="h-14 w-full text-base font-bold" onClick={tapAdvance}>
+                    <Check className="size-5" /> {confirmAdvance ? "Точно доставили?" : "Доставил груз"}
+                  </Button>
+                </div>
               ) : (
                 <p className="rounded-md bg-muted px-3 py-2 text-center text-xs text-muted-foreground">
                   Груз доставлен — ждём подтверждения получения заказчиком.
                 </p>
               )
             ) : canConfirmDelivery ? (
-              <Button className="w-full" onClick={() => confirmDelivery(order.id)}>
-                <Check className="size-4" /> Подтвердить получение
+              <Button className="h-14 w-full text-base font-bold" onClick={() => confirmDelivery(order.id)}>
+                <Check className="size-5" /> Подтвердить получение
               </Button>
             ) : (
               <p className="rounded-md bg-muted px-3 py-2 text-center text-xs text-muted-foreground">

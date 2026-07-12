@@ -44,7 +44,6 @@ const DEAL_STATUS_VARIANT: Record<
 > = {
   accepted: "info",
   picked_up: "info",
-  in_transit: "info",
   at_border: "warning",
   delivered: "success",
   completed: "success",
