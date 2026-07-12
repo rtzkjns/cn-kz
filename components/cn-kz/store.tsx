@@ -280,6 +280,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       setAuthed(false)
       setShowAuth(false)
       setStack([])
+      setTabRaw("feed") // иначе после выхода подсветка нижней навигации рассинхронится с гостевым экраном
     }
 
     const openAuth = () => setShowAuth(true)

@@ -230,11 +230,13 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
             {order.pickupPhone && (
               <DetailRow label="Контакт погрузки" value={order.pickupPhone} />
             )}
-            <DetailRow label="Адрес доставки" value={order.address} />
-            <DetailRow
-              label="Получатель"
-              value={`${order.recipientName} · ${order.recipientPhone}`}
-            />
+            {order.address && <DetailRow label="Адрес доставки" value={order.address} />}
+            {(order.recipientName || order.recipientPhone) && (
+              <DetailRow
+                label="Получатель"
+                value={[order.recipientName, order.recipientPhone].filter(Boolean).join(" · ")}
+              />
+            )}
             <DetailRow
               label="Оплата"
               value={order.payment === "cash" ? "Наличные" : "Банковский перевод"}

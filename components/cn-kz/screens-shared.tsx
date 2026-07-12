@@ -471,7 +471,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
               )}
               {role === "carrier" && !completed && (
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                  {["Прибыл на погрузку", "Забрал груз", "Прибыл на выгрузку"].map((l) => (
+                  {["Прибыл на погрузку", "Прибыл на выгрузку"].map((l) => (
                     <button
                       key={l}
                       onClick={() => logDealEvent(order.id, l)}

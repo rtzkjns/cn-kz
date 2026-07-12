@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ScreenHeader } from "./phone-frame"
 import { deals, money } from "./shared"
-import { Section } from "./ui-bits"
+import { Countdown, Section } from "./ui-bits"
 import { useCnKz } from "./store"
 
 export function CarrierProfileScreen({
@@ -137,7 +137,11 @@ export function CarrierProfileScreen({
 
       {/* action bar */}
       <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-border bg-card p-3">
-        {offer && order && offer.status === "countered" ? (
+        {offer && order && offer.awaitingConfirm && offer.confirmDeadline ? (
+          <div className="rounded-md border border-amber-500/35 bg-amber-500/12 px-3 py-2 text-center text-[13px] font-medium text-amber-500">
+            Встречная выбрана — ждём подтверждения перевозчика · <Countdown deadline={offer.confirmDeadline} />
+          </div>
+        ) : offer && order && offer.status === "countered" ? (
           <div className="rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-center text-[13px] font-medium text-brand">
             Встречная отправлена: {money(offer.shipperCounterUsd ?? offer.priceUsd)} · ждём ответа перевозчика
           </div>

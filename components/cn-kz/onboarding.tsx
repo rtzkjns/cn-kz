@@ -133,14 +133,9 @@ export function OnboardingFlow() {
             </Chip>
           </ChipRow>
           {method === "phone" ? (
-            <>
-              <Field label="Телефон">
-                <Input className="h-11" placeholder="+7 705 123 45 67" />
-              </Field>
-              <Field label="SMS-код">
-                <Input className="h-11" placeholder="Введите 4 цифры" inputMode="numeric" />
-              </Field>
-            </>
+            <Field label="Телефон">
+              <Input className="h-11" placeholder="+7 705 123 45 67" inputMode="tel" />
+            </Field>
           ) : (
             <>
               <Field label="Email">
@@ -155,7 +150,7 @@ export function OnboardingFlow() {
             </>
           )}
           <Button size="lg" className="h-12 w-full text-[15px]" onClick={() => enterApp(accountRole)}>
-            {method === "phone" ? "Получить код" : "Войти"}
+            {method === "phone" ? "Войти по SMS" : "Войти"}
           </Button>
         </div>
       )}
