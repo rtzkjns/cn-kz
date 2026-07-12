@@ -139,7 +139,6 @@ interface CnKzStore {
   acceptOffer: (orderId: string, offerId: string) => void
   pickCounterOffer: (orderId: string, offerId: string) => void // §5 Вариант Б: выбрать встречную → 15-мин окно
   confirmPickedCounter: (orderId: string, offerId: string) => void // перевозчик подтвердил встречную → сделка
-  expireCounter: (orderId: string, offerId: string) => void // перевозчик не смог взять → вернуть в ленту
   makeOffer: (orderId: string, kind: OfferKind, priceUsd: number, truckId?: string) => void
   skipOrder: (orderId: string) => void // «Пропустить» груз (без отклика)
   isSkipped: (orderId: string) => boolean
@@ -477,34 +476,36 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       showToast("Ждём подтверждения перевозчика — у него 15 минут")
       // Мок: перевозчик (в MVP — реальный человек) обычно подтверждает в окне. Симулируем
       // подтверждение; если бы не успел за 15 мин — сработал бы авто-expire (интервал выше).
-      setTimeout(() => {
-        const still = getOrder(orderId)
-        const of = still?.offers.find((x) => x.id === offerId)
-        if (of?.awaitingConfirm && !still?.deal) confirmPickedCounter(orderId, offerId)
-      }, 3500)
+      // Свежесть проверяем ВНУТРИ confirmPickedCounter (функциональный апдейт), не через
+      // захваченный getOrder — иначе замыкание видит состояние ДО выбора встречной.
+      setTimeout(() => confirmPickedCounter(orderId, offerId), 3500)
     }
 
     // Перевозчик подтвердил выбранную встречную в окне → создаётся сделка.
+    // Читаем СВЕЖЕЕ состояние внутри setMyOrders: создаём сделку только если оффер ещё ждёт и сделки нет.
     function confirmPickedCounter(orderId: string, offerId: string) {
-      acceptOffer(orderId, offerId)
-    }
-
-    // Окно истекло / перевозчик не смог взять → оффер «Истёк», заказ возвращается в ленту.
-    function expireCounter(orderId: string, offerId: string) {
-      updateMy(orderId, (o) =>
-        o.deal
-          ? o
-          : {
-              ...o,
-              status: "bidding",
-              offers: o.offers.map((of) =>
-                of.id === offerId
-                  ? { ...of, awaitingConfirm: false, confirmDeadline: undefined, status: "expired" }
-                  : of
-              ),
-            }
-      )
-      showToast("Перевозчик не подтвердил — заказ вернулся в ленту")
+      updateMy(orderId, (o) => {
+        if (o.deal) return o
+        const chosen = o.offers.find((of) => of.id === offerId)
+        if (!chosen || !chosen.awaitingConfirm) return o
+        return {
+          ...o,
+          status: "deal",
+          offers: o.offers.map((of) => ({
+            ...of,
+            awaitingConfirm: false,
+            confirmDeadline: undefined,
+            status: of.id === offerId ? "accepted" : "rejected",
+          })),
+          deal: {
+            status: "accepted",
+            carrier: chosen.carrier,
+            agreedPriceUsd: chosen.priceUsd,
+            chat: [],
+          },
+        }
+      })
+      showToast("Перевозчик подтвердил встречную — сделка создана")
     }
 
     // Перевозчик выигрывает заказ → на заказе появляется сделка (carrier = ME_CARRIER).
@@ -793,7 +794,6 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       acceptOffer,
       pickCounterOffer,
       confirmPickedCounter,
-      expireCounter,
       makeOffer,
       skipOrder,
       isSkipped,
