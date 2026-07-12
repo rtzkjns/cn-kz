@@ -21,8 +21,9 @@ export function CarrierProfileScreen({
   orderId?: string
   offerId?: string
 }) {
-  const { getCarrier, getOrder, pop, push, acceptOffer, showToast } = useCnKz()
+  const { getCarrier, getOrder, pop, push, acceptOffer, pickCounterOffer, showToast } = useCnKz()
   const [showReport, setShowReport] = useState(false)
+  const [reportReason, setReportReason] = useState<string | null>(null)
   const c = getCarrier(carrierId)
   if (!c) return null
 
@@ -136,20 +137,30 @@ export function CarrierProfileScreen({
 
       {/* action bar */}
       <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-border bg-card p-3">
-        {offer && order && (
+        {offer && order && offer.status === "countered" ? (
+          <div className="rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-center text-[13px] font-medium text-brand">
+            Встречная отправлена: {money(offer.shipperCounterUsd ?? offer.priceUsd)} · ждём ответа перевозчика
+          </div>
+        ) : offer && order ? (
           <Button
             className="w-full"
             onClick={() => {
-              acceptOffer(order.id, offer.id)
-              pop() // снять профиль со стека, чтобы «назад» не вёл к уже принятому отклику
-              push({ type: "deal", orderId: order.id })
+              if (offer.kind === "counter") {
+                // §5 Вариант Б: выбор встречной → перевозчику 15 мин на подтверждение, сделки ещё нет.
+                pickCounterOffer(order.id, offer.id)
+                pop()
+              } else {
+                acceptOffer(order.id, offer.id)
+                pop() // снять профиль со стека, чтобы «назад» не вёл к уже принятому отклику
+                push({ type: "deal", orderId: order.id })
+              }
             }}
           >
             {offer.kind === "accept"
               ? `Принять отклик ${money(offer.priceUsd)}`
               : `Выбрать ${money(offer.priceUsd)}`}
           </Button>
-        )}
+        ) : null}
         <div className="flex gap-2">
           <Button variant="outline" className="flex-1" onClick={() => showToast("Открываем чат")}>
             <MessageCircle className="size-4" /> Чат
@@ -180,20 +191,27 @@ export function CarrierProfileScreen({
             <div className="flex flex-wrap gap-1.5 pb-1">
               {["Мошенничество", "Не выходит на связь", "Обман по грузу", "Оскорбления", "Другое"].map(
                 (r) => (
-                  <span
+                  <button
                     key={r}
-                    className="rounded-full border border-border px-3 py-1.5 text-[13px] font-medium text-muted-foreground"
+                    onClick={() => setReportReason(r)}
+                    className={`rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                      reportReason === r
+                        ? "border-brand bg-brand/15 text-brand"
+                        : "border-border text-muted-foreground hover:text-foreground"
+                    }`}
                   >
                     {r}
-                  </span>
+                  </button>
                 )
               )}
             </div>
             <Button
               className="w-full"
+              disabled={!reportReason}
               onClick={() => {
                 setShowReport(false)
-                showToast("Жалоба отправлена — модерация проверит профиль")
+                showToast(`Жалоба отправлена (${reportReason}) — модерация проверит профиль`)
+                setReportReason(null)
               }}
             >
               <ShieldAlert className="size-4" /> Отправить жалобу

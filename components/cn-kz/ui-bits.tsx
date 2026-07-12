@@ -1,8 +1,27 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import type { LucideIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+
+// Живой обратный отсчёт mm:ss до дедлайна (§5 — окно подтверждения встречной).
+export function Countdown({ deadline }: { deadline: number }) {
+  const [now, setNow] = useState(deadline)
+  useEffect(() => {
+    setNow(Date.now())
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [])
+  const left = Math.max(0, deadline - now)
+  const m = Math.floor(left / 60000)
+  const s = Math.floor((left % 60000) / 1000)
+  return (
+    <span className="font-mono-tech tabular-nums">
+      {m}:{String(s).padStart(2, "0")}
+    </span>
+  )
+}
 
 // Мини-сводка сверху ленты: единая карточка с сегментами «иконка + число + подпись».
 export interface Stat {

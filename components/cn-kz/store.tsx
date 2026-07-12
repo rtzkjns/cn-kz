@@ -12,6 +12,8 @@ import {
 } from "@/lib/cn-kz/mock-data"
 import {
   type ChatMessage,
+  DEAL_FLOW,
+  DEAL_STATUS_LABEL,
   type OfferKind,
   type Order,
   type Role,
@@ -33,6 +35,7 @@ export type Screen =
   | { type: "createOrder"; prefillFrom?: string; editId?: string } // дубль/редактирование
   | { type: "terms" } // условия / публичная оферта
   | { type: "security" } // вход и безопасность аккаунта (2FA, сессии)
+  | { type: "borderDocs"; orderId: string } // чеклист документов для границы (PRD §9)
 
 export type Tab =
   | "feed"
@@ -132,13 +135,17 @@ interface CnKzStore {
   publishOrder: (d: NewOrderDraft) => void
   saveOrderEdit: (orderId: string, d: NewOrderDraft) => void // редактирование заказа
   republishOrder: (orderId: string) => void // архивный заказ → снова в ленту
+  deleteOrder: (orderId: string) => void // удалить заказ до сделки (PRD §3)
   acceptOffer: (orderId: string, offerId: string) => void
+  pickCounterOffer: (orderId: string, offerId: string) => void // §5 Вариант Б: выбрать встречную → 15-мин окно
+  confirmPickedCounter: (orderId: string, offerId: string) => void // перевозчик подтвердил встречную → сделка
   makeOffer: (orderId: string, kind: OfferKind, priceUsd: number, truckId?: string) => void
   skipOrder: (orderId: string) => void // «Пропустить» груз (без отклика)
   isSkipped: (orderId: string) => boolean
   confirmCounter: (orderId: string) => void // перевозчик принимает встречную цену заказчика
   declineMyOffer: (orderId: string) => void // перевозчик снимает свой отклик
   completeDeal: (orderId: string) => void
+  advanceDeal: (orderId: string) => void // перевозчик двигает статус доставки (PRD §6)
   submitRating: (orderId: string, stars: number) => void
   confirmDelivery: (orderId: string) => void
   cancelDeal: (orderId: string) => void
@@ -213,6 +220,33 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       // Автовыбор фильтра по типу авто из профиля (Figma) — перевозчик видит «свои» грузы.
       if (r === "carrier") setFilters({ ...EMPTY_FILTERS, bodyTypes: ["тент"] })
     }
+  }, [])
+
+  // §5 Вариант Б: авто-истечение окна подтверждения встречной → оффер «Истёк», заказ в ленту.
+  useEffect(() => {
+    const id = setInterval(() => {
+      const now = Date.now()
+      setMyOrders((list) => {
+        let changed = false
+        const next = list.map((o) => {
+          if (o.deal) return o
+          if (!o.offers.some((of) => of.awaitingConfirm && of.confirmDeadline && of.confirmDeadline < now))
+            return o
+          changed = true
+          return {
+            ...o,
+            status: "bidding" as const,
+            offers: o.offers.map((of) =>
+              of.awaitingConfirm && of.confirmDeadline && of.confirmDeadline < now
+                ? { ...of, awaitingConfirm: false, confirmDeadline: undefined, status: "expired" as const }
+                : of
+            ),
+          }
+        })
+        return changed ? next : list
+      })
+    }, 1000)
+    return () => clearInterval(id)
   }, [])
 
   const store = useMemo<CnKzStore>(() => {
@@ -395,6 +429,13 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       showToast("Заказ снова в ленте перевозчиков")
     }
 
+    // Удаление заказа заказчиком — только до сделки (PRD §3). После сделки — только отмена сделки.
+    function deleteOrder(orderId: string) {
+      setMyOrders((list) => list.filter((o) => !(o.id === orderId && !o.deal)))
+      pop()
+      showToast("Заказ удалён")
+    }
+
     function acceptOffer(orderId: string, offerId: string) {
       updateMy(orderId, (o) => {
         const chosen = o.offers.find((of) => of.id === offerId)
@@ -415,6 +456,56 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
         }
       })
       showToast("Сделка создана — договоритесь об оплате напрямую")
+    }
+
+    // §5 Вариант Б: заказчик выбрал ВСТРЕЧНУЮ (kind:"counter"). Сделку сразу не создаём —
+    // даём перевозчику 15 мин на подтверждение (фура могла освободиться/занять).
+    function pickCounterOffer(orderId: string, offerId: string) {
+      updateMy(orderId, (o) =>
+        o.deal
+          ? o
+          : {
+              ...o,
+              offers: o.offers.map((of) =>
+                of.id === offerId
+                  ? { ...of, awaitingConfirm: true, confirmDeadline: Date.now() + 15 * 60 * 1000 }
+                  : of
+              ),
+            }
+      )
+      showToast("Ждём подтверждения перевозчика — у него 15 минут")
+      // Мок: перевозчик (в MVP — реальный человек) обычно подтверждает в окне. Симулируем
+      // подтверждение; если бы не успел за 15 мин — сработал бы авто-expire (интервал выше).
+      // Свежесть проверяем ВНУТРИ confirmPickedCounter (функциональный апдейт), не через
+      // захваченный getOrder — иначе замыкание видит состояние ДО выбора встречной.
+      setTimeout(() => confirmPickedCounter(orderId, offerId), 3500)
+    }
+
+    // Перевозчик подтвердил выбранную встречную в окне → создаётся сделка.
+    // Читаем СВЕЖЕЕ состояние внутри setMyOrders: создаём сделку только если оффер ещё ждёт и сделки нет.
+    function confirmPickedCounter(orderId: string, offerId: string) {
+      updateMy(orderId, (o) => {
+        if (o.deal) return o
+        const chosen = o.offers.find((of) => of.id === offerId)
+        if (!chosen || !chosen.awaitingConfirm) return o
+        return {
+          ...o,
+          status: "deal",
+          offers: o.offers.map((of) => ({
+            ...of,
+            awaitingConfirm: false,
+            confirmDeadline: undefined,
+            status: of.id === offerId ? "accepted" : "rejected",
+          })),
+          deal: {
+            status: "accepted",
+            carrier: chosen.carrier,
+            agreedPriceUsd: chosen.priceUsd,
+            chat: [],
+          },
+        }
+      })
+      showToast("Перевозчик подтвердил встречную — сделка создана")
     }
 
     // Перевозчик выигрывает заказ → на заказе появляется сделка (carrier = ME_CARRIER).
@@ -496,6 +587,18 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       showToast("Заказ завершён · можно провести оплату")
     }
 
+    // PRD §6 — перевозчик двигает статус вперёд («Следующий этап»), forward-only, до «Доставлено».
+    // Финальное «Завершено» подтверждает ЗАКАЗЧИК через confirmDelivery («Подтвердить получение»).
+    function advanceDeal(orderId: string) {
+      const cur = getOrder(orderId)?.deal?.status
+      if (!cur) return
+      const idx = DEAL_FLOW.indexOf(cur)
+      if (idx < 0 || idx >= DEAL_FLOW.indexOf("delivered")) return
+      const next = DEAL_FLOW[idx + 1]
+      updateOrder(orderId, (o) => (o.deal ? { ...o, deal: { ...o.deal, status: next } } : o))
+      showToast(`Статус: ${DEAL_STATUS_LABEL[next]}`)
+    }
+
     function confirmDelivery(orderId: string) {
       updateOrder(orderId, (o) =>
         o.deal ? { ...o, deal: { ...o.deal, status: "completed" } } : o
@@ -516,6 +619,12 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
     }
 
     function cancelDeal(orderId: string) {
+      // §6: отмена доступна обеим сторонам только ДО статуса «Забрал заказ».
+      const cur = getOrder(orderId)?.deal?.status
+      if (cur !== "accepted") {
+        showToast("Отмена уже недоступна — груз в пути. Спорные ситуации — через претензию.")
+        return
+      }
       // Реальный штраф надёжности — только для перевозчика (у заказчика её нет).
       if (role === "carrier") {
         setReliability((r) => Math.max(0, r - 10))
@@ -681,13 +790,17 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       publishOrder,
       saveOrderEdit,
       republishOrder,
+      deleteOrder,
       acceptOffer,
+      pickCounterOffer,
+      confirmPickedCounter,
       makeOffer,
       skipOrder,
       isSkipped,
       confirmCounter,
       declineMyOffer,
       completeDeal,
+      advanceDeal,
       submitRating,
       confirmDelivery,
       cancelDeal,

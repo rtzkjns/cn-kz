@@ -182,7 +182,7 @@ export function OrderCard({
             }}
             className={cn(
               "inline-flex items-center gap-1 rounded-md px-4 py-2.5 text-[13px] font-bold text-white shadow-key transition-transform hover:brightness-110 active:scale-95",
-              confirmAccept ? "bg-emerald-600" : "bg-emerald-500"
+              confirmAccept ? "bg-[var(--success-strong)]" : "bg-[var(--success)]"
             )}
           >
             <Check className="size-4" /> {confirmAccept ? "Точно?" : "Принять"}

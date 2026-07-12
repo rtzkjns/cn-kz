@@ -5,9 +5,10 @@
 > Aesthetic: **"obsidian command terminal"** — near-black canvas, charcoal surfaces floating on it, depth from layered monochrome shadows (not borders or colored backgrounds). Utilitarian, precise — fits a logistics tool.
 
 ## Adaptation notes (where CN-KZ differs from stock Raycast)
-- **Accent = our Bolt green**, not Raycast's red. Green is the CN-KZ brand and IS used for primary CTAs, prices, active states. (Raycast reserves accent for status only + uses near-white CTAs — we deviate intentionally because green is our identity.)
-- **Font = Manrope** (our choice), not Inter. Keep the two-register idea: tight tracking on big headings, normal on body.
-- Everything else (surfaces, shadows, radius scale, spacing, no-colored-backgrounds rule) follows Raycast.
+- **Accent = indigo `#5e6ad2`** (light) / acid-lime `#e4f222` (dark) — the shipped "Linear midnight" identity, rationed to actions & active states. This is the CANONICAL brand (decided 2026-07-12). It replaced an earlier green/"Bolt" idea — the green spec is kept below only as historical reference, not current truth.
+- **Font = Inter** (`--font-sans`). Two-register idea stays: tight tracking on big headings, normal on body.
+- **One green token** `--success` (#10b981) is reserved for the single positive/accept action (carrier quick-accept) — it is NOT a general accent.
+- Everything else (surfaces, shadows, radius discipline, spacing) follows the Raycast structural principles below.
 
 ## Color tokens
 ```
@@ -75,5 +76,12 @@ box-shadow:
 **Do:** near-black neutral surfaces only · layered black/white shadows for depth · green for CTA/price/active · `tabular-nums` on all live numbers · concentric radii · scale-on-press.
 **Don't:** colored section backgrounds · radius > 20px on cards · tinted (slate/zinc) near-blacks · `#ff6363` for buttons/large fills (status dots only) · `transition: all` · pure-white button fills.
 
-## Current state vs target
-The wireframe currently uses a lighter neutral dark (`oklch(0.16 0 0)` ≈ #1f1f1f) with `ring-1` separation. Moving toward this system means: deepen the canvas to near-black `#040506`, layer the surface stack (#07080a → #111214 → #1b1c1e), and add the keyboard-key shadow to pressables. Green accent + Manrope stay.
+## Current state vs target — READ THIS FIRST
+⚠️ **The shipped code does NOT implement the green/Manrope system described above.** As of now (`app/globals.css`, `app/layout.tsx`) the wireframe ships a **"Linear midnight" theme**, not the Raycast/green one:
+- **Accent:** indigo `--brand: #5e6ad2` (light `:root`) / acid-lime `#e4f222` (`.dark`) — NOT green `#25b06a`.
+- **Font:** **Inter** (via `--font-sans`) — NOT Manrope.
+- **Radius:** `--radius: 0.375rem` (6px, sharp) — the code favours crisp corners + 1px borders over the shadow-elevation model above.
+- **Success/accept:** the carrier quick-accept button uses a dedicated green token `--success` (#10b981) — the one green in the shipped system.
+- Surfaces are near-black (`#08090a` canvas, `#0f1011` cards) with `--border` separation.
+
+**Brand decision (2026-07-12): indigo/Linear is canonical.** The green/"Bolt" spec is retired to historical reference. **Build every component against the shipped `globals.css` tokens (indigo `--brand`, `--success` green only for accept).**

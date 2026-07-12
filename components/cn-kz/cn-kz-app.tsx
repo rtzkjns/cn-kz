@@ -27,6 +27,7 @@ import { SettingsScreen, HistoryScreen, SecurityScreen } from "./screens-account
 import { MarketFeedScreen, MarketOrderScreen } from "./screens-market"
 import { GuestChatsScreen, GuestFavoritesScreen, GuestProfileScreen } from "./screens-guest"
 import { TermsScreen } from "./screens-terms"
+import { BorderDocsScreen } from "./screens-border-docs"
 import { CnKzProvider, useCnKz } from "./store"
 
 function Router() {
@@ -63,6 +64,8 @@ function Router() {
         return <TermsScreen />
       case "security":
         return <SecurityScreen />
+      case "borderDocs":
+        return <BorderDocsScreen orderId={top.orderId} />
     }
   }
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { BadgeCheck, Check, Copy, Gavel, MessageCircle, Package, Pencil, Phone, RefreshCw, Search, ShieldCheck, Tag, Truck, X } from "lucide-react"
+import { BadgeCheck, Check, Copy, Gavel, MessageCircle, Package, Pencil, Phone, RefreshCw, Search, ShieldCheck, Tag, Trash2, Truck, X } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -18,7 +18,7 @@ import { CityPicker } from "./city-picker"
 import { OrderCard } from "./order-card"
 import { ScreenHeader } from "./phone-frame"
 import { deals, plural, Rating, Route, money } from "./shared"
-import { Chip, ChipRow, DetailRow, EmptyState, Section, StatStrip } from "./ui-bits"
+import { Chip, ChipRow, Countdown, DetailRow, EmptyState, Section, StatStrip } from "./ui-bits"
 import { useCnKz, type NewOrderDraft } from "./store"
 
 const FILTERS = [
@@ -177,10 +177,11 @@ export function ShipperOrdersScreen() {
 }
 
 export function OrderDetailScreen({ orderId }: { orderId: string }) {
-  const { getOrder, pop, push, acceptOffer, rejectOffer, counterOffer, republishOrder, showToast, markSeen } = useCnKz()
+  const { getOrder, pop, push, acceptOffer, pickCounterOffer, rejectOffer, counterOffer, republishOrder, deleteOrder, showToast, markSeen } = useCnKz()
   const [counterFor, setCounterFor] = useState<string | null>(null)
   const [counterVal, setCounterVal] = useState("")
   const [rejectFor, setRejectFor] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const order = getOrder(orderId)
   // Открыли заказ → новые отклики прочитаны.
   useEffect(() => {
@@ -316,7 +317,12 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                     )}
                   </div>
 
-                  {of.status === "countered" ? (
+                  {of.awaitingConfirm && of.confirmDeadline ? (
+                    <div className="rounded-md border border-amber-500/35 bg-amber-500/12 px-3 py-2 text-[13px] font-medium text-amber-500">
+                      Вы выбрали встречную {money(of.priceUsd)} · ждём подтверждения перевозчика · осталось{" "}
+                      <Countdown deadline={of.confirmDeadline} />
+                    </div>
+                  ) : of.status === "countered" ? (
                     <div className="rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-[13px] font-medium text-brand">
                       Встречная отправлена: {money(of.shipperCounterUsd ?? of.priceUsd)} · ждём ответа перевозчика
                     </div>
@@ -328,9 +334,14 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                           className="flex-1"
                           onClick={(e) => {
                             e.stopPropagation()
-                            acceptOffer(order.id, of.id)
-                            pop()
-                            push({ type: "deal", orderId: order.id })
+                            if (of.kind === "counter") {
+                              // §5 Вариант Б: выбор встречной → 15-мин окно подтверждения перевозчика.
+                              pickCounterOffer(order.id, of.id)
+                            } else {
+                              acceptOffer(order.id, of.id)
+                              pop()
+                              push({ type: "deal", orderId: order.id })
+                            }
                           }}
                         >
                           {of.kind === "accept" ? "Выбрать" : "Выбрать встречную"}
@@ -450,6 +461,17 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
             }}
           >
             <RefreshCw className="size-4" /> Перепубликовать заказ
+          </Button>
+        )}
+
+        {!order.deal && (
+          <Button
+            variant="outline"
+            size="sm"
+            className={`w-full ${confirmDelete ? "border-destructive text-destructive" : "text-muted-foreground"}`}
+            onClick={() => (confirmDelete ? deleteOrder(order.id) : setConfirmDelete(true))}
+          >
+            <Trash2 className="size-3.5" /> {confirmDelete ? "Точно удалить заказ?" : "Удалить заказ"}
           </Button>
         )}
       </div>
@@ -616,6 +638,7 @@ export function CreateOrderScreen({
             <Input
               type="number"
               inputMode="numeric"
+              value={d.weightKg || ""}
               onChange={(e) => set("weightKg", Number(e.target.value))}
             />
           </Field>
@@ -623,6 +646,7 @@ export function CreateOrderScreen({
             <Input
               type="number"
               inputMode="numeric"
+              value={d.volumeM3 || ""}
               onChange={(e) => set("volumeM3", Number(e.target.value))}
             />
           </Field>
@@ -647,6 +671,7 @@ export function CreateOrderScreen({
             type="number"
             inputMode="numeric"
             placeholder="напр. 1500"
+            value={d.priceUsd || ""}
             onChange={(e) => set("priceUsd", Number(e.target.value))}
           />
           <p className="text-xs text-muted-foreground">
