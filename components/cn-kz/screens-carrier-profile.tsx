@@ -21,7 +21,7 @@ export function CarrierProfileScreen({
   orderId?: string
   offerId?: string
 }) {
-  const { getCarrier, getOrder, pop, push, acceptOffer, showToast } = useCnKz()
+  const { getCarrier, getOrder, pop, push, acceptOffer, pickCounterOffer, showToast } = useCnKz()
   const [showReport, setShowReport] = useState(false)
   const [reportReason, setReportReason] = useState<string | null>(null)
   const c = getCarrier(carrierId)
@@ -145,9 +145,15 @@ export function CarrierProfileScreen({
           <Button
             className="w-full"
             onClick={() => {
-              acceptOffer(order.id, offer.id)
-              pop() // снять профиль со стека, чтобы «назад» не вёл к уже принятому отклику
-              push({ type: "deal", orderId: order.id })
+              if (offer.kind === "counter") {
+                // §5 Вариант Б: выбор встречной → перевозчику 15 мин на подтверждение, сделки ещё нет.
+                pickCounterOffer(order.id, offer.id)
+                pop()
+              } else {
+                acceptOffer(order.id, offer.id)
+                pop() // снять профиль со стека, чтобы «назад» не вёл к уже принятому отклику
+                push({ type: "deal", orderId: order.id })
+              }
             }}
           >
             {offer.kind === "accept"

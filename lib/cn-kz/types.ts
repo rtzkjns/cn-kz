@@ -159,6 +159,9 @@ export interface Offer {
   shipperCounterUsd?: number // встречная цена заказчика в ответ на отклик (не затирает priceUsd)
   status: OfferStatus
   createdAgo: string // human-readable, e.g. "12 мин назад"
+  // §5 Вариант Б: заказчик выбрал встречную (kind:"counter") → у перевозчика 15 мин на подтверждение.
+  awaitingConfirm?: boolean // ждём подтверждения перевозчика после выбора его встречной
+  confirmDeadline?: number // ms-таймстамп дедлайна подтверждения (Date.now() + 15 мин)
 }
 
 export interface ChatMessage {

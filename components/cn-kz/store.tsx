@@ -137,6 +137,9 @@ interface CnKzStore {
   republishOrder: (orderId: string) => void // архивный заказ → снова в ленту
   deleteOrder: (orderId: string) => void // удалить заказ до сделки (PRD §3)
   acceptOffer: (orderId: string, offerId: string) => void
+  pickCounterOffer: (orderId: string, offerId: string) => void // §5 Вариант Б: выбрать встречную → 15-мин окно
+  confirmPickedCounter: (orderId: string, offerId: string) => void // перевозчик подтвердил встречную → сделка
+  expireCounter: (orderId: string, offerId: string) => void // перевозчик не смог взять → вернуть в ленту
   makeOffer: (orderId: string, kind: OfferKind, priceUsd: number, truckId?: string) => void
   skipOrder: (orderId: string) => void // «Пропустить» груз (без отклика)
   isSkipped: (orderId: string) => boolean
@@ -218,6 +221,33 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       // Автовыбор фильтра по типу авто из профиля (Figma) — перевозчик видит «свои» грузы.
       if (r === "carrier") setFilters({ ...EMPTY_FILTERS, bodyTypes: ["тент"] })
     }
+  }, [])
+
+  // §5 Вариант Б: авто-истечение окна подтверждения встречной → оффер «Истёк», заказ в ленту.
+  useEffect(() => {
+    const id = setInterval(() => {
+      const now = Date.now()
+      setMyOrders((list) => {
+        let changed = false
+        const next = list.map((o) => {
+          if (o.deal) return o
+          if (!o.offers.some((of) => of.awaitingConfirm && of.confirmDeadline && of.confirmDeadline < now))
+            return o
+          changed = true
+          return {
+            ...o,
+            status: "bidding" as const,
+            offers: o.offers.map((of) =>
+              of.awaitingConfirm && of.confirmDeadline && of.confirmDeadline < now
+                ? { ...of, awaitingConfirm: false, confirmDeadline: undefined, status: "expired" as const }
+                : of
+            ),
+          }
+        })
+        return changed ? next : list
+      })
+    }, 1000)
+    return () => clearInterval(id)
   }, [])
 
   const store = useMemo<CnKzStore>(() => {
@@ -427,6 +457,54 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
         }
       })
       showToast("Сделка создана — договоритесь об оплате напрямую")
+    }
+
+    // §5 Вариант Б: заказчик выбрал ВСТРЕЧНУЮ (kind:"counter"). Сделку сразу не создаём —
+    // даём перевозчику 15 мин на подтверждение (фура могла освободиться/занять).
+    function pickCounterOffer(orderId: string, offerId: string) {
+      updateMy(orderId, (o) =>
+        o.deal
+          ? o
+          : {
+              ...o,
+              offers: o.offers.map((of) =>
+                of.id === offerId
+                  ? { ...of, awaitingConfirm: true, confirmDeadline: Date.now() + 15 * 60 * 1000 }
+                  : of
+              ),
+            }
+      )
+      showToast("Ждём подтверждения перевозчика — у него 15 минут")
+      // Мок: перевозчик (в MVP — реальный человек) обычно подтверждает в окне. Симулируем
+      // подтверждение; если бы не успел за 15 мин — сработал бы авто-expire (интервал выше).
+      setTimeout(() => {
+        const still = getOrder(orderId)
+        const of = still?.offers.find((x) => x.id === offerId)
+        if (of?.awaitingConfirm && !still?.deal) confirmPickedCounter(orderId, offerId)
+      }, 3500)
+    }
+
+    // Перевозчик подтвердил выбранную встречную в окне → создаётся сделка.
+    function confirmPickedCounter(orderId: string, offerId: string) {
+      acceptOffer(orderId, offerId)
+    }
+
+    // Окно истекло / перевозчик не смог взять → оффер «Истёк», заказ возвращается в ленту.
+    function expireCounter(orderId: string, offerId: string) {
+      updateMy(orderId, (o) =>
+        o.deal
+          ? o
+          : {
+              ...o,
+              status: "bidding",
+              offers: o.offers.map((of) =>
+                of.id === offerId
+                  ? { ...of, awaitingConfirm: false, confirmDeadline: undefined, status: "expired" }
+                  : of
+              ),
+            }
+      )
+      showToast("Перевозчик не подтвердил — заказ вернулся в ленту")
     }
 
     // Перевозчик выигрывает заказ → на заказе появляется сделка (carrier = ME_CARRIER).
@@ -713,6 +791,9 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       republishOrder,
       deleteOrder,
       acceptOffer,
+      pickCounterOffer,
+      confirmPickedCounter,
+      expireCounter,
       makeOffer,
       skipOrder,
       isSkipped,
