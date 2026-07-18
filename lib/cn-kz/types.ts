@@ -204,10 +204,13 @@ export interface Order {
     tripId?: string // сборный рейс: несколько грузов в одной фуре
     crossedBorder?: boolean // водитель отметил «Прошёл границу» (необязательный шаг)
     updatedAgo?: string // «обновлено N назад» — когда водитель последний раз двигал статус
+    podPhoto?: boolean // фото выгрузки (POD) приложено — сохраняется между экранами (FINAL-SPEC §7)
     log?: { label: string; time: string }[] // отметки рейса с таймстампом (прибытие/простой)
     claim?: { reason: string; note: string } // претензия «на рассмотрении» (структурный спор)
   }
   ratedStars?: number // оценка, которую МЫ поставили второй стороне (сохраняется в истории)
+  ratedCriteria?: string[] // критерии оценки (пунктуальность/груз/…) — теперь сохраняются (FINAL-SPEC §7)
+  ratedComment?: string // комментарий к оценке — теперь сохраняется (был обязателен при 1–2★, но терялся)
   counterpartRating?: number // оценка, которую вторая сторона поставила НАМ — раскрывается после обоюдной (§8)
   // carrier's own offer state when viewing the feed
   myOfferStatus?: OfferStatus

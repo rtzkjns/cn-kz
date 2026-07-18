@@ -19,6 +19,7 @@ import {
   Plus,
   Settings,
   Signal,
+  Store,
   Tag,
   User,
   Wifi,
@@ -226,18 +227,19 @@ function NotificationBell() {
 type NavItem = { id: string; label: string; icon: typeof Package; center?: boolean }
 
 const NAV: Record<"shipper" | "carrier", NavItem[]> = {
+  // Shipper home = Мои заказы (их работа); Рынок = просмотр рыночных цен (FINAL-SPEC §3).
   shipper: [
-    { id: "feed", label: "Главная", icon: Home },
     { id: "myorders", label: "Мои заказы", icon: Package },
+    { id: "feed", label: "Рынок", icon: Store },
     { id: "add", label: "", icon: Plus, center: true },
     { id: "chats", label: "Чаты", icon: MessageCircle },
     { id: "profile", label: "Профиль", icon: User },
   ],
+  // Carrier = 4 таба (Избранное → сердечко в шапке ленты). FINAL-SPEC §3.
   carrier: [
     { id: "feed", label: "Главная", icon: Home },
-    { id: "favorites", label: "Избранное", icon: Heart },
-    { id: "deals", label: "Мои сделки", icon: Boxes },
-    { id: "chats", label: "Чат", icon: MessageCircle },
+    { id: "deals", label: "Мои рейсы", icon: Boxes },
+    { id: "chats", label: "Чаты", icon: MessageCircle },
     { id: "profile", label: "Профиль", icon: User },
   ],
 }
@@ -254,7 +256,7 @@ function BottomNav() {
   const { role, tab, setTab, push, authed } = useCnKz()
   const items = authed ? NAV[role] : GUEST_NAV
   return (
-    <nav className="flex shrink-0 items-stretch border-t border-border bg-card px-2 pt-2 pb-3">
+    <nav className="flex shrink-0 items-stretch border-t border-border bg-card px-2 pt-2 pb-[max(10px,env(safe-area-inset-bottom))]">
       {items.map((t) => {
         const Icon = t.icon
         if (t.center) {
@@ -276,19 +278,20 @@ function BottomNav() {
           <button
             key={t.id}
             onClick={() => setTab(t.id as Tab)}
+            aria-label={t.label}
             className="flex flex-1 flex-col items-center gap-1"
           >
             <span
               className={cn(
-                "flex h-8 w-16 items-center justify-center rounded-md transition-colors",
+                "flex h-9 w-16 items-center justify-center rounded-md transition-colors",
                 active ? "bg-brand/12 text-brand" : "text-muted-foreground"
               )}
             >
-              <Icon className="size-5" />
+              <Icon className="size-6" />
             </span>
             <span
               className={cn(
-                "text-[11px] font-medium transition-colors",
+                "text-[12px] font-medium transition-colors",
                 active ? "text-brand" : "text-muted-foreground"
               )}
             >
@@ -302,7 +305,7 @@ function BottomNav() {
 }
 
 export function PhoneFrame({ children }: { children: React.ReactNode }) {
-  const { toast, authed, openAuth } = useCnKz()
+  const { toast, authed, openAuth, role, setTab } = useCnKz()
   return (
     <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-neutral-950 to-black p-0 sm:p-6">
       <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2rem] sm:border-[6px] sm:border-neutral-800 sm:shadow-2xl">
@@ -320,7 +323,18 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
             </span>
           )}
           {authed ? (
-            <NotificationBell />
+            <div className="flex items-center gap-0.5">
+              {role === "carrier" && (
+                <button
+                  onClick={() => setTab("favorites")}
+                  aria-label="Избранное"
+                  className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <Heart className="size-5" />
+                </button>
+              )}
+              <NotificationBell />
+            </div>
           ) : (
             <Button size="sm" onClick={openAuth}>
               Войти

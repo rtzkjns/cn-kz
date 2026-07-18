@@ -11,6 +11,7 @@ import {
   Gavel,
   Handshake,
   PackageCheck,
+  Phone,
   Radio,
   Truck,
   X,
@@ -119,6 +120,37 @@ const OFFER_STATUS: Record<OfferStatus, { label: string; tone: Tone; icon: Lucid
 export function OfferStatusBadge({ status }: { status: OfferStatus }) {
   const s = OFFER_STATUS[status]
   return <StatusBadge tone={s.tone} icon={s.icon}>{s.label}</StatusBadge>
+}
+
+// ===== Раскрытие контакта (FINAL-SPEC §5). Маскировка снимается только внутри «живой» сделки/отклика. =====
+export function offerLive(status?: OfferStatus) {
+  return status === "pending" || status === "countered" || status === "accepted"
+}
+// Раскрыт ли контакт: есть сделка ЛИБО живой отклик между сторонами (не rejected/expired, не гость).
+export function contactUnlocked(opts: { offerStatus?: OfferStatus; hasDeal?: boolean }) {
+  return !!opts.hasDeal || offerLive(opts.offerStatus)
+}
+
+// Рабочая кнопка звонка (tel:) — высокоакцентная ВТОРИЧНАЯ (кроме экранов профиля). 48px, водитель звонит.
+export function CallButton({
+  phone,
+  className = "",
+}: {
+  phone: string
+  className?: string
+}) {
+  return (
+    <a
+      href={`tel:${phone.replace(/[^+\d]/g, "")}`}
+      onClick={(e) => e.stopPropagation()}
+      className={cn(
+        "flex h-12 items-center justify-center gap-2 rounded-md border border-brand/40 bg-brand/10 px-4 text-[15px] font-semibold text-brand transition-transform active:scale-[0.98]",
+        className
+      )}
+    >
+      <Phone className="size-5" /> Позвонить
+    </a>
+  )
 }
 
 export function Rating({ value }: { value: number }) {

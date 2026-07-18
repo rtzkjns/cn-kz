@@ -142,10 +142,12 @@ interface CnKzStore {
   isSkipped: (orderId: string) => boolean
   confirmCounter: (orderId: string) => void // перевозчик принимает встречную цену заказчика
   declineMyOffer: (orderId: string) => void // перевозчик снимает свой отклик
+  clearMyOffer: (orderId: string) => void // повторный отклик после отклонения/истечения
   completeDeal: (orderId: string) => void
   advanceDeal: (orderId: string) => void // основная кнопка водителя: Забрал груз / Доставил
   markAtBorder: (orderId: string) => void // необязательный тап водителя «Прошёл границу»
-  submitRating: (orderId: string, stars: number) => void
+  submitRating: (orderId: string, stars: number, criteria?: string[], comment?: string) => void
+  attachPod: (orderId: string) => void // приложить фото выгрузки (POD)
   confirmDelivery: (orderId: string) => void
   cancelDeal: (orderId: string) => void
   logDealEvent: (orderId: string, label: string) => void // отметка рейса с таймстампом
@@ -216,6 +218,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       setRoleRaw(r)
       setAuthed(true)
       setShowAuth(false)
+      setTabRaw(r === "shipper" ? "myorders" : "feed") // shipper home = Мои заказы (FINAL-SPEC §3)
       // Автовыбор фильтра по типу авто из профиля (Figma) — перевозчик видит «свои» грузы.
       if (r === "carrier") setFilters({ ...EMPTY_FILTERS, bodyTypes: ["тент"] })
     }
@@ -262,7 +265,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
 
     function enterApp(r: Role, p?: { name: string; company?: string }) {
       setRoleRaw(r)
-      setTabRaw("feed")
+      setTabRaw(r === "shipper" ? "myorders" : "feed") // shipper home = Мои заказы (FINAL-SPEC §3)
       setStack([])
       setAuthed(true)
       setShowAuth(false)
@@ -572,6 +575,17 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       showToast("Отклик снят")
     }
 
+    // Повторный отклик после отклонения/истечения (FINAL-SPEC §7): сбрасываем статус,
+    // возвращаем панель ставки — иначе перевозчик заперт и не может откликнуться снова.
+    function clearMyOffer(orderId: string) {
+      updateFeed(orderId, (o) => ({
+        ...o,
+        myOfferStatus: undefined,
+        myOfferPriceUsd: undefined,
+        myCounterPriceUsd: undefined,
+      }))
+    }
+
     // «Пропустить» (inDrive): без отклика, убираем груз из ленты перевозчика.
     function skipOrder(orderId: string) {
       setSkipped((s) => (s.includes(orderId) ? s : [...s, orderId]))
@@ -621,10 +635,21 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       showToast("Получение подтверждено · можно провести оплату")
     }
 
+    // Фото выгрузки (POD) — сохраняем на сделке, чтобы не терялось при уходе с экрана (FINAL-SPEC §7).
+    function attachPod(orderId: string) {
+      updateOrder(orderId, (o) => (o.deal ? { ...o, deal: { ...o.deal, podPhoto: true } } : o))
+      showToast("Фото выгрузки приложено")
+    }
+
     // Оценка сохраняется на заказе (видно в истории). §8: взаимная СЛЕПАЯ оценка —
     // встречная оценка второй стороны раскрывается только после того, как она тоже оценит (мок).
-    function submitRating(orderId: string, stars: number) {
-      updateOrder(orderId, (o) => ({ ...o, ratedStars: stars }))
+    function submitRating(orderId: string, stars: number, criteria?: string[], comment?: string) {
+      updateOrder(orderId, (o) => ({
+        ...o,
+        ratedStars: stars,
+        ratedCriteria: criteria && criteria.length ? criteria : o.ratedCriteria,
+        ratedComment: comment?.trim() ? comment.trim() : o.ratedComment,
+      }))
       showToast(`Спасибо! Вы поставили ${stars}★`)
       setTimeout(() => {
         updateOrder(orderId, (o) =>
@@ -814,9 +839,11 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       isSkipped,
       confirmCounter,
       declineMyOffer,
+      clearMyOffer,
       completeDeal,
       advanceDeal,
       markAtBorder,
+      attachPod,
       submitRating,
       confirmDelivery,
       cancelDeal,
