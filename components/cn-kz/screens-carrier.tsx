@@ -485,8 +485,10 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
         <Card size="sm">
           <CardContent className="space-y-2">
             <div className="flex items-start justify-between gap-2">
-              <Route from={order.origin} to={order.destination} />
-              <div className="text-right">
+              <div className="min-w-0 flex-1">
+                <Route from={order.origin} to={order.destination} className="block truncate" />
+              </div>
+              <div className="shrink-0 text-right">
                 <div className="font-mono-tech text-[28px] leading-none font-bold tabular-nums text-foreground">
                   {money(order.priceUsd)}
                 </div>

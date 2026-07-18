@@ -64,7 +64,7 @@ export function OrderCard({
           <Avatar name={order.shipper.name} className="size-8 rounded-md text-[13px]" />
           <div className="min-w-0 leading-tight">
             <p className="truncate text-[15px] font-semibold">{order.shipper.name}</p>
-            <p className="flex items-center gap-1 text-[13px] text-muted-foreground">
+            <p className="flex items-center gap-1 text-sm text-muted-foreground">
               <Star className="size-3.5 fill-muted-foreground/80 text-muted-foreground/80" />
               <span className="font-mono-tech text-foreground/80">
                 {order.shipper.rating.toFixed(1)}
@@ -152,7 +152,7 @@ export function OrderCard({
             {price}
           </p>
           {showKzt && (
-            <p className="font-mono-tech mt-1.5 text-[13px] leading-none text-muted-foreground/80">
+            <p className="font-mono-tech mt-1.5 text-sm leading-none text-muted-foreground/80">
               {kzt(priceUsd)} · оплата в USD
             </p>
           )}

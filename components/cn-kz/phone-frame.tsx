@@ -47,7 +47,7 @@ function LogoMenu() {
       <button
         onClick={() => setOpen(true)}
         aria-label="Меню"
-        className="flex size-8 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted active:scale-95"
+        className="flex size-11 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted active:scale-95"
       >
         <Menu className="size-5" />
       </button>
@@ -151,7 +151,7 @@ function NotificationBell() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Уведомления"
-        className="relative flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="relative flex size-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         <Bell className="size-5" />
         {newCount > 0 && (
@@ -328,7 +328,7 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
                 <button
                   onClick={() => setTab("favorites")}
                   aria-label="Избранное"
-                  className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="flex size-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   <Heart className="size-5" />
                 </button>
@@ -377,10 +377,10 @@ export function ScreenHeader({
       {onBack && (
         <button
           onClick={onBack}
-          className="-ml-1 flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="-ml-2 flex size-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
           aria-label="Назад"
         >
-          <ChevronLeft className="size-5" />
+          <ChevronLeft className="size-6" />
         </button>
       )}
       <div className="min-w-0 flex-1">
@@ -388,7 +388,7 @@ export function ScreenHeader({
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</p>
+          <p className="mt-0.5 truncate text-sm text-muted-foreground">{subtitle}</p>
         )}
       </div>
       {action}

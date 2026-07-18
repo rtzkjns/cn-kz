@@ -159,9 +159,11 @@ function DealRow({
   return (
     <Card size="sm" onClick={onClick} className="cursor-pointer hover:ring-foreground/20">
       <CardContent className="space-y-1.5">
-        <div className="flex items-center justify-between gap-2">
-          <Route from={order.origin} to={order.destination} className="text-base" />
-          <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex flex-wrap items-center justify-between gap-1.5">
+          <div className="min-w-0 flex-1">
+            <Route from={order.origin} to={order.destination} className="block truncate text-base" />
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
             {order.overdue && order.deal!.status === "accepted" && (
               <Badge variant="warning">Опаздывает</Badge>
             )}
@@ -189,7 +191,9 @@ function OfferRow({ order, onClick }: { order: Order; onClick: () => void }) {
     <Card size="sm" onClick={onClick} className="cursor-pointer hover:ring-foreground/20">
       <CardContent className="space-y-1.5">
         <div className="flex items-center justify-between gap-2">
-          <Route from={order.origin} to={order.destination} className="text-base" />
+          <div className="min-w-0 flex-1">
+            <Route from={order.origin} to={order.destination} className="block truncate text-base" />
+          </div>
           <OfferStatusBadge status={order.myOfferStatus!} />
         </div>
         <p className="line-clamp-1 text-sm text-muted-foreground">{order.cargo}</p>

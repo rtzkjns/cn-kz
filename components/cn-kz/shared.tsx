@@ -131,24 +131,32 @@ export function contactUnlocked(opts: { offerStatus?: OfferStatus; hasDeal?: boo
   return !!opts.hasDeal || offerLive(opts.offerStatus)
 }
 
-// Рабочая кнопка звонка (tel:) — высокоакцентная ВТОРИЧНАЯ (кроме экранов профиля). 48px, водитель звонит.
+// Рабочая кнопка звонка (tel:). Водитель звонит первым делом.
+// variant="secondary" (по умолчанию, 48px brand-tint) — на карточках/сделке.
+// variant="primary" (56px сплошная) — на экранах профиля, где звонок = основное действие (§4/§5).
 export function CallButton({
   phone,
+  variant = "secondary",
   className = "",
 }: {
   phone: string
+  variant?: "secondary" | "primary"
   className?: string
 }) {
+  const primary = variant === "primary"
   return (
     <a
       href={`tel:${phone.replace(/[^+\d]/g, "")}`}
       onClick={(e) => e.stopPropagation()}
       className={cn(
-        "flex h-12 items-center justify-center gap-2 rounded-md border border-brand/40 bg-brand/10 px-4 text-[15px] font-semibold text-brand transition-transform active:scale-[0.98]",
+        "flex items-center justify-center gap-2 rounded-lg font-semibold transition-transform active:scale-[0.98]",
+        primary
+          ? "h-14 bg-primary px-6 text-[17px] text-primary-foreground shadow-key"
+          : "h-12 rounded-md border border-brand/40 bg-brand/10 px-4 text-[15px] text-brand",
         className
       )}
     >
-      <Phone className="size-5" /> Позвонить
+      <Phone className={primary ? "size-5" : "size-5"} /> Позвонить
     </a>
   )
 }

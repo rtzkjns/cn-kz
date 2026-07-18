@@ -65,7 +65,7 @@ export function StatStrip({ items }: { items: Stat[] }) {
               >
                 {s.value}
               </div>
-              <div className="mt-1 text-[13px] leading-tight font-medium text-muted-foreground">
+              <div className="mt-1 text-sm leading-tight font-medium text-muted-foreground">
                 {s.label}
               </div>
             </div>
@@ -147,7 +147,7 @@ export function EmptyState({
         <Icon className="size-5" />
       </span>
       <p className="text-sm font-medium">{title}</p>
-      {hint && <p className="max-w-[17rem] text-xs text-muted-foreground">{hint}</p>}
+      {hint && <p className="max-w-[17rem] text-sm text-muted-foreground">{hint}</p>}
       {action && <div className="pt-1">{action}</div>}
     </div>
   )

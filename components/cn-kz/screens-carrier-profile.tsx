@@ -36,7 +36,7 @@ export function CarrierProfileScreen({
     <div className="flex h-full flex-col">
       <ScreenHeader title="Профиль перевозчика" onBack={pop} />
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-28">
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-44">
         <Card size="sm">
           <CardContent className="space-y-3">
             <div className="flex items-center gap-3">
@@ -138,7 +138,7 @@ export function CarrierProfileScreen({
       </div>
 
       {/* action bar */}
-      <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-border bg-card p-3">
+      <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-border bg-card px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))]">
         {offer && order && offer.awaitingConfirm && offer.confirmDeadline ? (
           <div className="rounded-md border border-amber-500/35 bg-amber-500/12 px-3 py-2 text-center text-sm font-medium text-amber-500">
             Встречная выбрана — ждём подтверждения перевозчика · <Countdown deadline={offer.confirmDeadline} />

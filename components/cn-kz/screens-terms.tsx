@@ -46,11 +46,12 @@ const SECTIONS: { icon: typeof FileText; title: string; body: string }[] = [
   },
 ]
 
-export function TermsScreen() {
+export function TermsScreen({ onBack }: { onBack?: () => void } = {}) {
   const { pop } = useCnKz()
+  const back = onBack ?? pop
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title="Условия и оферта" subtitle="Коротко и по-человечески" onBack={pop} />
+      <ScreenHeader title="Условия и оферта" subtitle="Коротко и по-человечески" onBack={back} />
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pb-10">
         {/* Главное — одним абзацем, чтобы понял любой */}
         <Card size="sm" className="ring-brand/40">

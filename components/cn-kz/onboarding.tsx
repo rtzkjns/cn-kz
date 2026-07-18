@@ -9,10 +9,11 @@ import { cn } from "@/lib/utils"
 import { TRUCK_TYPES, type City, type Role, type TruckType } from "@/lib/cn-kz/types"
 import { CityMultiPicker } from "./city-picker"
 import { StatusBar } from "./phone-frame"
+import { TermsScreen } from "./screens-terms"
 import { useCnKz } from "./store"
 import { Chip, ChipRow } from "./ui-bits"
 
-type Step = "auth" | "login" | "register" | "role" | "profile"
+type Step = "auth" | "login" | "register" | "role" | "profile" | "terms"
 
 // Mirrors User Flow «1. Онбординг»: splash → вход → главный экран; регистрация → выбор роли → профиль → главный экран.
 export function OnboardingFlow() {
@@ -23,12 +24,9 @@ export function OnboardingFlow() {
   const [role, setRole] = useState<Role>("shipper")
   const [lang, setLang] = useState<"Русский" | "Қазақша" | "中文">("Русский")
 
-  // Overlay covers the app router, so a pushed {type:'terms'} can't render behind it —
-  // close the auth overlay first, then push Terms onto the app stack (reachable at consent).
-  const openTerms = () => {
-    closeAuth()
-    push({ type: "terms" })
-  }
+  // Оферта показывается КАК ШАГ онбординга (не push в стек), иначе closeAuth() размонтирует
+  // онбординг и теряет введённые данные, а «Назад» падает на гостевую ленту.
+  const openTerms = () => setStep("terms")
 
   // profile fields (wireframe — not persisted)
   const [name, setName] = useState("")
@@ -107,6 +105,16 @@ export function OnboardingFlow() {
             </button>
           </div>
         </div>
+      </Frame>
+    )
+  }
+
+  // Оферта как шаг онбординга — «Назад» возвращает к регистрации, данные сохраняются.
+  if (step === "terms") {
+    return (
+      <Frame>
+        <StatusBar />
+        <TermsScreen onBack={() => setStep("register")} />
       </Frame>
     )
   }

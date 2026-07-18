@@ -27,7 +27,7 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader title="Заказчик" onBack={pop} />
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pb-6">
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pb-40">
         <Card size="sm">
           <CardContent className="space-y-3">
             <div className="flex items-center gap-3">
@@ -92,33 +92,48 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
           </Section>
         )}
 
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="lg"
-            className="flex-1"
-            onClick={() => {
-              if (order?.deal) push({ type: "chat", orderId })
-              else showToast("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»")
-            }}
-          >
-            <MessageCircle className="size-5" /> Чат
-          </Button>
-          {unlocked ? (
-            <CallButton phone={s.phone} className="flex-1" />
-          ) : (
+      </div>
+
+      {/* Нижняя панель контакта — звонок = основное действие на экране профиля (§4/§5). */}
+      <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-border bg-card px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+        {unlocked ? (
+          <>
+            <CallButton phone={s.phone} variant="primary" className="w-full" />
             <Button
               variant="outline"
               size="lg"
-              className="flex-1"
-              onClick={() =>
-                showToast("Номер откроется после вашего отклика или начала сделки")
-              }
+              className="h-12 w-full"
+              onClick={() => {
+                if (order?.deal) push({ type: "chat", orderId })
+                else showToast("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»")
+              }}
+            >
+              <MessageCircle className="size-5" /> Чат
+            </Button>
+          </>
+        ) : (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-12 flex-1"
+              onClick={() => {
+                if (order?.deal) push({ type: "chat", orderId })
+                else showToast("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»")
+              }}
+            >
+              <MessageCircle className="size-5" /> Чат
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-12 flex-1"
+              onClick={() => showToast("Номер откроется после вашего отклика или начала сделки")}
             >
               <Phone className="size-5" /> Номер скрыт
             </Button>
-          )}
-        </div>
+          </div>
+        )}
         <button
           onClick={() => setShowReport(true)}
           className="flex w-full items-center justify-center gap-1.5 py-1 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
