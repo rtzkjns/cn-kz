@@ -65,7 +65,7 @@ export function StatStrip({ items }: { items: Stat[] }) {
               >
                 {s.value}
               </div>
-              <div className="mt-1 text-[11px] leading-tight font-medium text-muted-foreground">
+              <div className="mt-1 text-[13px] leading-tight font-medium text-muted-foreground">
                 {s.label}
               </div>
             </div>
@@ -108,7 +108,7 @@ export function Chip({
     <button
       onClick={onClick}
       className={cn(
-        "shrink-0 rounded-md border px-3 py-1.5 text-[13px] font-medium whitespace-nowrap transition-[scale,color,background-color,border-color] duration-150 active:scale-[0.96]",
+        "flex h-11 shrink-0 items-center rounded-md border px-4 text-[15px] font-medium whitespace-nowrap transition-[scale,color,background-color,border-color] duration-150 active:scale-[0.96]",
         active
           ? "border-transparent bg-brand text-white"
           : "border-border bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground"
@@ -116,6 +116,16 @@ export function Chip({
     >
       {children}
     </button>
+  )
+}
+
+// Липкая нижняя панель с ОДНИМ основным действием (56px, thumb-zone). FINAL-SPEC §2.2.
+// Градиентный fade сверху + safe-area снизу. Кладётся последним внутри экрана.
+export function StickyCTA({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="pointer-events-none sticky inset-x-0 bottom-0 z-20 -mx-4 mt-2 px-4 pt-6 pb-[max(12px,env(safe-area-inset-bottom))] [background:linear-gradient(to_top,var(--background)_55%,transparent)]">
+      <div className="pointer-events-auto flex flex-col gap-2">{children}</div>
+    </div>
   )
 }
 
