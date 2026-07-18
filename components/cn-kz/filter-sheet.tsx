@@ -34,7 +34,7 @@ function Pill({
     <button
       onClick={onClick}
       className={cn(
-        "rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors",
+        "flex h-11 items-center rounded-full border px-4 text-[15px] font-medium transition-colors",
         active
           ? "border-transparent bg-brand text-white"
           : "border-border text-muted-foreground hover:text-foreground"
@@ -48,8 +48,8 @@ function Pill({
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <p className="text-[13px] font-semibold">{title}</p>
-      <div className="flex flex-wrap gap-1.5">{children}</div>
+      <p className="text-[15px] font-semibold">{title}</p>
+      <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   )
 }
@@ -115,16 +115,16 @@ export function FilterSheet() {
             {!showAllTypes && (
               <button
                 onClick={() => setShowAllTypes(true)}
-                className="rounded-full border border-dashed border-border px-3 py-1.5 text-[13px] font-medium text-brand"
+                className="flex h-11 items-center rounded-full border border-dashed border-border px-4 text-[15px] font-medium text-brand"
               >
                 Показать все типы
               </button>
             )}
             {showAllTypes &&
               ALL_BODY_TYPES.map((g) => (
-                <div key={g.group} className="w-full space-y-1.5">
-                  <p className="text-[11px] text-muted-foreground">{g.group}</p>
-                  <div className="flex flex-wrap gap-1.5">
+                <div key={g.group} className="w-full space-y-2">
+                  <p className="text-sm text-muted-foreground">{g.group}</p>
+                  <div className="flex flex-wrap gap-2">
                     {g.items.map((t) => (
                       <Pill key={t} active={draft.bodyTypes.includes(t)} onClick={() => toggleArr("bodyTypes", t)}>
                         {t}
@@ -186,12 +186,18 @@ export function FilterSheet() {
           </Group>
         </div>
 
-        <div className="flex items-center gap-2 border-t border-border p-3">
-          <Button variant="outline" className="flex-1" onClick={() => setDraft(EMPTY_FILTERS)}>
+        <div className="flex flex-col gap-2 border-t border-border p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+          <Button
+            variant="ghost"
+            size="lg"
+            className="w-full text-[15px]"
+            onClick={() => setDraft(EMPTY_FILTERS)}
+          >
             <RotateCcw className="size-4" /> Сбросить
           </Button>
           <Button
-            className="flex-[2]"
+            size="xl"
+            className="w-full"
             onClick={() => {
               setFilters(draft)
               closeFilters()

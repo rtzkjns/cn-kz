@@ -21,8 +21,8 @@ export function ChatsListScreen() {
             <span className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
               <MessageCircle className="size-5" />
             </span>
-            <p className="text-sm font-medium">Чатов пока нет</p>
-            <p className="max-w-[16rem] text-xs text-muted-foreground">
+            <p className="text-base font-medium">Чатов пока нет</p>
+            <p className="max-w-[16rem] text-sm text-muted-foreground">
               Как только вы примете отклик или начнётся сделка — переписка появится здесь.
             </p>
           </div>
@@ -37,18 +37,18 @@ export function ChatsListScreen() {
               <button
                 key={o.id}
                 onClick={() => push({ type: "chat", orderId: o.id })}
-                className="flex w-full items-center gap-3 py-3 text-left transition-colors active:bg-muted/40"
+                className="flex min-h-14 w-full items-center gap-3 py-3 text-left transition-colors active:bg-muted/40"
               >
-                <Avatar name={other.name} className="size-10 shrink-0" />
+                <Avatar name={other.name} className="size-11 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-medium">{other.name}</p>
-                    {last && <span className="shrink-0 text-[10px] text-muted-foreground">{last.time}</span>}
+                    <p className="truncate text-base font-semibold">{other.name}</p>
+                    {last && <span className="shrink-0 text-sm text-muted-foreground">{last.time}</span>}
                   </div>
-                  <p className="truncate text-xs text-muted-foreground">
+                  <p className="truncate text-sm text-muted-foreground">
                     {o.origin} → {o.destination}
                   </p>
-                  <p className={"truncate text-xs " + (unread ? "font-medium text-foreground" : "text-muted-foreground")}>
+                  <p className={"truncate text-sm " + (unread ? "font-medium text-foreground" : "text-muted-foreground")}>
                     {last ? (last.fromMe ? "Вы: " : "") + last.text : "Нет сообщений"}
                   </p>
                 </div>

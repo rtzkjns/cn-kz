@@ -17,10 +17,18 @@ type Step = "auth" | "login" | "register" | "role" | "profile"
 // Mirrors User Flow «1. Онбординг»: splash → вход → главный экран; регистрация → выбор роли → профиль → главный экран.
 export function OnboardingFlow() {
   // Вход использует роль уже существующего аккаунта (последнюю в сторе); роль выбирается только при регистрации.
-  const { enterApp, role: accountRole, closeAuth } = useCnKz()
+  const { enterApp, role: accountRole, closeAuth, push } = useCnKz()
   const [step, setStep] = useState<Step>("auth")
   const [method, setMethod] = useState<"email" | "phone">("phone")
   const [role, setRole] = useState<Role>("shipper")
+  const [lang, setLang] = useState<"Русский" | "Қазақша" | "中文">("Русский")
+
+  // Overlay covers the app router, so a pushed {type:'terms'} can't render behind it —
+  // close the auth overlay first, then push Terms onto the app stack (reachable at consent).
+  const openTerms = () => {
+    closeAuth()
+    push({ type: "terms" })
+  }
 
   // profile fields (wireframe — not persisted)
   const [name, setName] = useState("")
@@ -51,7 +59,7 @@ export function OnboardingFlow() {
                 <br />
                 по всей СНГ
               </h1>
-              <p className="max-w-[18rem] text-center text-sm leading-relaxed text-muted-foreground text-pretty">
+              <p className="max-w-[18rem] text-center text-base leading-relaxed text-muted-foreground text-pretty">
                 Маркетплейс грузов и перевозчиков. Прямые сделки, торги и рейтинги — без посредников.
               </p>
             </div>
@@ -62,11 +70,23 @@ export function OnboardingFlow() {
             </div>
           </div>
 
-          {/* CTAs — single accent: only «Войти» is the lime/green action. */}
+          {/* Язык — реальный выбор появится позже; на первом экране виден как первичный контрол. */}
+          <div className="mb-3 flex flex-col gap-2">
+            <span className="t-eyebrow text-muted-foreground">Язык</span>
+            <ChipRow>
+              {(["Русский", "Қазақша", "中文"] as const).map((l) => (
+                <Chip key={l} active={lang === l} onClick={() => setLang(l)}>
+                  {l}
+                </Chip>
+              ))}
+            </ChipRow>
+          </div>
+
+          {/* CTAs — single accent: only «Войти» is the primary action. */}
           <div className="flex flex-col gap-2.5">
             <Button
-              size="lg"
-              className="h-12 w-full text-[15px]"
+              size="xl"
+              className="w-full"
               onClick={() => setStep("login")}
             >
               Войти
@@ -74,14 +94,14 @@ export function OnboardingFlow() {
             <Button
               size="lg"
               variant="outline"
-              className="h-12 w-full text-[15px]"
+              className="h-12 w-full text-base"
               onClick={() => setStep("register")}
             >
               Создать аккаунт
             </Button>
             <button
               onClick={closeAuth}
-              className="mt-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="mt-1 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Смотреть грузы без входа →
             </button>
@@ -110,7 +130,7 @@ export function OnboardingFlow() {
           <Button
             variant="outline"
             size="lg"
-            className="h-12 w-full gap-2.5 text-[15px]"
+            className="h-12 w-full gap-2.5 text-base"
             onClick={() => enterApp(accountRole)}
           >
             <span className="flex size-5 items-center justify-center rounded-full bg-white text-[13px] font-bold text-[#4285F4]">
@@ -119,7 +139,7 @@ export function OnboardingFlow() {
             Продолжить с Google
           </Button>
 
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <span className="h-px flex-1 bg-border" /> или по телефону
             <span className="h-px flex-1 bg-border" />
           </div>
@@ -134,22 +154,19 @@ export function OnboardingFlow() {
           </ChipRow>
           {method === "phone" ? (
             <Field label="Телефон">
-              <Input className="h-11" placeholder="+7 705 123 45 67" inputMode="tel" />
+              <Input className="h-14 text-base md:text-base" placeholder="+7 705 123 45 67" inputMode="tel" />
             </Field>
           ) : (
             <>
               <Field label="Email">
-                <Input className="h-11" type="email" placeholder="you@mail.kz" />
+                <Input className="h-14 text-base md:text-base" type="email" placeholder="you@mail.kz" />
               </Field>
               <Field label="Пароль">
-                <Input className="h-11" type="password" placeholder="Ваш пароль" />
+                <Input className="h-14 text-base md:text-base" type="password" placeholder="Ваш пароль" />
               </Field>
-              <button className="text-xs font-medium text-brand hover:underline">
-                Забыли пароль?
-              </button>
             </>
           )}
-          <Button size="lg" className="h-12 w-full text-[15px]" onClick={() => enterApp(accountRole)}>
+          <Button size="xl" className="w-full" onClick={() => enterApp(accountRole)}>
             {method === "phone" ? "Войти по SMS" : "Войти"}
           </Button>
         </div>
@@ -169,28 +186,35 @@ export function OnboardingFlow() {
           {method === "phone" ? (
             <>
               <Field label="Телефон">
-                <Input placeholder="+7 7__ ___ __ __" />
+                <Input className="h-14 text-base md:text-base" placeholder="+7 7__ ___ __ __" inputMode="tel" />
               </Field>
               <Field label="SMS-код">
-                <Input placeholder="____" inputMode="numeric" />
+                <Input className="h-14 text-base md:text-base" placeholder="____" inputMode="numeric" />
               </Field>
             </>
           ) : (
             <>
               <Field label="Email">
-                <Input type="email" placeholder="you@mail.kz" />
+                <Input className="h-14 text-base md:text-base" type="email" placeholder="you@mail.kz" />
               </Field>
               <Field label="Пароль">
-                <Input type="password" placeholder="••••••••" />
+                <Input className="h-14 text-base md:text-base" type="password" placeholder="••••••••" />
               </Field>
             </>
           )}
-          <Button className="w-full" onClick={() => setStep("role")}>
+          <Button size="xl" className="w-full" onClick={() => setStep("role")}>
             Зарегистрироваться
           </Button>
-          <p className="text-center text-[11px] leading-snug text-muted-foreground">
-            Регистрируясь, вы принимаете <span className="font-medium text-foreground">Условия и
-            публичную оферту</span>: CN-KZ — площадка для поиска, не перевозчик и не гарант доставки.
+          <p className="text-center text-sm leading-snug text-muted-foreground">
+            Регистрируясь, вы принимаете{" "}
+            <button
+              type="button"
+              onClick={openTerms}
+              className="font-medium text-brand underline underline-offset-2"
+            >
+              Условия и публичную оферту
+            </button>
+            : CN-KZ — площадка для поиска, не перевозчик и не гарант доставки.
           </p>
         </div>
       )}
@@ -200,7 +224,7 @@ export function OnboardingFlow() {
           <h1 className="text-center font-heading text-lg font-semibold">
             Выберите роль
           </h1>
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center text-sm text-muted-foreground">
             Роль выбирается один раз и не меняется.
           </p>
           <RoleCard
@@ -224,20 +248,20 @@ export function OnboardingFlow() {
             Профиль {role === "shipper" ? "заказчика" : "перевозчика"}
           </h1>
           <Field label="ФИО">
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя Фамилия" />
+            <Input className="h-14 text-base md:text-base" value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя Фамилия" />
           </Field>
           <Field label="Телефон">
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+7…" />
+            <Input className="h-14 text-base md:text-base" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+7…" inputMode="tel" />
           </Field>
 
           {role === "shipper" ? (
             <Field label="Юр. лицо (необязательно)">
-              <Input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="ИП / ТОО" />
+              <Input className="h-14 text-base md:text-base" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="ИП / ТОО" />
             </Field>
           ) : (
             <>
               <div className="space-y-1.5">
-                <span className="text-xs font-medium text-muted-foreground">
+                <span className="text-sm font-medium text-muted-foreground">
                   Тип первой фуры
                 </span>
                 <div className="flex flex-wrap gap-1.5">
@@ -250,18 +274,18 @@ export function OnboardingFlow() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Макс. вес, кг">
-                  <Input type="number" inputMode="numeric" placeholder="20000" />
+                  <Input className="h-14 text-base md:text-base" type="number" inputMode="numeric" placeholder="20000" />
                 </Field>
                 <Field label="Объём, м³">
-                  <Input type="number" inputMode="numeric" placeholder="86" />
+                  <Input className="h-14 text-base md:text-base" type="number" inputMode="numeric" placeholder="86" />
                 </Field>
               </div>
               <Field label="Гос. номер">
-                <Input placeholder="777 ABC 02" />
+                <Input className="h-14 text-base md:text-base" placeholder="777 ABC 02" />
               </Field>
 
               <div className="space-y-1.5">
-                <span className="text-xs font-medium text-muted-foreground">
+                <span className="text-sm font-medium text-muted-foreground">
                   Проверка профиля — значок «Бизнес проверен» и доступ к премиум-грузам
                 </span>
                 {[
@@ -273,10 +297,10 @@ export function OnboardingFlow() {
                   <button
                     key={d}
                     onClick={() => toggleDoc(d)}
-                    className="flex w-full items-center justify-between rounded-md border border-dashed border-border px-3 py-2 text-left text-sm"
+                    className="flex min-h-11 w-full items-center justify-between rounded-md border border-dashed border-border px-3 py-2 text-left text-[15px]"
                   >
                     <span className={docs.includes(d) ? "text-foreground" : "text-muted-foreground"}>{d}</span>
-                    <span className={"shrink-0 text-xs font-medium " + (docs.includes(d) ? "text-brand" : "text-muted-foreground")}>
+                    <span className={"shrink-0 text-sm font-medium " + (docs.includes(d) ? "text-brand" : "text-muted-foreground")}>
                       {docs.includes(d) ? "✓ Готово" : "Загрузить"}
                     </span>
                   </button>
@@ -284,7 +308,7 @@ export function OnboardingFlow() {
               </div>
 
               <div className="space-y-1.5">
-                <span className="text-xs font-medium text-muted-foreground">
+                <span className="text-sm font-medium text-muted-foreground">
                   Маршруты — пришлём уведомление о новых грузах
                 </span>
                 <CityMultiPicker
@@ -300,6 +324,7 @@ export function OnboardingFlow() {
           )}
 
           <Button
+            size="xl"
             className="w-full"
             disabled={role === "carrier" && routes.length === 0}
             onClick={() => enterApp(role, name.trim() ? { name: name.trim(), company: company.trim() || undefined } : undefined)}
@@ -323,14 +348,14 @@ function Shell({
     <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-neutral-950 to-black p-0 sm:p-6">
       <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2rem] sm:border-[6px] sm:border-neutral-800 sm:shadow-2xl">
         <StatusBar />
-        <header className="flex h-12 shrink-0 items-center gap-1 border-b border-border px-3">
+        <header className="flex h-14 shrink-0 items-center gap-1 border-b border-border px-1">
           {onBack && (
             <button
               onClick={onBack}
-              className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="flex size-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
               aria-label="Назад"
             >
-              <ChevronLeft className="size-5" />
+              <ChevronLeft className="size-6" />
             </button>
           )}
         </header>
@@ -385,8 +410,8 @@ function ValuePill({
   label: string
 }) {
   return (
-    <span className="surface-inset inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground">
-      <Icon className="size-3.5 text-foreground/70" />
+    <span className="surface-inset inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground">
+      <Icon className="size-4 text-foreground/70" />
       {label}
     </span>
   )
@@ -414,8 +439,8 @@ function RoleCard({
         <Icon className="size-5" />
       </span>
       <span className="min-w-0">
-        <span className="block font-medium">{title}</span>
-        <span className="block text-xs text-muted-foreground">{desc}</span>
+        <span className="block text-[17px] font-semibold">{title}</span>
+        <span className="block text-[15px] text-muted-foreground">{desc}</span>
       </span>
     </button>
   )
@@ -424,7 +449,7 @@ function RoleCard({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
       {children}
     </label>
   )

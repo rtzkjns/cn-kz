@@ -1,6 +1,6 @@
 "use client"
 
-import { AlertTriangle, Clock, Package, Star, Tag, TrendingUp } from "lucide-react"
+import { AlertTriangle, Package, Star, Tag, TrendingUp } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -32,11 +32,11 @@ function Kpi({
       >
         <Icon className="size-3.5" />
       </span>
-      <div className={"font-mono-tech text-xl leading-none font-bold tracking-tight " + (accent ? "text-brand" : "")}>
+      <div className={"font-mono-tech text-2xl leading-none font-bold tracking-tight tabular-nums " + (accent ? "text-brand" : "")}>
         {value}
       </div>
-      <div className="mt-1 text-[11px] leading-tight text-muted-foreground">{label}</div>
-      {sub && <div className="mt-0.5 text-[10px] text-muted-foreground/70">{sub}</div>}
+      <div className="mt-1.5 text-sm leading-tight text-muted-foreground">{label}</div>
+      {sub && <div className="mt-0.5 text-sm text-muted-foreground/70">{sub}</div>}
     </div>
   )
 }
@@ -46,9 +46,9 @@ function Bar({ label, value, max, suffix, asMoney }: { label: string; value: num
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs">
+      <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">{label}</span>
-        <span className="font-mono-tech text-foreground">
+        <span className="font-mono-tech tabular-nums text-foreground">
           {asMoney ? money(value) : suffix ? `${value}${suffix}` : value}
         </span>
       </div>
@@ -75,7 +75,6 @@ export function AnalyticsScreen() {
     : "0"
   const ratings = completed.map((o) => o.deal!.carrier.rating)
   const avgCarrierRating = ratings.length ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : "—"
-  const onTime = 96
 
   // Top destinations across all orders.
   const routeCount: Record<string, number> = {}
@@ -114,10 +113,10 @@ export function AnalyticsScreen() {
         {noOffers > 0 && (
           <Card size="sm" className="ring-amber-500/30">
             <CardContent className="flex items-start gap-2">
-              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
-              <div className="text-sm">
+              <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-500" />
+              <div className="text-base">
                 <p className="font-medium">{noOffers} заказ(а) без откликов</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Возможно, цена ниже рынка на этих маршрутах — попробуйте поднять.
                 </p>
               </div>
@@ -147,10 +146,9 @@ export function AnalyticsScreen() {
         </Section>
 
         <Section title="Качество">
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <Kpi label="откликов / заказ" value={avgOffers} icon={Tag} />
             <Kpi label="рейтинг перевозчиков" value={String(avgCarrierRating)} icon={Star} />
-            <Kpi label="вовремя" value={`${onTime}%`} icon={Clock} accent />
           </div>
         </Section>
 

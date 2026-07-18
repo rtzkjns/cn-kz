@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Phone, RefreshCw, Search, SlidersHorizontal } from "lucide-react"
+import { Copy, RefreshCw, Search, SlidersHorizontal } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ import { useCnKz } from "./store"
 
 function LiveBadge() {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-[11px] font-medium tracking-wide text-muted-foreground">
+    <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-xs font-medium tracking-wide text-muted-foreground">
       <span className="relative flex size-1.5">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-70" />
         <span className="relative inline-flex size-1.5 rounded-full bg-brand" />
@@ -59,7 +59,7 @@ export function MarketFeedScreen() {
     <div className="flex h-full flex-col">
       <ScreenHeader
         title="Главная"
-        subtitle={`${list.length} ${plural(list.length, "открытый груз", "открытых груза", "открытых грузов")} · по всей СНГ`}
+        subtitle={`Рынок цен и маршрутов · ${list.length} ${plural(list.length, "открытый груз", "открытых груза", "открытых грузов")} по СНГ`}
         action={
           <div className="flex items-center gap-1.5">
             <button
@@ -94,9 +94,9 @@ export function MarketFeedScreen() {
         ))}
         <button
           onClick={openFilters}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex h-11 items-center gap-1.5 rounded-full border border-border px-4 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
-          <SlidersHorizontal className="size-3.5" />
+          <SlidersHorizontal className="size-4" />
           Все фильтры{countActive(filters) > 0 ? ` · ${countActive(filters)}` : ""}
         </button>
       </div>
@@ -146,9 +146,11 @@ export function MarketFeedScreen() {
 
 // Read-only market listing (a load posted by another заказчик) — for browsing / rate research.
 export function MarketOrderScreen({ orderId }: { orderId: string }) {
-  const { getOrder, pop, authed, openAuth } = useCnKz()
+  const { getOrder, pop, push, authed, role, openAuth } = useCnKz()
   const order = getOrder(orderId)
   if (!order) return null
+
+  const canClone = authed && role === "shipper"
 
   return (
     <div className="flex h-full flex-col">
@@ -171,7 +173,7 @@ export function MarketOrderScreen({ orderId }: { orderId: string }) {
                 {money(order.priceUsd)}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">{order.cargo}</p>
+            <p className="text-[15px] text-muted-foreground">{order.cargo}</p>
             <DetailRow label="Тип авто" value={order.truckType} />
             <DetailRow
               label="Вес / объём"
@@ -183,38 +185,47 @@ export function MarketOrderScreen({ orderId }: { orderId: string }) {
 
         <Section title="Заказчик">
           <Card size="sm">
-            <CardContent className="flex items-center gap-2">
+            <CardContent className="flex items-center gap-3">
               <Avatar name={order.shipper.name} className="size-8" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">
+                <p className="truncate text-[15px] font-medium">
                   {order.shipper.name}
                   {order.shipper.company && (
                     <span className="text-muted-foreground"> · {order.shipper.company}</span>
                   )}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   <Rating value={order.shipper.rating} /> · {deals(order.shipper.dealsCount)}
                 </p>
               </div>
-              <Phone className="size-4 text-muted-foreground" />
             </CardContent>
           </Card>
         </Section>
 
-        <p className="px-1 text-center text-[11px] text-muted-foreground">
+        <p className="px-1 text-center text-sm text-muted-foreground">
           {authed
             ? "Заказ другого заказчика · только просмотр (рыночные цены и маршруты)"
             : "Контакты и точный адрес скрыты — войдите, чтобы связаться и откликнуться"}
         </p>
       </div>
 
-      {!authed && (
-        <div className="absolute inset-x-0 bottom-0 border-t border-border bg-card p-3">
-          <Button className="w-full" onClick={openAuth}>
+      {!authed ? (
+        <div className="absolute inset-x-0 bottom-0 border-t border-border bg-card p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+          <Button size="xl" className="w-full" onClick={openAuth}>
             Войти, чтобы откликнуться
           </Button>
         </div>
-      )}
+      ) : canClone ? (
+        <div className="absolute inset-x-0 bottom-0 border-t border-border bg-card p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+          <Button
+            size="xl"
+            className="w-full"
+            onClick={() => push({ type: "createOrder", prefillFrom: order.id })}
+          >
+            <Copy className="size-5" /> Создать похожий заказ
+          </Button>
+        </div>
+      ) : null}
     </div>
   )
 }
