@@ -46,17 +46,18 @@ const SECTIONS: { icon: typeof FileText; title: string; body: string }[] = [
   },
 ]
 
-export function TermsScreen() {
+export function TermsScreen({ onBack }: { onBack?: () => void } = {}) {
   const { pop } = useCnKz()
+  const back = onBack ?? pop
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title="Условия и оферта" subtitle="Коротко и по-человечески" onBack={pop} />
+      <ScreenHeader title="Условия и оферта" subtitle="Коротко и по-человечески" onBack={back} />
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pb-10">
         {/* Главное — одним абзацем, чтобы понял любой */}
         <Card size="sm" className="ring-brand/40">
           <CardContent className="space-y-1.5 py-3">
-            <p className="text-sm font-semibold">Коротко</p>
-            <p className="text-[13px] leading-relaxed text-muted-foreground">
+            <p className="text-[15px] font-semibold">Коротко</p>
+            <p className="text-[15px] leading-relaxed text-muted-foreground">
               CN-KZ — это <span className="font-medium text-foreground">доска объявлений о грузах</span>,
               а не перевозчик и не гарант. Мы соединяем стороны, но{" "}
               <span className="font-medium text-foreground">не участвуем в сделке и не отвечаем за неё</span>.
@@ -75,8 +76,8 @@ export function TermsScreen() {
                     <Icon className="size-4" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium">{s.title}</p>
-                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{s.body}</p>
+                    <p className="text-[15px] font-medium">{s.title}</p>
+                    <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
                   </div>
                 </div>
               )
@@ -84,7 +85,7 @@ export function TermsScreen() {
           </CardContent>
         </Card>
 
-        <p className="px-1 text-center text-[11px] text-muted-foreground">
+        <p className="px-1 text-center text-sm text-muted-foreground">
           Используя CN-KZ, вы принимаете эти условия. Редакция v1.0 · полная оферта — на сайте.
         </p>
       </div>

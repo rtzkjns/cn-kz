@@ -85,3 +85,16 @@ box-shadow:
 - Surfaces are near-black (`#08090a` canvas, `#0f1011` cards) with `--border` separation.
 
 **Brand decision (2026-07-12): indigo/Linear is canonical.** The green/"Bolt" spec is retired to historical reference. **Build every component against the shipped `globals.css` tokens (indigo `--brand`, `--success` green only for accept).**
+
+---
+
+## Driver-first UI contract (2026-07-18 · docs/FINAL-SPEC.md)
+Our carrier is a low-tech long-haul truck driver on a phone in a cab (gloves, cold, sunlight, one hand, low literacy). These floors are LOCKED and every screen inherits them by default — they are not per-screen decisions.
+
+**Type scale** (semantic classes in `globals.css`; Inter, Geist Mono for numbers): `.t-display` 32/700 (price), `.t-h1` 24/700, `.t-h2` 20/700 (destination), `.t-h3` 17/600, `.t-body` 16/400–500, `.t-body-strong` 16/600, `.t-meta` 14/500, `.t-eyebrow` 12/600 UPPERCASE (labels only). **Floor: text a driver must READ ≥14px; nothing <12px.** `tabular-nums` on every price/weight/count/rating/countdown. (Bottom-nav labels are the only 12px read text — exempt because always icon+word.)
+
+**Tap & buttons:** `--tap-min:48px`, `--cta-h:56px`. Primary CTA = 56px full-width, label 17/700, `bg-primary`, **exactly one per screen, bottom-anchored** (sticky bar on detail/form/deal). Secondary = 48px ghost/outline 16px. Chips = 44px. Icon buttons = 44×44 hit area (glyph 20–24px). Gap ≥8px. Feed card carries a real 48px action button (never a bare chevron). Binding/destructive = two-tap confirm that changes **both color and label**.
+
+**Semantic status:** one `Badge` = dot + icon + WORD on a 12%-tint bg (never full fill; danger = text+dot only; **never color alone**). Tokens: `--success #10b981` (done/accept), `--warn #f5b545` (in-progress/attention), `--info #5aa9f5` (neutral/published), `--brand` (agreed/deal), `--destructive` (cancel/claim, text+dot).
+
+**Radius stays 6px** (`--radius: 0.375rem`) — sharp Linear identity, do NOT oscillate. Contact reveals only inside an engaged order (see FINAL-SPEC §5). Full status→color map, per-screen primary-action table, and the language contract live in `docs/FINAL-SPEC.md`.

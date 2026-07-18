@@ -29,9 +29,9 @@ function GuestGate({
         <span className="flex size-14 items-center justify-center rounded-2xl bg-brand/12 text-brand">
           <Icon className="size-6" />
         </span>
-        <p className="text-base font-semibold">{subtitle}</p>
-        <p className="max-w-[15rem] text-sm text-muted-foreground">{hint}</p>
-        <Button className="mt-1 w-full" onClick={openAuth}>
+        <p className="text-lg font-semibold">{subtitle}</p>
+        <p className="max-w-[15rem] text-[15px] text-muted-foreground">{hint}</p>
+        <Button size="xl" className="mt-1 w-full" onClick={openAuth}>
           {cta}
         </Button>
       </div>
@@ -70,8 +70,8 @@ function ValueRow({ icon: Icon, title, hint }: { icon: typeof Boxes; title: stri
         <Icon className="size-4" />
       </span>
       <div className="min-w-0">
-        <p className="text-sm font-medium">{title}</p>
-        <p className="text-xs text-muted-foreground">{hint}</p>
+        <p className="text-[15px] font-medium">{title}</p>
+        <p className="text-sm text-muted-foreground">{hint}</p>
       </div>
     </div>
   )
@@ -90,12 +90,12 @@ export function GuestProfileScreen() {
               <User className="size-6" />
             </span>
             <div className="space-y-0.5">
-              <p className="text-base font-semibold">Войдите в CN-KZ</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-lg font-semibold">Войдите в CN-KZ</p>
+              <p className="text-[15px] text-muted-foreground">
                 Публикуйте грузы, откликайтесь и ведите сделки
               </p>
             </div>
-            <Button className="w-full" onClick={openAuth}>
+            <Button size="xl" className="w-full" onClick={openAuth}>
               Войти или зарегистрироваться
             </Button>
           </CardContent>
@@ -146,11 +146,11 @@ function SettingRow({
   onClick: () => void
 }) {
   return (
-    <button onClick={onClick} className="flex w-full items-center gap-3 py-2.5 text-left text-sm transition-colors hover:text-foreground">
-      <Icon className="size-4 text-muted-foreground" />
+    <button onClick={onClick} className="flex min-h-11 w-full items-center gap-3 py-2.5 text-left text-[15px] transition-colors hover:text-foreground">
+      <Icon className="size-5 text-muted-foreground" />
       <span className="flex-1">{label}</span>
-      {value && <span className="text-xs text-muted-foreground">{value}</span>}
-      <ChevronRight className="size-4 text-muted-foreground" />
+      {value && <span className="text-sm text-muted-foreground">{value}</span>}
+      <ChevronRight className="size-5 text-muted-foreground" />
     </button>
   )
 }

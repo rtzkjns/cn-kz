@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ScreenHeader } from "./phone-frame"
-import { deals, money } from "./shared"
+import { CallButton, contactUnlocked, deals, money } from "./shared"
 import { Countdown, Section } from "./ui-bits"
 import { useCnKz } from "./store"
 
@@ -29,12 +29,17 @@ export function CarrierProfileScreen({
 
   const order = orderId ? getOrder(orderId) : undefined
   const offer = order?.offers.find((o) => o.id === offerId)
+  // §5: контакт раскрыт только при живом отклике этого перевозчика ИЛИ уже есть сделка по заказу.
+  const unlocked = contactUnlocked({ offerStatus: offer?.status, hasDeal: !!order?.deal })
+  // Кнопка «Принять отклик» = основное действие экрана — только при живом отклике (не встречная, не ожидание подтверждения).
+  const showAccept =
+    !!offer && !!order && !(offer.awaitingConfirm && offer.confirmDeadline) && offer.status !== "countered"
 
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader title="Профиль перевозчика" onBack={pop} />
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-28">
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-44">
         <Card size="sm">
           <CardContent className="space-y-3">
             <div className="flex items-center gap-3">
@@ -44,9 +49,9 @@ export function CarrierProfileScreen({
                   <span className="truncate">{c.name}</span>
                   {c.verified && <BadgeCheck className="size-4 shrink-0 text-brand" />}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   <span className="inline-flex items-center gap-0.5">
-                    <Star className="size-3 fill-muted-foreground/80 text-muted-foreground/80" />
+                    <Star className="size-3.5 fill-muted-foreground/80 text-muted-foreground/80" />
                     <span className="font-mono-tech text-foreground">{c.rating.toFixed(1)}</span>
                   </span>{" "}
                   · {deals(c.dealsCount)}
@@ -81,7 +86,7 @@ export function CarrierProfileScreen({
               <VerifyRow ok={!!c.verified} label="Селфи сверено с удостоверением" />
               <VerifyRow ok label="Профиль с фото (селфи)" />
               <VerifyRow ok={!!(c.trucks && c.trucks.length)} label="Транспорт · фото на файле" />
-              <p className="pt-1 text-[11px] leading-snug text-muted-foreground">
+              <p className="pt-1 text-sm leading-snug text-muted-foreground">
                 Значок «Бизнес проверен» = БИН/ИНН найден в реестре юрлиц и селфи совпало с
                 удостоверением. Доступ к базам МВД/розыска подключаем поэтапно — проверка снижает
                 риск, но не гарантия.
@@ -99,8 +104,8 @@ export function CarrierProfileScreen({
                   <CardContent className="flex items-center gap-2">
                     <Truck className="size-4 text-brand" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium capitalize">{t.type}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[15px] font-medium capitalize">{t.type}</p>
+                      <p className="text-sm text-muted-foreground">
                         {t.maxWeightKg.toLocaleString("ru-RU")} кг · {t.maxVolumeM3} м³ · {t.plate}
                       </p>
                     </div>
@@ -119,14 +124,14 @@ export function CarrierProfileScreen({
                 <Card key={r.id} size="sm">
                   <CardContent className="space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{r.author}</span>
-                      <span className="font-mono-tech text-xs text-muted-foreground">
+                      <span className="text-[15px] font-medium">{r.author}</span>
+                      <span className="font-mono-tech text-sm text-muted-foreground">
                         {"★".repeat(r.rating)}
                         <span className="text-muted-foreground/40">{"★".repeat(5 - r.rating)}</span>
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground">{r.text}</p>
-                    <p className="text-[10px] text-muted-foreground/70">{r.ago}</p>
+                    <p className="text-sm text-muted-foreground">{r.text}</p>
+                    <p className="text-xs text-muted-foreground/70">{r.ago}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -136,17 +141,18 @@ export function CarrierProfileScreen({
       </div>
 
       {/* action bar */}
-      <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-border bg-card p-3">
+      <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-border bg-card px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))]">
         {offer && order && offer.awaitingConfirm && offer.confirmDeadline ? (
-          <div className="rounded-md border border-amber-500/35 bg-amber-500/12 px-3 py-2 text-center text-[13px] font-medium text-amber-500">
+          <div className="rounded-md border border-amber-500/35 bg-amber-500/12 px-3 py-2 text-center text-sm font-medium text-amber-500">
             Встречная выбрана — ждём подтверждения перевозчика · <Countdown deadline={offer.confirmDeadline} />
           </div>
         ) : offer && order && offer.status === "countered" ? (
-          <div className="rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-center text-[13px] font-medium text-brand">
+          <div className="rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-center text-sm font-medium text-brand">
             Встречная отправлена: {money(offer.shipperCounterUsd ?? offer.priceUsd)} · ждём ответа перевозчика
           </div>
         ) : offer && order ? (
           <Button
+            size="xl"
             className="w-full"
             onClick={() => {
               if (offer.kind === "counter") {
@@ -165,17 +171,66 @@ export function CarrierProfileScreen({
               : `Выбрать ${money(offer.priceUsd)}`}
           </Button>
         ) : null}
-        <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={() => showToast("Открываем чат")}>
-            <MessageCircle className="size-4" /> Чат
-          </Button>
-          <Button variant="outline" className="flex-1" onClick={() => showToast(`Звоним (номер скрыт для безопасности)`)}>
-            <Phone className="size-4" /> Позвонить
-          </Button>
-        </div>
+        {showAccept ? (
+          /* Есть «Принять отклик» (основное действие экрана) → Чат + Звонок вторичной строкой. */
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-12 flex-1"
+              onClick={() => {
+                if (order?.deal) push({ type: "chat", orderId: order.id })
+                else showToast("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»")
+              }}
+            >
+              <MessageCircle className="size-5" /> Чат
+            </Button>
+            {unlocked ? (
+              <CallButton phone={c.phone} className="flex-1" />
+            ) : (
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-12 flex-1"
+                onClick={() =>
+                  showToast("Номер откроется, когда перевозчик откликнется или начнётся сделка")
+                }
+              >
+                <Phone className="size-5" /> Номер скрыт
+              </Button>
+            )}
+          </div>
+        ) : (
+          /* Чистый профиль (нет отклика к принятию) → звонок = основное 56px действие, чат — вторичное. */
+          <>
+            {unlocked ? (
+              <CallButton phone={c.phone} variant="primary" className="w-full" />
+            ) : (
+              <Button
+                variant="outline"
+                className="h-12 w-full"
+                onClick={() =>
+                  showToast("Номер откроется, когда перевозчик откликнется или начнётся сделка")
+                }
+              >
+                <Phone className="size-5" /> Номер скрыт
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              className="h-12 w-full"
+              onClick={() => {
+                if (order?.deal) push({ type: "chat", orderId: order.id })
+                else showToast("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»")
+              }}
+            >
+              <MessageCircle className="size-5" /> Чат
+            </Button>
+          </>
+        )}
         <button
           onClick={() => setShowReport(true)}
-          className="flex w-full items-center justify-center gap-1.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-destructive"
+          className="flex w-full items-center justify-center gap-1.5 py-1 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
         >
           <ShieldAlert className="size-3.5" /> Пожаловаться на пользователя
         </button>
@@ -198,7 +253,7 @@ export function CarrierProfileScreen({
                   <button
                     key={r}
                     onClick={() => setReportReason(r)}
-                    className={`rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                    className={`inline-flex h-11 items-center rounded-full border px-4 text-sm font-medium transition-colors ${
                       reportReason === r
                         ? "border-brand bg-brand/15 text-brand"
                         : "border-border text-muted-foreground hover:text-foreground"
@@ -210,6 +265,7 @@ export function CarrierProfileScreen({
               )}
             </div>
             <Button
+              size="lg"
               className="w-full"
               disabled={!reportReason}
               onClick={() => {
@@ -222,6 +278,7 @@ export function CarrierProfileScreen({
             </Button>
             <Button
               variant="outline"
+              size="lg"
               className="w-full"
               onClick={() => {
                 setShowReport(false)
@@ -232,7 +289,7 @@ export function CarrierProfileScreen({
             </Button>
             <button
               onClick={() => setShowReport(false)}
-              className="w-full py-1 text-center text-xs font-medium text-muted-foreground hover:text-foreground"
+              className="w-full py-2 text-center text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               Отмена
             </button>

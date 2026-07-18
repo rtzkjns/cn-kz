@@ -8,22 +8,26 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ScreenHeader } from "./phone-frame"
-import { deals } from "./shared"
+import { CallButton, contactUnlocked, deals } from "./shared"
 import { Section } from "./ui-bits"
 import { useCnKz } from "./store"
 
 // Профиль ЗАКАЗЧИКА — симметрия с профилем перевозчика: перевозчик может проверить и пожаловаться.
 export function ShipperProfileScreen({ orderId }: { orderId: string }) {
-  const { getOrder, pop, showToast } = useCnKz()
+  const { getOrder, pop, push, showToast } = useCnKz()
   const [showReport, setShowReport] = useState(false)
   const [reportReason, setReportReason] = useState<string | null>(null)
-  const s = getOrder(orderId)?.shipper
+  const order = getOrder(orderId)
+  const s = order?.shipper
   if (!s) return null
+
+  // §5: номер заказчика виден перевозчику только пока его отклик живой ИЛИ есть сделка.
+  const unlocked = contactUnlocked({ offerStatus: order?.myOfferStatus, hasDeal: !!order?.deal })
 
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader title="Заказчик" onBack={pop} />
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pb-6">
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pb-40">
         <Card size="sm">
           <CardContent className="space-y-3">
             <div className="flex items-center gap-3">
@@ -33,10 +37,10 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
                   <span className="truncate">{s.name}</span>
                   {s.verified && <BadgeCheck className="size-4 shrink-0 text-brand" />}
                 </p>
-                {s.company && <p className="truncate text-xs text-muted-foreground">{s.company}</p>}
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                {s.company && <p className="truncate text-sm text-muted-foreground">{s.company}</p>}
+                <p className="mt-0.5 text-sm text-muted-foreground">
                   <span className="inline-flex items-center gap-0.5">
-                    <Star className="size-3 fill-muted-foreground/80 text-muted-foreground/80" />
+                    <Star className="size-3.5 fill-muted-foreground/80 text-muted-foreground/80" />
                     <span className="font-mono-tech text-foreground">{s.rating.toFixed(1)}</span>
                   </span>{" "}
                   · {deals(s.dealsCount)}
@@ -62,7 +66,7 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
               <VRow ok label="Телефон подтверждён" />
               <VRow ok={!!s.verified} label="БИН/ИНН сверен с реестром юрлиц" />
               <VRow ok={s.dealsCount > 0} label={`История: ${s.dealsCount} завершённых сделок`} />
-              <p className="pt-1 text-[11px] leading-snug text-muted-foreground">
+              <p className="pt-1 text-sm leading-snug text-muted-foreground">
                 Аванс берите на счёт компании по БИН, не на личную карту. Оплата — напрямую, площадка
                 деньги не держит.
               </p>
@@ -76,11 +80,11 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
               {s.reviews.map((r) => (
                 <Card key={r.id} size="sm">
                   <CardContent className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="font-medium">{r.author}</span>
                       <span className="text-muted-foreground">{r.ago}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">{r.text}</p>
+                    <p className="text-sm text-muted-foreground">{r.text}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -88,17 +92,51 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
           </Section>
         )}
 
-        <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={() => showToast("Открываем чат")}>
-            <MessageCircle className="size-4" /> Чат
-          </Button>
-          <Button variant="outline" className="flex-1" onClick={() => showToast("Звоним (номер скрыт для безопасности)")}>
-            <Phone className="size-4" /> Позвонить
-          </Button>
-        </div>
+      </div>
+
+      {/* Нижняя панель контакта — звонок = основное действие на экране профиля (§4/§5). */}
+      <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-border bg-card px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+        {unlocked ? (
+          <>
+            <CallButton phone={s.phone} variant="primary" className="w-full" />
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-12 w-full"
+              onClick={() => {
+                if (order?.deal) push({ type: "chat", orderId })
+                else showToast("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»")
+              }}
+            >
+              <MessageCircle className="size-5" /> Чат
+            </Button>
+          </>
+        ) : (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-12 flex-1"
+              onClick={() => {
+                if (order?.deal) push({ type: "chat", orderId })
+                else showToast("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»")
+              }}
+            >
+              <MessageCircle className="size-5" /> Чат
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-12 flex-1"
+              onClick={() => showToast("Номер откроется после вашего отклика или начала сделки")}
+            >
+              <Phone className="size-5" /> Номер скрыт
+            </Button>
+          </div>
+        )}
         <button
           onClick={() => setShowReport(true)}
-          className="flex w-full items-center justify-center gap-1.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-destructive"
+          className="flex w-full items-center justify-center gap-1.5 py-1 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
         >
           <ShieldAlert className="size-3.5" /> Пожаловаться на заказчика
         </button>
@@ -119,7 +157,7 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
                 <button
                   key={r}
                   onClick={() => setReportReason(r)}
-                  className={`rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                  className={`inline-flex h-11 items-center rounded-full border px-4 text-sm font-medium transition-colors ${
                     reportReason === r
                       ? "border-brand bg-brand/15 text-brand"
                       : "border-border text-muted-foreground hover:text-foreground"
@@ -129,13 +167,13 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
                 </button>
               ))}
             </div>
-            <Button className="w-full" disabled={!reportReason} onClick={() => { setShowReport(false); showToast(`Жалоба отправлена (${reportReason}) — модерация проверит профиль`); setReportReason(null) }}>
+            <Button size="lg" className="w-full" disabled={!reportReason} onClick={() => { setShowReport(false); showToast(`Жалоба отправлена (${reportReason}) — модерация проверит профиль`); setReportReason(null) }}>
               <ShieldAlert className="size-4" /> Отправить жалобу
             </Button>
-            <Button variant="outline" className="w-full" onClick={() => { setShowReport(false); showToast(`${s.name} заблокирован — вы не увидите его заказы`) }}>
+            <Button variant="outline" size="lg" className="w-full" onClick={() => { setShowReport(false); showToast(`${s.name} заблокирован — вы не увидите его заказы`) }}>
               <Ban className="size-4" /> Заблокировать
             </Button>
-            <button onClick={() => setShowReport(false)} className="w-full py-1 text-center text-xs font-medium text-muted-foreground hover:text-foreground">
+            <button onClick={() => setShowReport(false)} className="w-full py-2 text-center text-sm font-medium text-muted-foreground hover:text-foreground">
               Отмена
             </button>
           </div>
