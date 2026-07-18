@@ -19,6 +19,7 @@ import {
 
 import { Card, CardContent } from "@/components/ui/card"
 import type { Order } from "@/lib/cn-kz/types"
+import { LANGS } from "@/lib/cn-kz/i18n"
 import { ScreenHeader } from "./phone-frame"
 import { DealStatusBadge, Route, money } from "./shared"
 import { Chip, ChipRow, Section } from "./ui-bits"
@@ -85,7 +86,12 @@ function Row({
 }
 
 export function SettingsScreen() {
-  const { setTab, resetOnboarding, showToast, push } = useCnKz()
+  const { setTab, resetOnboarding, showToast, push, lang, setLang } = useCnKz()
+  const curLang = LANGS.find((l) => l.id === lang)
+  const cycleLang = () => {
+    const i = LANGS.findIndex((l) => l.id === lang)
+    setLang(LANGS[(i + 1) % LANGS.length].id)
+  }
   const [confirmDel, setConfirmDel] = useState(false)
   const back = () => setTab("profile")
   return (
@@ -132,11 +138,11 @@ export function SettingsScreen() {
                 label="Язык"
                 value={
                   <span className="text-right text-sm leading-tight">
-                    <span className="block text-foreground">Русский</span>
-                    <span className="block text-sm text-muted-foreground">Рус · Қаз · 中文 · скоро</span>
+                    <span className="block text-foreground">{curLang?.label}</span>
+                    <span className="block text-sm text-muted-foreground">Рус · Қаз · 中文</span>
                   </span>
                 }
-                onClick={() => showToast("Смена языка (Рус · Қаз · 中文) — скоро")}
+                onClick={cycleLang}
               />
               <Row
                 icon={CreditCard}

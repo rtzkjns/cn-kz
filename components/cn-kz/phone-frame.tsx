@@ -6,6 +6,8 @@ import {
   BatteryFull,
   Bell,
   Boxes,
+  Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -29,6 +31,7 @@ import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { ME_CARRIER, ME_SHIPPER } from "@/lib/cn-kz/mock-data"
+import { LANGS } from "@/lib/cn-kz/i18n"
 import { FilterSheet } from "./filter-sheet"
 import { useCnKz, type Tab } from "./store"
 
@@ -224,45 +227,87 @@ function NotificationBell() {
   )
 }
 
-type NavItem = { id: string; label: string; icon: typeof Package; center?: boolean }
+// Язык — первичный контрол в шапке (не спрятан в настройках). FINAL-SPEC §8.
+function LangSelect() {
+  const { lang, setLang } = useCnKz()
+  const [open, setOpen] = useState(false)
+  const cur = LANGS.find((l) => l.id === lang)
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Язык интерфейса"
+        className="flex h-11 items-center gap-0.5 rounded-lg px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        {cur?.label}
+        <ChevronDown className="size-3.5" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+          <div className="absolute top-11 right-0 z-40 w-32 overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
+            {LANGS.map((l) => (
+              <button
+                key={l.id}
+                onClick={() => {
+                  setLang(l.id)
+                  setOpen(false)
+                }}
+                className={cn(
+                  "flex w-full items-center justify-between px-3 py-2.5 text-sm hover:bg-muted",
+                  l.id === lang ? "font-semibold text-brand" : "text-foreground"
+                )}
+              >
+                {l.label}
+                {l.id === lang && <Check className="size-4" />}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+type NavItem = { id: string; labelKey?: string; icon: typeof Package; center?: boolean }
 
 const NAV: Record<"shipper" | "carrier", NavItem[]> = {
   // Shipper home = Мои заказы (их работа); Рынок = просмотр рыночных цен (FINAL-SPEC §3).
   shipper: [
-    { id: "myorders", label: "Мои заказы", icon: Package },
-    { id: "feed", label: "Рынок", icon: Store },
-    { id: "add", label: "", icon: Plus, center: true },
-    { id: "chats", label: "Чаты", icon: MessageCircle },
-    { id: "profile", label: "Профиль", icon: User },
+    { id: "myorders", labelKey: "nav.myorders", icon: Package },
+    { id: "feed", labelKey: "nav.market", icon: Store },
+    { id: "add", icon: Plus, center: true },
+    { id: "chats", labelKey: "nav.chats", icon: MessageCircle },
+    { id: "profile", labelKey: "nav.profile", icon: User },
   ],
   // Carrier = 4 таба (Избранное → сердечко в шапке ленты). FINAL-SPEC §3.
   carrier: [
-    { id: "feed", label: "Главная", icon: Home },
-    { id: "deals", label: "Мои рейсы", icon: Boxes },
-    { id: "chats", label: "Чаты", icon: MessageCircle },
-    { id: "profile", label: "Профиль", icon: User },
+    { id: "feed", labelKey: "nav.feed", icon: Home },
+    { id: "deals", labelKey: "nav.deals", icon: Boxes },
+    { id: "chats", labelKey: "nav.chats", icon: MessageCircle },
+    { id: "profile", labelKey: "nav.profile", icon: User },
   ],
 }
 
 // Гость видит ПОЛНУЮ навигацию (не 2 таба): открытый браузинг + вход в табе «Профиль».
 const GUEST_NAV: NavItem[] = [
-  { id: "feed", label: "Главная", icon: Home },
-  { id: "favorites", label: "Избранное", icon: Heart },
-  { id: "chats", label: "Чат", icon: MessageCircle },
-  { id: "profile", label: "Профиль", icon: User },
+  { id: "feed", labelKey: "nav.feed", icon: Home },
+  { id: "favorites", labelKey: "nav.favorites", icon: Heart },
+  { id: "chats", labelKey: "nav.chats", icon: MessageCircle },
+  { id: "profile", labelKey: "nav.profile", icon: User },
 ]
 
 function BottomNav() {
-  const { role, tab, setTab, push, authed } = useCnKz()
+  const { role, tab, setTab, push, authed, t } = useCnKz()
   const items = authed ? NAV[role] : GUEST_NAV
   return (
     <nav className="flex shrink-0 items-stretch border-t border-border bg-card px-2 pt-2 pb-[max(10px,env(safe-area-inset-bottom))]">
-      {items.map((t) => {
-        const Icon = t.icon
-        if (t.center) {
+      {items.map((item) => {
+        const Icon = item.icon
+        if (item.center) {
           return (
             <button
-              key={t.id}
+              key={item.id}
               onClick={() => push({ type: "createOrder" })}
               className="flex flex-1 flex-col items-center justify-center"
               aria-label="Новый заказ"
@@ -273,12 +318,13 @@ function BottomNav() {
             </button>
           )
         }
-        const active = tab === t.id
+        const active = tab === item.id
+        const label = item.labelKey ? t(item.labelKey) : ""
         return (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id as Tab)}
-            aria-label={t.label}
+            key={item.id}
+            onClick={() => setTab(item.id as Tab)}
+            aria-label={label}
             className="flex flex-1 flex-col items-center gap-1"
           >
             <span
@@ -295,7 +341,7 @@ function BottomNav() {
                 active ? "text-brand" : "text-muted-foreground"
               )}
             >
-              {t.label}
+              {label}
             </span>
           </button>
         )
@@ -324,6 +370,7 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
           )}
           {authed ? (
             <div className="flex items-center gap-0.5">
+              <LangSelect />
               {role === "carrier" && (
                 <button
                   onClick={() => setTab("favorites")}

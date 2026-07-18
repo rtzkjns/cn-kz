@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { TRUCK_TYPES, type City, type Role, type TruckType } from "@/lib/cn-kz/types"
+import { LANGS } from "@/lib/cn-kz/i18n"
 import { CityMultiPicker } from "./city-picker"
 import { StatusBar } from "./phone-frame"
 import { TermsScreen } from "./screens-terms"
@@ -18,11 +19,10 @@ type Step = "auth" | "login" | "register" | "role" | "profile" | "terms"
 // Mirrors User Flow «1. Онбординг»: splash → вход → главный экран; регистрация → выбор роли → профиль → главный экран.
 export function OnboardingFlow() {
   // Вход использует роль уже существующего аккаунта (последнюю в сторе); роль выбирается только при регистрации.
-  const { enterApp, role: accountRole, closeAuth, push } = useCnKz()
+  const { enterApp, role: accountRole, closeAuth, lang, setLang } = useCnKz()
   const [step, setStep] = useState<Step>("auth")
   const [method, setMethod] = useState<"email" | "phone">("phone")
   const [role, setRole] = useState<Role>("shipper")
-  const [lang, setLang] = useState<"Русский" | "Қазақша" | "中文">("Русский")
 
   // Оферта показывается КАК ШАГ онбординга (не push в стек), иначе closeAuth() размонтирует
   // онбординг и теряет введённые данные, а «Назад» падает на гостевую ленту.
@@ -72,9 +72,9 @@ export function OnboardingFlow() {
           <div className="mb-3 flex flex-col gap-2">
             <span className="t-eyebrow text-muted-foreground">Язык</span>
             <ChipRow>
-              {(["Русский", "Қазақша", "中文"] as const).map((l) => (
-                <Chip key={l} active={lang === l} onClick={() => setLang(l)}>
-                  {l}
+              {LANGS.map((l) => (
+                <Chip key={l.id} active={lang === l.id} onClick={() => setLang(l.id)}>
+                  {l.label}
                 </Chip>
               ))}
             </ChipRow>

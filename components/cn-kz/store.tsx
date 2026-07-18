@@ -19,6 +19,7 @@ import {
   type User,
 } from "@/lib/cn-kz/types"
 import { plural } from "./shared"
+import { type Lang, translate } from "@/lib/cn-kz/i18n"
 import { EMPTY_FILTERS, type FilterState } from "@/lib/cn-kz/filters"
 
 // A pushed detail screen sits on top of the active tab.
@@ -113,6 +114,9 @@ interface CnKzStore {
   setRole: (r: Role) => void
   tab: Tab
   setTab: (t: Tab) => void
+  lang: Lang
+  setLang: (l: Lang) => void
+  t: (key: string) => string // перевод по текущему языку (ru — база/фолбэк)
   dealsNewOnly: boolean // «Сделки» отфильтрованы по «Есть новые» (§10)
   setDealsNewOnly: (v: boolean) => void
   openNotifications: () => void // «Все» из дропдауна → дашборд сделок с фильтром «есть новые» (§10)
@@ -195,6 +199,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
   const [showAuth, setShowAuth] = useState(false)
   const [role, setRoleRaw] = useState<Role>("shipper")
   const [tab, setTabRaw] = useState<Tab>("feed")
+  const [lang, setLang] = useState<Lang>("ru") // язык интерфейса (FINAL-SPEC §8)
   const [dealsNewOnly, setDealsNewOnly] = useState(false)
   const [seen, setSeen] = useState<string[]>([]) // id заказов с просмотренными событиями
   const [stack, setStack] = useState<Screen[]>([])
@@ -812,6 +817,9 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       setRole,
       tab,
       setTab,
+      lang,
+      setLang,
+      t: (key: string) => translate(lang, key),
       dealsNewOnly,
       setDealsNewOnly,
       openNotifications,
@@ -871,7 +879,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
       rejectOffer,
       getCarrier,
     }
-  }, [authed, showAuth, role, tab, dealsNewOnly, seen, stack, toast, myOrders, feedOrders, favorites, skipped, reliability, cancelCount, tripDraft, filters, showFilters, profile])
+  }, [authed, showAuth, role, tab, lang, dealsNewOnly, seen, stack, toast, myOrders, feedOrders, favorites, skipped, reliability, cancelCount, tripDraft, filters, showFilters, profile])
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>
 }
