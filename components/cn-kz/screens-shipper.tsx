@@ -320,13 +320,21 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                   </div>
 
                   {of.awaitingConfirm && of.confirmDeadline ? (
-                    <div className="rounded-md border border-amber-500/35 bg-amber-500/12 px-3 py-2 text-[15px] font-medium text-amber-500">
-                      Вы выбрали встречную {money(of.priceUsd)} · ждём подтверждения перевозчика · осталось{" "}
-                      <Countdown deadline={of.confirmDeadline} />
+                    <div className="space-y-2 pt-1">
+                      <div className="rounded-md border border-amber-500/35 bg-amber-500/12 px-3 py-2 text-[15px] font-medium text-amber-500">
+                        Вы выбрали встречную {money(of.priceUsd)} · ждём подтверждения перевозчика · осталось{" "}
+                        <Countdown deadline={of.confirmDeadline} />
+                      </div>
+                      {/* §5: отклик «живой» — можно позвонить перевозчику, пока ждём подтверждения. */}
+                      <CallButton phone={of.carrier.phone} className="w-full" />
                     </div>
                   ) : of.status === "countered" ? (
-                    <div className="rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-[15px] font-medium text-brand">
-                      Встречная отправлена: {money(of.shipperCounterUsd ?? of.priceUsd)} · ждём ответа перевозчика
+                    <div className="space-y-2 pt-1">
+                      <div className="rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-[15px] font-medium text-brand">
+                        Встречная отправлена: {money(of.shipperCounterUsd ?? of.priceUsd)} · ждём ответа перевозчика
+                      </div>
+                      {/* §5: контакт раскрыт, пока встречная на рассмотрении. */}
+                      <CallButton phone={of.carrier.phone} className="w-full" />
                     </div>
                   ) : (
                     <>
@@ -791,7 +799,7 @@ export function CreateOrderScreen({
         </button>
 
         <StickyCTA>
-          <p className="text-center text-[13px] leading-snug text-muted-foreground">
+          <p className="text-center text-sm leading-snug text-muted-foreground">
             CN-KZ — площадка для поиска, а не перевозчик и не гарант доставки. Проверяйте контрагента и
             груз сами.
           </p>

@@ -121,7 +121,6 @@ export function CarrierFeedScreen() {
             value: available,
             label: "Подходящих грузов",
             icon: Boxes,
-            onClick: () => setFilters(EMPTY_FILTERS),
           },
           {
             value: myOffers,
@@ -508,7 +507,14 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
               <DetailRow label="Точка погрузки" value={order.pickupPoint} />
             )}
             {order.pickupPhone && (
-              <DetailRow label="Контакт погрузки" value={order.pickupPhone} />
+              <DetailRow
+                label="Контакт погрузки"
+                value={
+                  contactUnlocked({ offerStatus: order.myOfferStatus, hasDeal: !!order.deal })
+                    ? order.pickupPhone
+                    : "откроется после отклика"
+                }
+              />
             )}
             <DetailRow label="Адрес доставки" value={order.address} />
             {order.notes && <DetailRow label="Примечание" value={order.notes} />}
