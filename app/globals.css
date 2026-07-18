@@ -48,6 +48,9 @@
   --radius-4xl: calc(var(--radius) * 2.6);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
+  --color-success: var(--success);
+  --color-warn: var(--warn);
+  --color-info: var(--info);
 }
 
 :root {
@@ -72,6 +75,8 @@
   --destructive: #d05a52; /* desaturated — danger only */
   --success: #10b981; /* positive/accept — the one green in the system (carrier quick-accept) */
   --success-strong: #059669; /* pressed/confirm state of --success */
+  --warn: #f5b545; /* amber — in-progress / attention (В пути, идут отклики) */
+  --info: #5aa9f5; /* sky — informational / neutral status (Опубликован, На границе) */
   --border: #23252a; /* graphite */
   --input: #2a2c30;
   --ring: #5e6ad2; /* indigo focus */
@@ -80,7 +85,10 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.375rem; /* strict — 6px, minimal corner smoothing */
+  --radius: 0.375rem; /* strict — 6px, minimal corner smoothing (LOCKED — do not oscillate) */
+  /* Driver-first UI contract (docs/FINAL-SPEC.md §2.2): touch/CTA sizing floors. */
+  --cta-h: 56px; /* primary bottom-anchored CTA */
+  --tap-min: 48px; /* minimum interactive target */
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -110,6 +118,10 @@
   --accent: #1c1d1f;
   --accent-foreground: #f7f8f8;
   --destructive: oklch(0.65 0.2 25);
+  --success: #10b981;
+  --success-strong: #059669;
+  --warn: #f5b545;
+  --info: #5aa9f5;
   --border: #23252a; /* graphite */
   --input: #23252a;
   --ring: #e4f222;
@@ -178,5 +190,22 @@
     font-family: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
     font-feature-settings: "tnum" on;
     letter-spacing: -0.02em;
+  }
+
+  /* ===== Driver-first type scale (docs/FINAL-SPEC.md §2.1). Floor: read text ≥14px, nothing <12px.
+     Semantic classes so screens stop hand-rolling text-[13px]/text-[11px]. Utilities still win. ===== */
+  .t-display {
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-weight: 700; font-size: 32px; line-height: 1.05; letter-spacing: -0.02em;
+    font-feature-settings: "tnum" on;
+  }
+  .t-h1 { font-weight: 700; font-size: 24px; line-height: 1.2; letter-spacing: -0.02em; }
+  .t-h2 { font-weight: 700; font-size: 20px; line-height: 1.25; letter-spacing: -0.015em; }
+  .t-h3 { font-weight: 600; font-size: 17px; line-height: 1.3; }
+  .t-body { font-weight: 400; font-size: 16px; line-height: 1.5; }
+  .t-body-strong { font-weight: 600; font-size: 16px; line-height: 1.5; }
+  .t-meta { font-weight: 500; font-size: 14px; line-height: 1.35; }
+  .t-eyebrow {
+    font-weight: 600; font-size: 12px; line-height: 1.2; letter-spacing: 0.04em; text-transform: uppercase;
   }
 }
