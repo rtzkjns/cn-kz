@@ -188,9 +188,9 @@ export function FilterSheet() {
 
         <div className="flex flex-col gap-2 border-t border-border p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
           <Button
-            variant="ghost"
+            variant="outline"
             size="lg"
-            className="w-full text-[15px]"
+            className="h-12 w-full text-[15px]"
             onClick={() => setDraft(EMPTY_FILTERS)}
           >
             <RotateCcw className="size-4" /> Сбросить

@@ -28,7 +28,9 @@ function LiveBadge() {
 
 // «Главная» — весь маркетплейс грузов (все открытые заказы), как на kolesa/OLX.
 export function MarketFeedScreen() {
-  const { feedOrders, push, filters, setFilters, openFilters } = useCnKz()
+  const { feedOrders, push, filters, setFilters, openFilters, authed, role } = useCnKz()
+  // Для авторизованного заказчика эта вкладка = «Рынок» (исследование цен); для гостя/перевозчика — домашняя «Главная».
+  const isMarketTab = authed && role === "shipper"
   const [q, setQ] = useState("")
   // Короткий скелет загрузки — под обещание «Realtime лента». refresh() = «потянуть обновить».
   const [loading, setLoading] = useState(true)
@@ -58,7 +60,7 @@ export function MarketFeedScreen() {
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader
-        title="Главная"
+        title={isMarketTab ? "Рынок" : "Главная"}
         subtitle={`Рынок цен и маршрутов · ${list.length} ${plural(list.length, "открытый груз", "открытых груза", "открытых грузов")} по СНГ`}
         action={
           <div className="flex items-center gap-1.5">

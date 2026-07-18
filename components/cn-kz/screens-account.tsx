@@ -29,17 +29,22 @@ import { useCnKz } from "./store"
 // Real local-state switch — visibly flips and holds for the session (mock; no backend).
 function Toggle({ on, label }: { on: boolean; label: string }) {
   const [v, setV] = useState(on)
+  // ≥44px tap target: кнопка тянется на min-h-11 с паддингом, 28px трек — только визуал.
   return (
     <button
       onClick={() => setV((x) => !x)}
       role="switch"
       aria-checked={v}
       aria-label={label}
-      className={"relative h-7 w-12 shrink-0 rounded-full transition-colors " + (v ? "bg-brand" : "bg-muted")}
+      className="flex min-h-11 shrink-0 items-center py-2 pl-2"
     >
       <span
-        className={"absolute top-1 size-5 rounded-full bg-white transition-all " + (v ? "left-[22px]" : "left-1")}
-      />
+        className={"relative block h-7 w-12 rounded-full transition-colors " + (v ? "bg-brand" : "bg-muted")}
+      >
+        <span
+          className={"absolute top-1 size-5 rounded-full bg-white transition-all " + (v ? "left-[22px]" : "left-1")}
+        />
+      </span>
     </button>
   )
 }
@@ -50,25 +55,31 @@ function Row({
   value,
   onClick,
   danger,
+  armed,
 }: {
   icon: typeof UserIcon
   label: string
   value?: React.ReactNode
   onClick?: () => void
   danger?: boolean
+  armed?: boolean
 }) {
   return (
     <button
       onClick={onClick}
       className={
         "flex w-full items-center gap-3 px-1 py-3 text-left text-base transition-colors " +
-        (danger ? "text-destructive" : "hover:text-foreground")
+        (armed
+          ? "rounded-md bg-destructive px-2 font-medium text-white"
+          : danger
+            ? "text-destructive"
+            : "hover:text-foreground")
       }
     >
-      <Icon className={"size-5 " + (danger ? "" : "text-muted-foreground")} />
+      <Icon className={"size-5 " + (armed ? "text-white" : danger ? "" : "text-muted-foreground")} />
       <span className="flex-1">{label}</span>
       {value}
-      {!value && !danger && <ChevronRight className="size-5 text-muted-foreground" />}
+      {!value && !danger && !armed && <ChevronRight className="size-5 text-muted-foreground" />}
     </button>
   )
 }
@@ -122,7 +133,7 @@ export function SettingsScreen() {
                 value={
                   <span className="text-right text-sm leading-tight">
                     <span className="block text-foreground">Русский</span>
-                    <span className="block text-xs text-muted-foreground">Рус · Қаз · 中文 · скоро</span>
+                    <span className="block text-sm text-muted-foreground">Рус · Қаз · 中文 · скоро</span>
                   </span>
                 }
                 onClick={() => showToast("Смена языка (Рус · Қаз · 中文) — скоро")}
@@ -133,7 +144,7 @@ export function SettingsScreen() {
                 value={
                   <span className="text-right text-sm leading-tight">
                     <span className="block text-foreground">$ USD</span>
-                    <span className="block text-xs text-muted-foreground">тенге — ориентир</span>
+                    <span className="block text-sm text-muted-foreground">тенге — ориентир</span>
                   </span>
                 }
                 onClick={() => showToast("Оплата в USD · ₸ показан ориентировочно")}
@@ -160,6 +171,7 @@ export function SettingsScreen() {
               icon={Trash2}
               label={confirmDel ? "Нажмите ещё раз для подтверждения" : "Удалить аккаунт"}
               danger
+              armed={confirmDel}
               onClick={() => {
                 if (!confirmDel) {
                   setConfirmDel(true)

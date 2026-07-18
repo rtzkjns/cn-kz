@@ -545,7 +545,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
                       key={c}
                       onClick={() => toggleCriterion(c)}
                       className={
-                        "min-h-9 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors " +
+                        "min-h-11 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors " +
                         (criteria.includes(c)
                           ? "border-brand/40 bg-brand/15 text-brand"
                           : "border-border text-muted-foreground hover:text-foreground")
@@ -632,14 +632,14 @@ export function DealScreen({ orderId }: { orderId: string }) {
                     <button
                       key={l}
                       onClick={() => logDealEvent(order.id, l)}
-                      className="min-h-10 rounded-md border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                      className="min-h-11 rounded-md border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {l}
                     </button>
                   ))}
                   <button
                     onClick={() => logDealEvent(order.id, "Простой / срыв погрузки")}
-                    className="min-h-10 rounded-md border border-amber-500/40 px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-500"
+                    className="min-h-11 rounded-md border border-amber-500/40 px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-500"
                   >
                     Зафиксировать простой
                   </button>
@@ -769,7 +769,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
                     key={r}
                     onClick={() => setClaimReason(r)}
                     className={
-                      "min-h-10 rounded-full border px-3 py-2 text-sm font-medium transition-colors " +
+                      "min-h-11 rounded-full border px-3 py-2 text-sm font-medium transition-colors " +
                       (claimReason === r
                         ? "border-brand/40 bg-brand/15 text-brand"
                         : "border-border text-muted-foreground hover:text-foreground")
@@ -1057,12 +1057,8 @@ export function ProfileScreen() {
                       <div className="text-sm text-muted-foreground">рейтинг</div>
                     </div>
                     <div>
-                      <div className="font-mono-tech text-xl font-bold text-brand">96%</div>
-                      <div className="text-sm text-muted-foreground">вовремя</div>
-                    </div>
-                    <div>
-                      <div className="font-mono-tech text-xl font-bold">$18.4k</div>
-                      <div className="text-sm text-muted-foreground">заработано</div>
+                      <div className="font-mono-tech text-xl font-bold text-brand">{reliability}</div>
+                      <div className="text-sm text-muted-foreground">надёжность</div>
                     </div>
                   </div>
                 </CardContent>
@@ -1149,7 +1145,7 @@ export function ProfileScreen() {
           <LogOut className="size-5" /> Выйти
         </Button>
 
-        <p className="pb-4 text-center text-xs text-muted-foreground">
+        <p className="pb-4 text-center text-sm text-muted-foreground">
           CN-KZ · Грузоперевозки по СНГ
         </p>
       </div>

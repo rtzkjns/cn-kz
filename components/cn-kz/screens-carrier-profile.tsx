@@ -31,6 +31,9 @@ export function CarrierProfileScreen({
   const offer = order?.offers.find((o) => o.id === offerId)
   // §5: контакт раскрыт только при живом отклике этого перевозчика ИЛИ уже есть сделка по заказу.
   const unlocked = contactUnlocked({ offerStatus: offer?.status, hasDeal: !!order?.deal })
+  // Кнопка «Принять отклик» = основное действие экрана — только при живом отклике (не встречная, не ожидание подтверждения).
+  const showAccept =
+    !!offer && !!order && !(offer.awaitingConfirm && offer.confirmDeadline) && offer.status !== "countered"
 
   return (
     <div className="flex h-full flex-col">
@@ -168,33 +171,63 @@ export function CarrierProfileScreen({
               : `Выбрать ${money(offer.priceUsd)}`}
           </Button>
         ) : null}
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="lg"
-            className="flex-1"
-            onClick={() => {
-              if (order?.deal) push({ type: "chat", orderId: order.id })
-              else showToast("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»")
-            }}
-          >
-            <MessageCircle className="size-5" /> Чат
-          </Button>
-          {unlocked ? (
-            <CallButton phone={c.phone} className="flex-1" />
-          ) : (
+        {showAccept ? (
+          /* Есть «Принять отклик» (основное действие экрана) → Чат + Звонок вторичной строкой. */
+          <div className="flex gap-2">
             <Button
               variant="outline"
               size="lg"
-              className="flex-1"
-              onClick={() =>
-                showToast("Номер откроется, когда перевозчик откликнется или начнётся сделка")
-              }
+              className="h-12 flex-1"
+              onClick={() => {
+                if (order?.deal) push({ type: "chat", orderId: order.id })
+                else showToast("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»")
+              }}
             >
-              <Phone className="size-5" /> Номер скрыт
+              <MessageCircle className="size-5" /> Чат
             </Button>
-          )}
-        </div>
+            {unlocked ? (
+              <CallButton phone={c.phone} className="flex-1" />
+            ) : (
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-12 flex-1"
+                onClick={() =>
+                  showToast("Номер откроется, когда перевозчик откликнется или начнётся сделка")
+                }
+              >
+                <Phone className="size-5" /> Номер скрыт
+              </Button>
+            )}
+          </div>
+        ) : (
+          /* Чистый профиль (нет отклика к принятию) → звонок = основное 56px действие, чат — вторичное. */
+          <>
+            {unlocked ? (
+              <CallButton phone={c.phone} variant="primary" className="w-full" />
+            ) : (
+              <Button
+                variant="outline"
+                className="h-12 w-full"
+                onClick={() =>
+                  showToast("Номер откроется, когда перевозчик откликнется или начнётся сделка")
+                }
+              >
+                <Phone className="size-5" /> Номер скрыт
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              className="h-12 w-full"
+              onClick={() => {
+                if (order?.deal) push({ type: "chat", orderId: order.id })
+                else showToast("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»")
+              }}
+            >
+              <MessageCircle className="size-5" /> Чат
+            </Button>
+          </>
+        )}
         <button
           onClick={() => setShowReport(true)}
           className="flex w-full items-center justify-center gap-1.5 py-1 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
