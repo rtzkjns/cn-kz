@@ -275,7 +275,7 @@ function CapBar({ label, used, max, pct, unit }: { label: string; used: number; 
       </div>
       <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
         <div
-          className={"h-full rounded-full " + (pct >= 100 ? "bg-amber-500" : "bg-brand")}
+          className={"h-full rounded-full " + (pct >= 100 ? "bg-warn" : "bg-brand")}
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -383,7 +383,7 @@ export function TripBuilderScreen() {
               <span className="font-mono-tech text-lg font-bold tabular-nums">{money(total)}</span>
             </div>
             {overCapacity && (
-              <p className="text-sm text-amber-500">
+              <p className="text-sm text-warn">
                 Рейс превышает вместимость фуры — уберите груз, чтобы взять рейс
               </p>
             )}
@@ -681,7 +681,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                 ))}
               </ChipRow>
               {overCapacity && (
-                <p className="text-sm text-amber-500">
+                <p className="text-sm text-warn">
                   Груз превышает вместимость этой фуры — выберите другую
                 </p>
               )}

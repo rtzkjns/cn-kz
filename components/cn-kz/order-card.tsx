@@ -55,7 +55,7 @@ export function OrderCard({
     <div
       onClick={onClick}
       className={cn(
-        "surface-glass group cursor-pointer rounded-md p-4 transition-transform duration-150 active:scale-[0.99]"
+        "surface-glass group cursor-pointer rounded-2xl p-4 transition-transform duration-150 active:scale-[0.99]"
       )}
     >
       {/* Trust header: shipper + rating · freshness, status */}
@@ -145,7 +145,7 @@ export function OrderCard({
       </div>
 
       {/* Price footer + contextual action */}
-      <div className="mt-3 flex items-center justify-between gap-2 rounded-md bg-secondary px-4 py-3">
+      <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-secondary px-4 py-3">
         <div className="min-w-0 leading-none">
           <p className="t-eyebrow text-muted-foreground">Цена заказчика</p>
           <p className="font-mono-tech mt-1.5 text-[28px] leading-none font-bold tracking-tight">

@@ -111,9 +111,9 @@ export function AnalyticsScreen() {
 
         {/* insights / exceptions */}
         {noOffers > 0 && (
-          <Card size="sm" className="ring-amber-500/30">
+          <Card size="sm" className="ring-warn/30">
             <CardContent className="flex items-start gap-2">
-              <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-500" />
+              <AlertTriangle className="mt-0.5 size-5 shrink-0 text-warn" />
               <div className="text-base">
                 <p className="font-medium">{noOffers} заказ(а) без откликов</p>
                 <p className="text-sm text-muted-foreground">

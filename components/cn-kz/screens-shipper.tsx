@@ -321,7 +321,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
 
                   {of.awaitingConfirm && of.confirmDeadline ? (
                     <div className="space-y-2 pt-1">
-                      <div className="rounded-md border border-amber-500/35 bg-amber-500/12 px-3 py-2 text-[15px] font-medium text-amber-500">
+                      <div className="rounded-md border border-warn/35 bg-warn/12 px-3 py-2 text-[15px] font-medium text-warn">
                         Вы выбрали встречную {money(of.priceUsd)} · ждём подтверждения перевозчика · осталось{" "}
                         <Countdown deadline={of.confirmDeadline} />
                       </div>
@@ -770,7 +770,7 @@ export function CreateOrderScreen({
 
         {/* Груз в РФ — санкционный риск на коридоре Китай→Россия. Точечная подсказка. */}
         {RU_CITIES.has(d.destination) && (
-          <div className="flex items-start gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-sm text-amber-600 dark:text-amber-500">
+          <div className="flex items-start gap-2 rounded-md bg-warn/10 px-3 py-2 text-sm text-warn dark:text-warn">
             <ShieldCheck className="mt-0.5 size-4 shrink-0" />
             Груз в РФ: убедитесь, что это не санкционный товар двойного назначения (электроника, чипы,
             дроны, станки, подшипники). Иначе застрянет на границе, а ответственность — на вас.

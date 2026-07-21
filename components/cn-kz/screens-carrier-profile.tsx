@@ -143,7 +143,7 @@ export function CarrierProfileScreen({
       {/* action bar */}
       <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-border bg-card px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))]">
         {offer && order && offer.awaitingConfirm && offer.confirmDeadline ? (
-          <div className="rounded-md border border-amber-500/35 bg-amber-500/12 px-3 py-2 text-center text-sm font-medium text-amber-500">
+          <div className="rounded-md border border-warn/35 bg-warn/12 px-3 py-2 text-center text-sm font-medium text-warn">
             Встречная выбрана — ждём подтверждения перевозчика · <Countdown deadline={offer.confirmDeadline} />
           </div>
         ) : offer && order && offer.status === "countered" ? (

@@ -39,105 +39,113 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* «Тракт» radius scale — generous, intentional (spec §Radius). badge 8 · input/button 14 · card 20 · sheet 24. */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-4xl: 28px;
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-tint: var(--brand-tint);
   --color-success: var(--success);
   --color-warn: var(--warn);
   --color-info: var(--info);
 }
 
 :root {
-  /* Linear "midnight command deck" — 3-color: dark neutrals + snow text + INDIGO accent.
-     Indigo is rationed to actions & active states (the research rule). Sharp corners, 1px borders. */
-  --brand: #5e6ad2; /* Linear indigo — the single accent */
+  /* «Тракт / Signal Dispatch» (docs/REDESIGN-SPEC.md) — warm-paper LIGHT canvas, white cards
+     floating on soft warm shadows, ONE signal-orange hero rationed to the single action per screen.
+     This is the DEFAULT rendered theme (app renders :root, no .dark class). */
+  --brand: #ea4e1b; /* signal orange — primary CTA, active nav, focus, price emphasis */
   --brand-foreground: #ffffff;
-  --background: #08090a; /* onyx canvas */
-  --foreground: #f7f8f8; /* snow */
-  --card: #0f1011; /* charcoal */
-  --card-foreground: #f7f8f8;
-  --popover: #161718; /* obsidian */
-  --popover-foreground: #f7f8f8;
-  --primary: #5e6ad2; /* indigo filled CTA — the one action color */
+  --brand-strong: #c23d12; /* pressed */
+  --brand-tint: #fdede7; /* 12% wash — selected card / active nav pill / quiet emphasis */
+  --background: #fbf9f6; /* warm paper canvas */
+  --foreground: #14110e; /* warm ink (~16:1) */
+  --card: #ffffff; /* white cards float via shadow, not borders */
+  --card-foreground: #14110e;
+  --popover: #ffffff;
+  --popover-foreground: #14110e;
+  --primary: #ea4e1b; /* = brand */
   --primary-foreground: #ffffff;
-  --secondary: #1b1c1e;
-  --secondary-foreground: #f7f8f8;
-  --muted: #161718;
-  --muted-foreground: #8a8f98; /* fog */
-  --accent: #1b1c1e;
-  --accent-foreground: #f7f8f8;
-  --destructive: #d05a52; /* desaturated — danger only */
-  --success: #10b981; /* positive/accept — the one green in the system (carrier quick-accept) */
-  --success-strong: #059669; /* pressed/confirm state of --success */
-  --warn: #f5b545; /* amber — in-progress / attention (В пути, идут отклики) */
-  --info: #5aa9f5; /* sky — informational / neutral status (Опубликован, На границе) */
-  --border: #23252a; /* graphite */
-  --input: #2a2c30;
-  --ring: #5e6ad2; /* indigo focus */
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.375rem; /* strict — 6px, minimal corner smoothing (LOCKED — do not oscillate) */
-  /* Driver-first UI contract (docs/FINAL-SPEC.md §2.2): touch/CTA sizing floors. */
+  --secondary: #f2eee8; /* warm quiet fill — meta pills, chat bubbles, avatars (contrast on white cards) */
+  --secondary-foreground: #14110e;
+  --muted: #f4f1ec; /* quiet nested block */
+  --muted-foreground: #6b6560; /* AA warm-grey secondary */
+  --accent: #f4f1ec;
+  --accent-foreground: #14110e;
+  --destructive: #d22f2f; /* cancel/claim — text + dot only, never a fill */
+  --success: #12925a; /* accept/deal fill, Доставлен/Завершено */
+  --success-strong: #0e7a4b; /* pressed/confirm state of --success */
+  --warn: #b7791f; /* amber text (+ #F6C453 dot) — in-transit/attention, never a fill */
+  --info: #2563c9; /* neutral/published status */
+  --border: #ece7e1; /* warm hairline — dividers/inputs only */
+  --input: #ded8d1; /* input border (a touch stronger than divider) */
+  --ring: #ea4e1b; /* orange focus */
+  --chart-1: #ea4e1b;
+  --chart-2: #12925a;
+  --chart-3: #2563c9;
+  --chart-4: #b7791f;
+  --chart-5: #6b6560;
+  --radius: 14px; /* base — friendly, consumer (was sharp 6px) */
+  /* Driver-first UI contract (docs/FINAL-SPEC.md §2.2): touch/CTA sizing floors — UNCHANGED. */
   --cta-h: 56px; /* primary bottom-anchored CTA */
   --tap-min: 48px; /* minimum interactive target */
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #14110e;
+  --sidebar-primary: #ea4e1b;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f1ec;
+  --sidebar-accent-foreground: #14110e;
+  --sidebar-border: #ece7e1;
+  --sidebar-ring: #ea4e1b;
 }
 
 .dark {
-  /* Linear "midnight command deck" (see docs/DESIGN.md). acid-lime #e4f222 as the single rationed accent. */
-  --brand: #e4f222;
-  --brand-foreground: #030404;
-  --background: #08090a; /* onyx canvas */
-  --foreground: #f7f8f8; /* snow */
-  --card: #0f1011; /* charcoal */
-  --card-foreground: #f7f8f8;
-  --popover: #161718; /* obsidian */
-  --popover-foreground: #f7f8f8;
-  --primary: #e4f222;
-  --primary-foreground: #030404;
-  --secondary: #161718;
-  --secondary-foreground: #f7f8f8;
-  --muted: #161718;
-  --muted-foreground: #8a8f98; /* fog */
-  --accent: #1c1d1f;
-  --accent-foreground: #f7f8f8;
-  --destructive: oklch(0.65 0.2 25);
-  --success: #10b981;
-  --success-strong: #059669;
-  --warn: #f5b545;
-  --info: #5aa9f5;
-  --border: #23252a; /* graphite */
-  --input: #23252a;
-  --ring: #e4f222;
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* «Тракт» night variant — warm charcoal, same orange hero, same rounding. Optional (not default). */
+  --brand: #ff5a2a;
+  --brand-foreground: #14110e;
+  --brand-strong: #e0491d;
+  --brand-tint: #2e211a;
+  --background: #14120f; /* warm near-black */
+  --foreground: #f7f4f0;
+  --card: #1f1c18; /* warm charcoal card */
+  --card-foreground: #f7f4f0;
+  --popover: #1f1c18;
+  --popover-foreground: #f7f4f0;
+  --primary: #ff5a2a;
+  --primary-foreground: #14110e;
+  --secondary: #262019; /* warm quiet fill (pills show on charcoal cards) */
+  --secondary-foreground: #f7f4f0;
+  --muted: #262019;
+  --muted-foreground: #a89f96;
+  --accent: #262019;
+  --accent-foreground: #f7f4f0;
+  --destructive: #f06060;
+  --success: #35c07f;
+  --success-strong: #2aa96e;
+  --warn: #f6c453;
+  --info: #6aa9ff;
+  --border: #2a2621;
+  --input: #362f28;
+  --ring: #ff5a2a;
+  --chart-1: #ff5a2a;
+  --chart-2: #35c07f;
+  --chart-3: #6aa9ff;
+  --chart-4: #f6c453;
+  --chart-5: #a89f96;
+  --sidebar: #1f1c18;
+  --sidebar-foreground: #f7f4f0;
+  --sidebar-primary: #ff5a2a;
+  --sidebar-primary-foreground: #14110e;
+  --sidebar-accent: #262019;
+  --sidebar-accent-foreground: #f7f4f0;
+  --sidebar-border: #2a2621;
+  --sidebar-ring: #ff5a2a;
 }
 
 @layer base {
@@ -149,63 +157,106 @@
   }
   html {
     @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 }
 
 @layer utilities {
-  /* ===== Strict Linear surfaces — charcoal defined by a 1px graphite border. Borders, not glow. ===== */
+  /* ===== «Тракт» surfaces — white cards FLOAT on warm paper via soft shadows (no borders). ===== */
 
-  /* Card: charcoal on onyx, crisp 1px graphite inset border + a faint contact shadow. */
+  /* Card: white, soft two-layer warm shadow (rest state). The signature "shipped app" surface. */
   .surface-glass {
     background: var(--card);
     box-shadow:
-      inset 0 0 0 1px #23252a,
-      0 1px 2px 0 rgba(0, 0, 0, 0.5);
+      0 1px 2px 0 rgba(20, 17, 14, 0.04),
+      0 6px 16px -8px rgba(20, 17, 14, 0.1);
   }
-  /* Active / your-offer surface — indigo 1px border (the accent). */
+  /* Active / your-offer / accepted surface — 1.5px orange ring + tint wash (no shadow bump). */
   .surface-glass-brand {
-    background: var(--card);
-    box-shadow:
-      inset 0 0 0 1px rgba(94, 106, 210, 0.65),
-      0 1px 2px 0 rgba(0, 0, 0, 0.5);
+    background: var(--brand-tint);
+    box-shadow: inset 0 0 0 1.5px var(--brand);
   }
-  /* Inset / quiet nested surface (obsidian). */
+  /* Inset / quiet nested block — faint warm fill, no shadow. */
   .surface-inset {
-    background: #161718;
-    box-shadow: inset 0 0 0 1px #23252a;
+    background: var(--muted);
+    box-shadow: none;
   }
   .shadow-card {
     box-shadow:
-      inset 0 0 0 1px #23252a,
-      0 1px 2px 0 rgba(0, 0, 0, 0.5);
+      0 1px 2px 0 rgba(20, 17, 14, 0.04),
+      0 6px 16px -8px rgba(20, 17, 14, 0.1);
   }
-  /* Raised pressable (mono CTA) — minimal depth. */
+  /* Raised pressable — a slightly deeper soft lift (used by sticky bars / raised tiles). */
   .shadow-key {
     box-shadow:
-      0 1px 2px 0 rgba(0, 0, 0, 0.5),
-      0 2px 6px -2px rgba(0, 0, 0, 0.4);
+      0 1px 2px 0 rgba(20, 17, 14, 0.05),
+      0 10px 24px -12px rgba(20, 17, 14, 0.16);
   }
-  /* Technical metadata — IDs & prices in true monospace (Linear "this is a tool" signal). */
-  .font-mono-tech {
-    font-family: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
-    font-feature-settings: "tnum" on;
-    letter-spacing: -0.02em;
+  /* Signal-orange glow — the ONE primary CTA per screen. */
+  .shadow-brand {
+    box-shadow: 0 6px 16px -6px rgba(234, 78, 27, 0.45);
+  }
+  /* Dark-variant shadow overrides (warmer, deeper so cards separate from the charcoal canvas). */
+  .dark .surface-glass,
+  .dark .shadow-card {
+    box-shadow:
+      0 1px 2px 0 rgba(0, 0, 0, 0.4),
+      0 8px 20px -10px rgba(0, 0, 0, 0.55);
+  }
+  .dark .surface-inset {
+    background: var(--muted);
   }
 
-  /* ===== Driver-first type scale (docs/FINAL-SPEC.md §2.1). Floor: read text ≥14px, nothing <12px.
-     Semantic classes so screens stop hand-rolling text-[13px]/text-[11px]. Utilities still win. ===== */
-  .t-display {
-    font-family: var(--font-geist-mono), ui-monospace, monospace;
-    font-weight: 700; font-size: 32px; line-height: 1.05; letter-spacing: -0.02em;
+  /* Live numbers — prices, weights, counts — in TABULAR SANS (Golos Text with tnum), the consumer-app
+     treatment. Keeps column alignment without the "dev tool" monospace. (Was Geist Mono.) */
+  .font-mono-tech {
     font-feature-settings: "tnum" on;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
   }
-  .t-h1 { font-weight: 700; font-size: 24px; line-height: 1.2; letter-spacing: -0.02em; }
+
+  /* ===== Driver-first type scale (docs/FINAL-SPEC.md §2.1) — re-skinned in Golos Text.
+     Floor holds: read text ≥14px, nothing <12px. tabular-nums on all live numbers. ===== */
+  .t-display {
+    /* Price hero — bold tabular SANS (consumer app), no longer monospace. */
+    font-weight: 800; font-size: 32px; line-height: 1.05; letter-spacing: -0.02em;
+    font-feature-settings: "tnum" on; font-variant-numeric: tabular-nums;
+  }
+  .t-h1 { font-weight: 800; font-size: 24px; line-height: 1.2; letter-spacing: -0.02em; }
   .t-h2 { font-weight: 700; font-size: 20px; line-height: 1.25; letter-spacing: -0.015em; }
   .t-h3 { font-weight: 600; font-size: 17px; line-height: 1.3; }
   .t-body { font-weight: 400; font-size: 16px; line-height: 1.5; }
   .t-body-strong { font-weight: 600; font-size: 16px; line-height: 1.5; }
   .t-meta { font-weight: 500; font-size: 14px; line-height: 1.35; }
   .t-eyebrow {
-    font-weight: 600; font-size: 12px; line-height: 1.2; letter-spacing: 0.04em; text-transform: uppercase;
+    font-weight: 700; font-size: 12px; line-height: 1.2; letter-spacing: 0.04em; text-transform: uppercase;
+  }
+
+  /* ===== Route-rail motif (the signature brand device — graft from Cargo Line).
+     origin → dest connected by a dotted vertical rail with two terminal dots. ===== */
+  .route-rail {
+    background-image: linear-gradient(to bottom, var(--border) 0 60%, transparent 60%);
+    background-size: 2px 8px;
+    background-repeat: repeat-y;
+    background-position: center;
+  }
+
+  /* Warm shimmer skeleton (graft — "shipped, not mocked" loading). */
+  .skeleton-shimmer {
+    background: linear-gradient(90deg, var(--muted) 25%, #efeae3 37%, var(--muted) 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+  .dark .skeleton-shimmer {
+    background: linear-gradient(90deg, var(--muted) 25%, #322a22 37%, var(--muted) 63%);
+    background-size: 400% 100%;
+  }
+  @keyframes shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-shimmer { animation: none; }
   }
 }

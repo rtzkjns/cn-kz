@@ -14,7 +14,7 @@ const buttonVariants = cva(
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "border-border bg-card text-foreground hover:bg-muted aria-expanded:bg-muted aria-expanded:text-foreground",
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
@@ -28,7 +28,8 @@ const buttonVariants = cva(
         sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "h-11 gap-1.5 px-6 has-data-[icon=inline-end]:pr-4 has-data-[icon=inline-start]:pl-4",
         // Driver-first primary CTA — 56px, bottom-anchored, one per screen (FINAL-SPEC §2.2).
-        xl: "h-14 gap-2 rounded-lg px-6 text-[17px] font-bold [&_svg:not([class*='size-'])]:size-5 has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5",
+        // «Тракт»: fully-pill + signal-orange glow (graft from M3) — the single hero action.
+        xl: "h-14 gap-2 rounded-full px-7 text-[17px] font-bold shadow-brand [&_svg:not([class*='size-'])]:size-5 has-data-[icon=inline-end]:pr-6 has-data-[icon=inline-start]:pl-6",
         icon: "size-8",
         // Tap-safe icon button — 44px hit area for gloved drivers (glyph stays ~20px).
         "icon-touch": "size-11 [&_svg:not([class*='size-'])]:size-5",

@@ -476,7 +476,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
         {order.deliverBy && <DetailRow label="Срок доставки" value={order.deliverBy} />}
 
         {order.overdue && !completed && !cancelled && (
-          <div className="flex items-center gap-2 rounded-md bg-amber-500/10 px-3 py-2.5 text-sm text-amber-600 dark:text-amber-500">
+          <div className="flex items-center gap-2 rounded-md bg-warn/10 px-3 py-2.5 text-sm text-warn dark:text-warn">
             <ShieldAlert className="size-4 shrink-0" /> Перевозчик опаздывает к сроку доставки. Напишите в чат или согласуйте новый срок.
           </div>
         )}
@@ -492,7 +492,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
           </span>
         </div>
         {!cancelled && !completed && (
-          <div className="flex items-start gap-2 rounded-md bg-amber-500/10 px-3 py-2.5 text-sm text-amber-600 dark:text-amber-500">
+          <div className="flex items-start gap-2 rounded-md bg-warn/10 px-3 py-2.5 text-sm text-warn dark:text-warn">
             <ShieldAlert className="mt-0.5 size-4 shrink-0" />
             <span>
               Аванс на топливо — обычное дело. Проводите его через приложение проверенному
@@ -639,7 +639,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
                   ))}
                   <button
                     onClick={() => logDealEvent(order.id, "Простой / срыв погрузки")}
-                    className="min-h-11 rounded-md border border-amber-500/40 px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-500"
+                    className="min-h-11 rounded-md border border-warn/40 px-3 py-2 text-sm font-medium text-warn dark:text-warn"
                   >
                     Зафиксировать простой
                   </button>
@@ -649,7 +649,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
 
             {/* «Что-то не так со сделкой?» — вход в поддержку/спор с доказательствами. */}
             {deal.claim ? (
-              <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-600 dark:text-amber-500">
+              <div className="flex items-start gap-2 rounded-md border border-warn/40 bg-warn/10 px-3 py-2.5 text-sm text-warn dark:text-warn">
                 <ShieldAlert className="mt-0.5 size-4 shrink-0" />
                 <span>
                   <span className="font-medium">Поддержка разбирается: {deal.claim.reason}.</span>{" "}
@@ -713,7 +713,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
                 : "Отмена оставит перевозчика без груза и повлияет на ваш рейтинг заказчика."}
             </p>
             <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2.5 text-sm text-muted-foreground">
-              <ShieldAlert className="size-4 shrink-0 text-amber-500" /> Форс-мажор (поломка, граница)? Отмена без штрафа — приложите фото.
+              <ShieldAlert className="size-4 shrink-0 text-warn" /> Форс-мажор (поломка, граница)? Отмена без штрафа — приложите фото.
             </div>
             <div className="space-y-2">
               <Button
@@ -1031,7 +1031,7 @@ export function ProfileScreen() {
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div
-                      className={"h-full rounded-full " + (reliable ? "bg-brand" : "bg-amber-500")}
+                      className={"h-full rounded-full " + (reliable ? "bg-brand" : "bg-warn")}
                       style={{ width: `${reliability}%` }}
                     />
                   </div>

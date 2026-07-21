@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Golos_Text, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-// Linear: Inter for UI, Geist Mono for technical IDs/prices.
-const sans = Inter({
+// «Тракт» redesign: Golos Text — a Cyrillic-native humanist sans (consumer-app warmth,
+// not a dev-tool grotesk). Geist Mono is kept ONLY for raw IDs (order/plate numbers).
+const sans = Golos_Text({
   variable: "--font-sans",
   subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
