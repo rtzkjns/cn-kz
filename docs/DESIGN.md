@@ -84,7 +84,7 @@ box-shadow:
 - **Success/accept:** the carrier quick-accept button uses a dedicated green token `--success` (#10b981) — the one green in the shipped system.
 - Surfaces are near-black (`#08090a` canvas, `#0f1011` cards) with `--border` separation.
 
-**⚠️ SUPERSEDED (2026-07-21): the canonical theme is now «Тракт / Signal Dispatch» — see [docs/REDESIGN-SPEC.md](REDESIGN-SPEC.md).** Warm-paper LIGHT canvas `#FBF9F6`, white cards on soft warm shadows (NO 1px borders), signal-orange `#EA4E1B` accent, **Golos Text**, 14–24px radius scale, tabular-SANS numbers, `--success` green for accept only. The dark "Linear midnight" indigo/Inter theme below is RETIRED to historical reference. **Build every component against the shipped `app/globals.css` tokens.** The driver-first floors (type scale, 56px CTA, 44px taps, status = color+icon+word) carry over unchanged.
+**⚠️ SUPERSEDED (2026-07-22): the canonical theme is now «Signal» — see [docs/CLONE-SPEC.md](CLONE-SPEC.md) (authoritative).** A 1:1 replication of inDrive's in-app design SYSTEM in CN-KZ's own identity: **pure-white** surfaces, ONE **signal-lime `#C0F03C`** accent with **BLACK text** on it (never white-on-lime), flat cards on **gray gutters** (no borders/shadows), **Manrope + Inter**, PRICE-IS-HERO (32/800), 12–24px radii, blue/lime route rings, green `#1E9E57` for accept only. Anti-empty density rules. Both prior themes — dark indigo "Linear" AND warm-paper "Тракт" (orange) — are RETIRED. **Build every component against the shipped `app/globals.css` tokens.** Driver-first floors (type scale, 56px CTA, 44px taps, status = color+icon+word) carry over unchanged.
 
 ---
 
