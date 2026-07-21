@@ -95,7 +95,7 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
       </div>
 
       {/* Нижняя панель контакта — звонок = основное действие на экране профиля (§4/§5). */}
-      <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-border bg-card px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+      <div className="absolute inset-x-0 bottom-0 space-y-2 bg-card px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_rgba(20,17,14,0.12)]">
         {unlocked ? (
           <>
             <CallButton phone={s.phone} variant="primary" className="w-full" />
@@ -136,7 +136,7 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
         )}
         <button
           onClick={() => setShowReport(true)}
-          className="flex w-full items-center justify-center gap-1.5 py-1 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
+          className="flex w-full items-center justify-center gap-1.5 py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
         >
           <ShieldAlert className="size-3.5" /> Пожаловаться на заказчика
         </button>
@@ -148,7 +148,7 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
           onClick={() => setShowReport(false)}
         >
           <div
-            className="animate-in slide-in-from-bottom w-full space-y-2 rounded-t-2xl border-t border-border bg-card p-4 duration-200"
+            className="animate-in slide-in-from-bottom w-full space-y-2 rounded-t-3xl bg-card p-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-base font-semibold">Пожаловаться на {s.name}</p>
@@ -173,7 +173,7 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
             <Button variant="outline" size="lg" className="w-full" onClick={() => { setShowReport(false); showToast(`${s.name} заблокирован — вы не увидите его заказы`) }}>
               <Ban className="size-4" /> Заблокировать
             </Button>
-            <button onClick={() => setShowReport(false)} className="w-full py-2 text-center text-sm font-medium text-muted-foreground hover:text-foreground">
+            <button onClick={() => setShowReport(false)} className="w-full py-3 text-center text-sm font-medium text-muted-foreground hover:text-foreground">
               Отмена
             </button>
           </div>
@@ -186,7 +186,7 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
 function VRow({ ok, label }: { ok: boolean; label: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className={ok ? "" : "text-muted-foreground"}>{label}</span>
+      <span className={ok ? "tabular-nums" : "tabular-nums text-muted-foreground"}>{label}</span>
       {ok ? <BadgeCheck className="size-4 text-brand" /> : <span className="text-xs text-muted-foreground">—</span>}
     </div>
   )

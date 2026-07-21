@@ -105,7 +105,7 @@ export function CarrierProfileScreen({
                     <Truck className="size-4 text-brand" />
                     <div className="flex-1">
                       <p className="text-[15px] font-medium capitalize">{t.type}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground tabular-nums">
                         {t.maxWeightKg.toLocaleString("ru-RU")} кг · {t.maxVolumeM3} м³ · {t.plate}
                       </p>
                     </div>
@@ -126,12 +126,12 @@ export function CarrierProfileScreen({
                     <div className="flex items-center justify-between">
                       <span className="text-[15px] font-medium">{r.author}</span>
                       <span className="font-mono-tech text-sm text-muted-foreground">
-                        {"★".repeat(r.rating)}
-                        <span className="text-muted-foreground/40">{"★".repeat(5 - r.rating)}</span>
+                        <span className="text-foreground">{"★".repeat(r.rating)}</span>
+                        <span className="text-muted-foreground/30">{"★".repeat(5 - r.rating)}</span>
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground">{r.text}</p>
-                    <p className="text-xs text-muted-foreground/70">{r.ago}</p>
+                    <p className="text-sm text-muted-foreground">{r.ago}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -141,7 +141,7 @@ export function CarrierProfileScreen({
       </div>
 
       {/* action bar */}
-      <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-border bg-card px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+      <div className="absolute inset-x-0 bottom-0 space-y-2 bg-card px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_rgba(20,17,14,0.12)]">
         {offer && order && offer.awaitingConfirm && offer.confirmDeadline ? (
           <div className="rounded-md border border-warn/35 bg-warn/12 px-3 py-2 text-center text-sm font-medium text-warn">
             Встречная выбрана — ждём подтверждения перевозчика · <Countdown deadline={offer.confirmDeadline} />
@@ -153,7 +153,7 @@ export function CarrierProfileScreen({
         ) : offer && order ? (
           <Button
             size="xl"
-            className="w-full"
+            className="w-full bg-[var(--success)] text-white shadow-none hover:bg-[var(--success-strong)] active:bg-[var(--success-strong)]"
             onClick={() => {
               if (offer.kind === "counter") {
                 // §5 Вариант Б: выбор встречной → перевозчику 15 мин на подтверждение, сделки ещё нет.
@@ -230,7 +230,7 @@ export function CarrierProfileScreen({
         )}
         <button
           onClick={() => setShowReport(true)}
-          className="flex w-full items-center justify-center gap-1.5 py-1 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
+          className="flex w-full items-center justify-center gap-1.5 py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
         >
           <ShieldAlert className="size-3.5" /> Пожаловаться на пользователя
         </button>
@@ -243,7 +243,7 @@ export function CarrierProfileScreen({
           onClick={() => setShowReport(false)}
         >
           <div
-            className="animate-in slide-in-from-bottom w-full space-y-2 rounded-t-2xl border-t border-border bg-card p-4 duration-200"
+            className="animate-in slide-in-from-bottom w-full space-y-2 rounded-t-3xl bg-card p-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-base font-semibold">Пожаловаться на {c.name}</p>
@@ -289,7 +289,7 @@ export function CarrierProfileScreen({
             </Button>
             <button
               onClick={() => setShowReport(false)}
-              className="w-full py-2 text-center text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="w-full py-3 text-center text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               Отмена
             </button>

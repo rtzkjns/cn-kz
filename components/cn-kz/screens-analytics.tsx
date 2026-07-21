@@ -23,10 +23,10 @@ function Kpi({
   accent?: boolean
 }) {
   return (
-    <div className="surface-glass rounded-md p-3">
+    <div className="surface-glass rounded-2xl p-3">
       <span
         className={
-          "mb-2 flex size-7 items-center justify-center rounded-[5px] " +
+          "mb-2 flex size-7 items-center justify-center rounded-lg " +
           (accent ? "bg-brand/15 text-brand" : "bg-muted text-muted-foreground")
         }
       >
@@ -42,7 +42,7 @@ function Kpi({
 }
 
 // Simple CSS bar row for a horizontal chart.
-function Bar({ label, value, max, suffix, asMoney }: { label: string; value: number; max: number; suffix?: string; asMoney?: boolean }) {
+function Bar({ label, value, max, suffix, asMoney, neutral }: { label: string; value: number; max: number; suffix?: string; asMoney?: boolean; neutral?: boolean }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
   return (
     <div className="space-y-1">
@@ -53,7 +53,7 @@ function Bar({ label, value, max, suffix, asMoney }: { label: string; value: num
         </span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${pct}%` }} />
+        <div className={"h-full rounded-full transition-all " + (neutral ? "bg-foreground/25" : "bg-brand")} style={{ width: `${pct}%` }} />
       </div>
     </div>
   )
@@ -111,7 +111,7 @@ export function AnalyticsScreen() {
 
         {/* insights / exceptions */}
         {noOffers > 0 && (
-          <Card size="sm" className="ring-warn/30">
+          <Card size="sm" className="border-l-4 border-warn">
             <CardContent className="flex items-start gap-2">
               <AlertTriangle className="mt-0.5 size-5 shrink-0 text-warn" />
               <div className="text-base">
@@ -139,7 +139,7 @@ export function AnalyticsScreen() {
           <Card size="sm">
             <CardContent className="space-y-3">
               {topRoutes.map(([r, n]) => (
-                <Bar key={r} label={r} value={n} max={maxRoute} suffix=" зак." />
+                <Bar key={r} label={r} value={n} max={maxRoute} suffix=" зак." neutral />
               ))}
             </CardContent>
           </Card>

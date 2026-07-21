@@ -11,18 +11,21 @@ import {
   Info,
   Lock,
   LogOut,
+  Package,
   Shield,
   Smartphone,
   Trash2,
+  Truck,
   User as UserIcon,
 } from "lucide-react"
 
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Order } from "@/lib/cn-kz/types"
 import { LANGS } from "@/lib/cn-kz/i18n"
 import { ScreenHeader } from "./phone-frame"
 import { DealStatusBadge, Route, money } from "./shared"
-import { Chip, ChipRow, Section } from "./ui-bits"
+import { Chip, ChipRow, EmptyState, Section } from "./ui-bits"
 import { useCnKz } from "./store"
 
 // ---------- Settings ----------
@@ -40,10 +43,10 @@ function Toggle({ on, label }: { on: boolean; label: string }) {
       className="flex min-h-11 shrink-0 items-center py-2 pl-2"
     >
       <span
-        className={"relative block h-7 w-12 rounded-full transition-colors " + (v ? "bg-brand" : "bg-muted")}
+        className={"relative block h-7 w-12 rounded-full transition-colors " + (v ? "bg-brand" : "bg-input")}
       >
         <span
-          className={"absolute top-1 size-5 rounded-full bg-white transition-all " + (v ? "left-[22px]" : "left-1")}
+          className={"absolute top-1 size-5 rounded-full bg-white shadow-sm transition-all " + (v ? "left-[22px]" : "left-1")}
         />
       </span>
     </button>
@@ -71,13 +74,13 @@ function Row({
       className={
         "flex w-full items-center gap-3 px-1 py-3 text-left text-base transition-colors " +
         (armed
-          ? "rounded-md bg-destructive px-2 font-medium text-white"
+          ? "rounded-lg bg-destructive/10 px-2 font-semibold text-destructive"
           : danger
             ? "text-destructive"
             : "hover:text-foreground")
       }
     >
-      <Icon className={"size-5 " + (armed ? "text-white" : danger ? "" : "text-muted-foreground")} />
+      <Icon className={"size-5 " + (armed ? "text-destructive" : danger ? "" : "text-muted-foreground")} />
       <span className="flex-1">{label}</span>
       {value}
       {!value && !danger && !armed && <ChevronRight className="size-5 text-muted-foreground" />}
@@ -238,7 +241,7 @@ export function SecurityScreen() {
                     <span className="block text-sm text-muted-foreground">{when}</span>
                   </span>
                   {current ? (
-                    <span className="text-sm font-medium text-brand">активно</span>
+                    <span className="text-sm font-medium text-success">активно</span>
                   ) : (
                     <button
                       onClick={() => showToast("Устройство отключено от аккаунта")}
@@ -253,12 +256,13 @@ export function SecurityScreen() {
           </Card>
         </div>
 
-        <button
+        <Button
+          variant="secondary"
           onClick={() => showToast("Код для смены PIN отправлен по SMS")}
-          className="min-h-12 w-full rounded-md border border-border py-3 text-base font-medium text-foreground"
+          className="h-12 w-full rounded-xl text-base"
         >
           Сменить PIN-код
-        </button>
+        </Button>
         <button
           onClick={() => showToast("Вы вышли на всех устройствах, кроме этого")}
           className="flex min-h-11 w-full items-center justify-center gap-1.5 py-2 text-sm font-medium text-destructive"
@@ -326,9 +330,10 @@ export function HistoryScreen() {
         </ChipRow>
 
         {list.length === 0 && (
-          <p className="pt-16 text-center text-base text-muted-foreground">
-            Здесь появятся ваши завершённые {role === "carrier" ? "рейсы" : "заказы"}.
-          </p>
+          <EmptyState
+            icon={role === "carrier" ? Truck : Package}
+            title={`Здесь появятся ваши завершённые ${role === "carrier" ? "рейсы" : "заказы"}.`}
+          />
         )}
         <div className="space-y-2">
           {list.map((o) => (

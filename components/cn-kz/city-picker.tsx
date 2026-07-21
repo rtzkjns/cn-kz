@@ -34,12 +34,12 @@ function Results({
 }) {
   if (items.length === 0) return null
   return (
-    <div className="overflow-hidden rounded-lg border border-border">
+    <div className="surface-glass divide-y divide-border overflow-hidden rounded-2xl">
       {items.map((c) => (
         <button
           key={c}
           onClick={() => onPick(c)}
-          className="flex h-12 w-full items-center border-b border-border/60 px-3 text-left text-base last:border-0 hover:bg-muted"
+          className="flex h-12 w-full items-center px-3 text-left text-base hover:bg-muted"
         >
           {c}
         </button>
@@ -71,7 +71,7 @@ export function CityPicker({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-12 w-full items-center justify-between rounded-md border border-border bg-card px-3 text-base"
+        className="flex h-14 w-full items-center justify-between rounded-lg border-[1.5px] border-input bg-card px-3 text-base"
       >
         <span className={value ? "text-foreground" : "text-muted-foreground"}>
           {value || placeholder}
@@ -82,7 +82,11 @@ export function CityPicker({
       {open && (
         <div className="animate-in fade-in absolute inset-0 z-50 flex flex-col bg-background duration-150">
           <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-            <button onClick={() => setOpen(false)} aria-label="Назад">
+            <button
+              onClick={() => setOpen(false)}
+              aria-label="Назад"
+              className="-ml-2 flex size-11 items-center justify-center text-muted-foreground"
+            >
               <ChevronLeft className="size-5" />
             </button>
             <span className="text-base font-semibold">Выберите город</span>
@@ -101,7 +105,7 @@ export function CityPicker({
           </div>
           <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-6">
             {q ? (
-              <div className="overflow-hidden rounded-lg border border-border">
+              <div className="surface-glass divide-y divide-border overflow-hidden rounded-2xl">
                 {results.length === 0 && (
                   <p className="px-3 py-4 text-base text-muted-foreground">Ничего не найдено</p>
                 )}
@@ -109,7 +113,7 @@ export function CityPicker({
                   <button
                     key={c}
                     onClick={() => pick(c)}
-                    className="flex h-12 w-full items-center border-b border-border/60 px-3 text-left text-base last:border-0 hover:bg-muted"
+                    className="flex h-12 w-full items-center px-3 text-left text-base hover:bg-muted"
                   >
                     {c}
                   </button>

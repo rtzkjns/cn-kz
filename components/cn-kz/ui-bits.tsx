@@ -34,7 +34,7 @@ export interface Stat {
 
 export function StatStrip({ items }: { items: Stat[] }) {
   return (
-    <div className="surface-glass mx-4 mb-3 flex items-stretch divide-x divide-border rounded-md">
+    <div className="surface-glass mx-4 mb-3 flex items-stretch divide-x divide-border rounded-2xl">
       {items.map((s) => {
         const Tag = s.onClick ? "button" : "div"
         const Icon = s.icon
@@ -44,13 +44,13 @@ export function StatStrip({ items }: { items: Stat[] }) {
             key={s.label}
             onClick={s.onClick}
             className={cn(
-              "flex flex-1 flex-col gap-2.5 px-3.5 py-3.5 text-left first:rounded-l-md last:rounded-r-md",
+              "flex flex-1 flex-col gap-2.5 px-3.5 py-3.5 text-left first:rounded-l-2xl last:rounded-r-2xl",
               s.onClick && "transition-transform duration-150 active:scale-[0.97]"
             )}
           >
             <span
               className={cn(
-                "flex size-7 items-center justify-center rounded-[5px]",
+                "flex size-7 items-center justify-center rounded-lg",
                 s.accent && on ? "bg-brand/15 text-brand" : "bg-muted text-muted-foreground"
               )}
             >
@@ -108,7 +108,7 @@ export function Chip({
     <button
       onClick={onClick}
       className={cn(
-        "flex h-11 shrink-0 items-center rounded-md border px-4 text-[15px] font-medium whitespace-nowrap transition-[scale,color,background-color,border-color] duration-150 active:scale-[0.96]",
+        "flex h-11 shrink-0 items-center rounded-full border px-4 text-[15px] font-medium whitespace-nowrap transition-[scale,color,background-color,border-color] duration-150 active:scale-[0.96]",
         active
           ? "border-transparent bg-brand text-white"
           : "border-border bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground"
@@ -120,10 +120,11 @@ export function Chip({
 }
 
 // Липкая нижняя панель с ОДНИМ основным действием (56px, thumb-zone). FINAL-SPEC §2.2.
-// Градиентный fade сверху + safe-area снизу. Кладётся последним внутри экрана.
+// Near-opaque paper base (masks content scrolling underneath cleanly) + a short top fade so the
+// cut isn't a hard line. Кладётся последним внутри экрана.
 export function StickyCTA({ children }: { children: React.ReactNode }) {
   return (
-    <div className="pointer-events-none sticky inset-x-0 bottom-0 z-20 -mx-4 mt-2 px-4 pt-6 pb-[max(12px,env(safe-area-inset-bottom))] [background:linear-gradient(to_top,var(--background)_55%,transparent)]">
+    <div className="pointer-events-none sticky inset-x-0 bottom-0 z-20 -mx-4 mt-3 px-4 pt-5 pb-[max(12px,env(safe-area-inset-bottom))] [background:linear-gradient(to_top,var(--background),var(--background)_calc(100%-18px),transparent)]">
       <div className="pointer-events-auto flex flex-col gap-2">{children}</div>
     </div>
   )
@@ -142,11 +143,11 @@ export function EmptyState({
   action?: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col items-center gap-2 pt-16 text-center">
-      <span className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-        <Icon className="size-5" />
+    <div className="flex flex-col items-center gap-3 pt-20 text-center">
+      <span className="flex size-16 items-center justify-center rounded-full bg-brand/12 text-brand">
+        <Icon className="size-7" />
       </span>
-      <p className="text-sm font-medium">{title}</p>
+      <p className="text-[17px] font-semibold text-foreground">{title}</p>
       {hint && <p className="max-w-[17rem] text-sm text-muted-foreground">{hint}</p>}
       {action && <div className="pt-1">{action}</div>}
     </div>

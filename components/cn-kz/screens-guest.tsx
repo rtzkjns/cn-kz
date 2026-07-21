@@ -25,13 +25,16 @@ function GuestGate({
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader title={title} />
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8 pb-24 text-center">
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8 text-center">
         <span className="flex size-14 items-center justify-center rounded-2xl bg-brand/12 text-brand">
           <Icon className="size-6" />
         </span>
         <p className="text-lg font-semibold">{subtitle}</p>
         <p className="max-w-[15rem] text-[15px] text-muted-foreground">{hint}</p>
-        <Button size="xl" className="mt-1 w-full" onClick={openAuth}>
+      </div>
+      {/* Основное действие — в thumb-zone внизу (FINAL-SPEC §2.2), не по центру */}
+      <div className="px-4 pt-2 pb-[max(12px,env(safe-area-inset-bottom))]">
+        <Button size="xl" className="w-full" onClick={openAuth}>
           {cta}
         </Button>
       </div>
@@ -66,7 +69,7 @@ export function GuestChatsScreen() {
 function ValueRow({ icon: Icon, title, hint }: { icon: typeof Boxes; title: string; hint: string }) {
   return (
     <div className="flex items-start gap-3 py-2">
-      <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-brand">
+      <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
         <Icon className="size-4" />
       </span>
       <div className="min-w-0">

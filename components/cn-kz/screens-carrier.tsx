@@ -106,9 +106,9 @@ export function CarrierFeedScreen() {
             <button
               onClick={refresh}
               aria-label="Обновить ленту"
-              className="text-muted-foreground transition-colors hover:text-foreground"
+              className="flex size-11 items-center justify-center -mr-1.5 rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
-              <RefreshCw className={"size-4 " + (loading ? "animate-spin" : "")} />
+              <RefreshCw className={"size-5 " + (loading ? "animate-spin" : "")} />
             </button>
             <LiveBadge />
           </div>
@@ -181,10 +181,10 @@ export function CarrierFeedScreen() {
       <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-24">
         {loading &&
           [0, 1, 2].map((i) => (
-            <div key={i} className="surface-glass animate-pulse space-y-3 rounded-md p-4">
-              <div className="h-4 w-1/2 rounded bg-muted" />
-              <div className="h-6 w-2/3 rounded bg-muted" />
-              <div className="h-14 rounded bg-muted" />
+            <div key={i} className="surface-glass space-y-3 rounded-2xl p-4">
+              <div className="skeleton-shimmer h-4 w-1/2 rounded-lg" />
+              <div className="skeleton-shimmer h-6 w-2/3 rounded-lg" />
+              <div className="skeleton-shimmer h-14 rounded-lg" />
             </div>
           ))}
         {!loading && list.length === 0 && (
@@ -193,7 +193,7 @@ export function CarrierFeedScreen() {
             title="Под ваши фильтры грузов нет"
             hint="Смягчите фильтры или загляните позже — лента обновляется в реальном времени."
             action={
-              <Button variant="outline" size="sm" onClick={() => setFilters(EMPTY_FILTERS)}>
+              <Button variant="outline" size="lg" onClick={() => setFilters(EMPTY_FILTERS)}>
                 Сбросить фильтры
               </Button>
             }
@@ -250,10 +250,10 @@ function TripTray() {
       className="shrink-0 w-full border-t border-border bg-card px-4 py-3 text-left transition-colors hover:bg-muted/40"
     >
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">
+        <span className="text-sm font-medium tabular-nums">
           Рейс · {orders.length} {plural(orders.length, "груз", "груза", "грузов")} → {dest}
         </span>
-        <span className="inline-flex items-center gap-1 text-sm font-medium text-brand">
+        <span className="inline-flex items-center gap-1 text-sm font-medium text-brand tabular-nums">
           {pct}% фуры <ChevronRight className="size-4" />
         </span>
       </div>
@@ -310,7 +310,7 @@ export function TripBuilderScreen() {
         subtitle={dest ? `Разные точки → ${dest}` : "Добавьте грузы"}
         onBack={pop}
       />
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
+      <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-0">
         <Card size="sm">
           <CardContent className="space-y-3">
             <CapBar label="Вес" used={w} max={FLEET_MAX_WEIGHT} pct={Math.min(100, Math.round((w / FLEET_MAX_WEIGHT) * 100))} unit="кг" />
@@ -395,7 +395,7 @@ export function TripBuilderScreen() {
                 clearTrip()
                 pop()
               }}
-              className="w-full py-2 text-sm text-muted-foreground hover:text-foreground"
+              className="flex h-11 w-full items-center justify-center text-sm text-muted-foreground hover:text-foreground"
             >
               Очистить рейс
             </button>
@@ -419,15 +419,11 @@ export function FavoritesScreen() {
       />
       <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-24">
         {list.length === 0 && (
-          <div className="flex flex-col items-center gap-2 pt-16 text-center">
-            <span className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-              <Heart className="size-5" />
-            </span>
-            <p className="text-[15px] font-medium">Пока пусто</p>
-            <p className="max-w-[16rem] text-sm text-muted-foreground">
-              Нажимайте ♥ на грузах в ленте — они появятся здесь, чтобы вернуться позже.
-            </p>
-          </div>
+          <EmptyState
+            icon={Heart}
+            title="Пока пусто"
+            hint="Нажимайте ♥ на грузах в ленте — они появятся здесь, чтобы вернуться позже."
+          />
         )}
         {list.map((o) => (
           <OrderCard
@@ -480,12 +476,24 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
         onBack={pop}
       />
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-4">
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-0">
         <Card size="sm">
           <CardContent className="space-y-2">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <Route from={order.origin} to={order.destination} className="block truncate" />
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 flex-1 gap-3">
+                <div className="flex flex-col items-center pt-2">
+                  <span className="size-1.5 rounded-full bg-muted-foreground/60" />
+                  <span className="my-1 w-px flex-1 bg-gradient-to-b from-border to-brand/50" />
+                  <span className="size-2 rounded-full bg-brand ring-4 ring-brand/15" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] font-medium text-muted-foreground">
+                    {order.origin}
+                  </p>
+                  <p className="mt-0.5 truncate text-[22px] leading-tight font-bold tracking-tight">
+                    {order.destination}
+                  </p>
+                </div>
               </div>
               <div className="shrink-0 text-right">
                 <div className="font-mono-tech text-[28px] leading-none font-bold tabular-nums text-foreground">
@@ -519,7 +527,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
             <DetailRow label="Адрес доставки" value={order.address} />
             {order.notes && <DetailRow label="Примечание" value={order.notes} />}
             {order.safePay !== false && (
-              <div className="mt-1 flex items-start gap-1.5 rounded-md bg-brand/10 px-2.5 py-2 text-sm text-foreground">
+              <div className="surface-inset mt-1 flex items-start gap-1.5 rounded-xl px-2.5 py-2 text-sm text-foreground">
                 <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand" /> Безопасная сделка:
                 заказчик проверен по БИН, переписка и фото сохраняются. Берите аванс на счёт компании
                 по БИН, не на личную карту.
@@ -579,7 +587,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
         {order.myOfferStatus && (
           <Card
             size="sm"
-            className={order.myOfferStatus === "accepted" ? "ring-brand/40" : ""}
+            className={order.myOfferStatus === "accepted" ? "surface-glass-brand" : ""}
           >
             <CardContent className="space-y-2">
               <div className="flex items-center justify-between">
@@ -611,7 +619,11 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                     value={money(order.myCounterPriceUsd ?? 0)}
                   />
                   <div className="flex gap-2 pt-1">
-                    <Button size="lg" className="flex-1" onClick={() => confirmCounter(order.id)}>
+                    <Button
+                      size="lg"
+                      className="flex-1 bg-[var(--success)] text-white hover:bg-[var(--success-strong)]"
+                      onClick={() => confirmCounter(order.id)}
+                    >
                       <Check className="size-4" /> Согласиться {money(order.myCounterPriceUsd ?? 0)}
                     </Button>
                     <Button
@@ -631,19 +643,6 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                     </Button>
                   </div>
                 </>
-              )}
-
-              {order.myOfferStatus === "accepted" && (
-                <Button
-                  size="xl"
-                  className="w-full"
-                  onClick={() => {
-                    setTab("deals")
-                    push({ type: "deal", orderId: order.id })
-                  }}
-                >
-                  <Truck className="size-5" /> Открыть сделку
-                </Button>
               )}
 
               {(order.myOfferStatus === "rejected" ||
@@ -667,6 +666,21 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {order.myOfferStatus === "accepted" && (
+          <StickyCTA>
+            <Button
+              size="xl"
+              className="w-full"
+              onClick={() => {
+                setTab("deals")
+                push({ type: "deal", orderId: order.id })
+              }}
+            >
+              <Truck className="size-5" /> Открыть сделку
+            </Button>
+          </StickyCTA>
         )}
 
         {!alreadyOffered && (

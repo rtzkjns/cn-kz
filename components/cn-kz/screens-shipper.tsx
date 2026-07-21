@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react"
 import { BadgeCheck, Check, Copy, Gavel, Package, Pencil, RefreshCw, Search, ShieldCheck, Tag, Trash2, Truck, X } from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -17,7 +16,7 @@ import {
 import { CityPicker } from "./city-picker"
 import { OrderCard } from "./order-card"
 import { ScreenHeader } from "./phone-frame"
-import { CallButton, deals, offerLive, plural, Rating, Route, money } from "./shared"
+import { CallButton, deals, offerLive, plural, Rating, StatusBadge, money } from "./shared"
 import { Chip, ChipRow, Countdown, DetailRow, EmptyState, Section, StatStrip, StickyCTA } from "./ui-bits"
 import { useCnKz, type NewOrderDraft } from "./store"
 
@@ -145,7 +144,7 @@ export function ShipperOrdersScreen() {
             title="Здесь пока пусто"
             hint="Опубликуйте заказ — перевозчики начнут откликаться в реальном времени."
             action={
-              <Button size="sm" onClick={() => push({ type: "createOrder" })}>
+              <Button size="lg" onClick={() => push({ type: "createOrder" })}>
                 Создать заказ
               </Button>
             }
@@ -208,12 +207,27 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
         onBack={pop}
       />
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-6">
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-0">
         <Card size="sm">
           <CardContent className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Route from={order.origin} to={order.destination} />
-              <span className="font-mono-tech text-base font-semibold text-foreground">
+            <div className="flex items-start justify-between gap-3">
+              {/* route-rail: origin muted → пунктирный коннектор → destination brand (сигнатурный мотив, как в OrderCard) */}
+              <div className="flex min-w-0 flex-1 gap-3">
+                <div className="flex flex-col items-center pt-1.5">
+                  <span className="size-1.5 rounded-full bg-muted-foreground/60" />
+                  <span className="my-1 w-px flex-1 bg-gradient-to-b from-border to-brand/50" />
+                  <span className="size-2 rounded-full bg-brand ring-4 ring-brand/15" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] font-medium text-muted-foreground">
+                    {order.origin}
+                  </p>
+                  <p className="mt-0.5 truncate text-[22px] leading-tight font-bold tracking-tight">
+                    {order.destination}
+                  </p>
+                </div>
+              </div>
+              <span className="font-mono-tech shrink-0 text-2xl font-bold text-foreground tabular-nums">
                 {money(order.priceUsd)}
               </span>
             </div>
@@ -273,7 +287,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                     offerId: of.id,
                   })
                 }
-                className="cursor-pointer hover:ring-foreground/20"
+                className="cursor-pointer transition-transform duration-150 active:scale-[0.99]"
               >
                 <CardContent className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -297,25 +311,23 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
 
                   {/* vehicle params */}
                   <div className="flex flex-wrap gap-1.5">
-                    <span className="inline-flex items-center gap-1 rounded-[4px] bg-secondary px-2 py-1 text-sm font-medium text-muted-foreground">
-                      <Truck className="size-3.5 opacity-60" /> {of.truck}
+                    <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1.5 text-sm font-medium text-muted-foreground">
+                      <Truck className="size-4 opacity-60" /> {of.truck}
                     </span>
                     {of.plate && (
-                      <span className="font-mono-tech inline-flex items-center rounded-[4px] bg-secondary px-2 py-1 text-sm font-medium text-muted-foreground">
+                      <span className="font-mono-tech inline-flex items-center rounded-md bg-secondary px-2.5 py-1.5 text-sm font-medium text-muted-foreground">
                         {of.plate}
                       </span>
                     )}
                     {of.capacityKg && (
-                      <span className="inline-flex items-center rounded-[4px] bg-secondary px-2 py-1 text-sm font-medium text-muted-foreground tabular-nums">
+                      <span className="inline-flex items-center rounded-md bg-secondary px-2.5 py-1.5 text-sm font-medium text-muted-foreground tabular-nums">
                         до {of.capacityKg.toLocaleString("ru-RU")} кг
                       </span>
                     )}
                     {of.kind === "accept" ? (
-                      <Badge variant="success">
-                        <Check className="size-3" /> Готов сразу
-                      </Badge>
+                      <StatusBadge tone="success" icon={Check}>Готов сразу</StatusBadge>
                     ) : (
-                      <Badge variant="warning">Встречная</Badge>
+                      <StatusBadge tone="info">Встречная</StatusBadge>
                     )}
                   </div>
 
@@ -341,7 +353,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                       <div className="flex gap-2 pt-1">
                         <Button
                           size="lg"
-                          className="h-12 flex-1 text-[15px]"
+                          className="h-12 flex-1 bg-[var(--success)] text-[15px] text-white hover:bg-[var(--success-strong)]"
                           onClick={(e) => {
                             e.stopPropagation()
                             if (of.kind === "counter") {
@@ -444,16 +456,18 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
         </div>
 
         {order.deal && order.status === "deal" && (
-          <Button
-            size="lg"
-            className="w-full text-[15px]"
-            onClick={() => {
-              pop()
-              push({ type: "deal", orderId: order.id })
-            }}
-          >
-            <Truck className="size-5" /> Открыть сделку · {money(order.deal.agreedPriceUsd)}
-          </Button>
+          <StickyCTA>
+            <Button
+              size="xl"
+              className="w-full"
+              onClick={() => {
+                pop()
+                push({ type: "deal", orderId: order.id })
+              }}
+            >
+              <Truck className="size-5" /> Открыть сделку · {money(order.deal.agreedPriceUsd)}
+            </Button>
+          </StickyCTA>
         )}
 
         {order.status === "archived" && (
@@ -596,7 +610,7 @@ export function CreateOrderScreen({
         onBack={pop}
       />
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
+      <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-0">
         <Field label="Откуда">
           <CityPicker value={d.origin} onChange={(c) => set("origin", c)} />
         </Field>

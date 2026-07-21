@@ -87,12 +87,16 @@ export function FilterSheet() {
     >
       <div className="flex-1" />
       <div
-        className="animate-in slide-in-from-bottom flex max-h-[85%] flex-col rounded-t-2xl border-t border-border bg-card duration-200"
+        className="animate-in slide-in-from-bottom shadow-key flex max-h-[85%] flex-col rounded-t-3xl bg-card duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <span className="text-base font-semibold">Все фильтры</span>
-          <button onClick={closeFilters} aria-label="Закрыть" className="text-muted-foreground hover:text-foreground">
+          <button
+            onClick={closeFilters}
+            aria-label="Закрыть"
+            className="-mr-2 flex size-11 items-center justify-center text-muted-foreground hover:text-foreground"
+          >
             <X className="size-5" />
           </button>
         </div>
@@ -115,7 +119,7 @@ export function FilterSheet() {
             {!showAllTypes && (
               <button
                 onClick={() => setShowAllTypes(true)}
-                className="flex h-11 items-center rounded-full border border-dashed border-border px-4 text-[15px] font-medium text-brand"
+                className="flex h-11 items-center rounded-full border border-dashed border-border px-4 text-[15px] font-medium text-muted-foreground"
               >
                 Показать все типы
               </button>
@@ -203,7 +207,7 @@ export function FilterSheet() {
               closeFilters()
             }}
           >
-            Показать {count}
+            Показать <span className="tabular-nums">{count}</span>
           </Button>
         </div>
       </div>

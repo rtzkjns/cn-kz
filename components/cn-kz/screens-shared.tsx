@@ -37,8 +37,8 @@ import {
 } from "@/lib/cn-kz/mock-data"
 import { DEAL_FLOW, DEAL_STATUS_LABEL, type Order } from "@/lib/cn-kz/types"
 import { ScreenHeader } from "./phone-frame"
-import { CallButton, deals, DealStatusBadge, OfferStatusBadge, Rating, Route, money } from "./shared"
-import { Chip, ChipRow, DetailRow, Section, StickyCTA } from "./ui-bits"
+import { CallButton, deals, DealStatusBadge, OfferStatusBadge, Rating, Route, StatusBadge, money } from "./shared"
+import { Chip, ChipRow, DetailRow, EmptyState, Section, StickyCTA } from "./ui-bits"
 import { useCnKz } from "./store"
 
 // ---------- Deals dashboard ----------
@@ -115,9 +115,10 @@ export function DealsScreen() {
         )}
         <Section title="Активные">
           {active.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              {dealsNewOnly ? "Нет сделок с новыми событиями" : "Нет активных сделок"}
-            </p>
+            <EmptyState
+              icon={Truck}
+              title={dealsNewOnly ? "Нет сделок с новыми событиями" : "Нет активных сделок"}
+            />
           )}
           <div className="space-y-2">
             {active.map((o) => (
@@ -165,7 +166,7 @@ function DealRow({
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
             {order.overdue && order.deal!.status === "accepted" && (
-              <Badge variant="warning">Опаздывает</Badge>
+              <StatusBadge tone="warn">Опаздывает</StatusBadge>
             )}
             {order.deal!.tripId && <Badge variant="outline">Рейс</Badge>}
             {isNew && <Badge variant="brand">новое</Badge>}
@@ -378,7 +379,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
         onBack={pop}
       />
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-6">
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-0">
         {/* status — простой степпер: «На границе» мягкий/необязательный узел */}
         <Card size="sm">
           <CardContent className="space-y-3">
@@ -519,7 +520,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
 
         {/* rating after completion */}
         {completed && !rated && (
-          <Card size="sm" className="ring-brand/40">
+          <Card size="sm" className="surface-glass-brand">
             <CardContent className="space-y-3">
               <p className="text-base font-semibold">
                 Оцените {role === "shipper" ? "перевозчика" : "заказчика"}
@@ -703,7 +704,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
           onClick={() => setShowCancel(false)}
         >
           <div
-            className="animate-in slide-in-from-bottom w-full space-y-3 rounded-t-2xl border-t border-border bg-card p-4 duration-200"
+            className="animate-in slide-in-from-bottom w-full space-y-3 rounded-t-3xl border-t border-border bg-card p-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-base font-semibold">Отменить сделку?</p>
@@ -754,7 +755,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
           onClick={() => setShowClaim(false)}
         >
           <div
-            className="animate-in slide-in-from-bottom w-full space-y-3 rounded-t-2xl border-t border-border bg-card p-4 duration-200"
+            className="animate-in slide-in-from-bottom w-full space-y-3 rounded-t-3xl border-t border-border bg-card p-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-base font-semibold">Что случилось?</p>
@@ -837,9 +838,11 @@ export function ChatScreen({ orderId }: { orderId: string }) {
 
       <div className="flex-1 space-y-2 overflow-y-auto px-4 py-2">
         {order.deal.chat.length === 0 && (
-          <p className="pt-10 text-center text-base text-muted-foreground">
-            Сообщений пока нет. Уточните детали груза.
-          </p>
+          <EmptyState
+            icon={MessageCircle}
+            title="Сообщений пока нет"
+            hint="Уточните детали груза"
+          />
         )}
         {order.deal.chat.map((m) => (
           <div
@@ -848,7 +851,7 @@ export function ChatScreen({ orderId }: { orderId: string }) {
           >
             <div
               className={
-                "max-w-[78%] rounded-md px-3 py-2 text-base " +
+                "max-w-[78%] rounded-2xl px-3 py-2 text-base " +
                 (m.fromMe
                   ? "rounded-br-[2px] bg-primary text-primary-foreground"
                   : "rounded-bl-[2px] bg-secondary text-foreground")
@@ -957,25 +960,25 @@ export function ProfileScreen() {
                 <span className="inline-flex items-center gap-2">
                   <ShieldCheck className="size-4 text-brand" /> Телефон подтверждён
                 </span>
-                <Badge variant="success">Да</Badge>
+                <StatusBadge tone="success">Да</StatusBadge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-2">
                   <ShieldCheck className="size-4 text-brand" /> БИН/ИНН сверен с реестром юрлиц
                 </span>
-                <Badge variant="success">Проверен</Badge>
+                <StatusBadge tone="success">Проверен</StatusBadge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-2">
                   <BadgeCheck className="size-4 text-brand" /> Профиль с фото (селфи)
                 </span>
-                <Badge variant="success">Есть</Badge>
+                <StatusBadge tone="success">Есть</StatusBadge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-2">
                   <BadgeCheck className="size-4 text-brand" /> Селфи сверено с документом
                 </span>
-                <Badge variant="success">Совпало</Badge>
+                <StatusBadge tone="success">Совпало</StatusBadge>
               </div>
               {role === "carrier" && (
                 <button
@@ -985,7 +988,7 @@ export function ProfileScreen() {
                   <span className="inline-flex items-center gap-2 text-foreground">
                     <Camera className="size-4 text-muted-foreground" /> Транспорт · фото с гос. номером
                   </span>
-                  <Badge variant="success">На файле</Badge>
+                  <StatusBadge tone="success">На файле</StatusBadge>
                 </button>
               )}
               <p className="pt-1 text-sm leading-snug text-muted-foreground">
@@ -1025,9 +1028,9 @@ export function ProfileScreen() {
                 <CardContent className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-mono-tech text-lg font-bold">{reliability} / 100</span>
-                    <Badge variant={reliable ? "success" : "warning"}>
+                    <StatusBadge tone={reliable ? "success" : "warn"}>
                       {reliable ? "Надёжный ✓" : "Снижена"}
-                    </Badge>
+                    </StatusBadge>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div
@@ -1131,7 +1134,7 @@ export function ProfileScreen() {
                 <span className="inline-flex items-center gap-2">
                   <Bell className="size-5 text-muted-foreground" /> Push-уведомления
                 </span>
-                <Badge variant="success">Вкл</Badge>
+                <StatusBadge tone="success">Вкл</StatusBadge>
               </div>
             </CardContent>
           </Card>

@@ -12,7 +12,7 @@ import { CityMultiPicker } from "./city-picker"
 import { StatusBar } from "./phone-frame"
 import { TermsScreen } from "./screens-terms"
 import { useCnKz } from "./store"
-import { Chip, ChipRow } from "./ui-bits"
+import { Chip, ChipRow, StickyCTA } from "./ui-bits"
 
 type Step = "auth" | "login" | "register" | "role" | "profile" | "terms"
 
@@ -52,7 +52,7 @@ export function OnboardingFlow() {
           <div className="flex flex-1 flex-col items-center justify-center gap-6">
             <LogoMark size="lg" />
             <div className="flex flex-col items-center gap-3">
-              <h1 className="text-center text-[2rem] leading-[1.08] font-semibold tracking-[-0.02em] text-balance">
+              <h1 className="t-display text-center text-balance">
                 Грузоперевозки
                 <br />
                 по всей СНГ
@@ -133,7 +133,7 @@ export function OnboardingFlow() {
     >
       {step === "login" && (
         <div className="space-y-4 px-5 pt-4">
-          <h1 className="font-heading text-xl font-semibold">Вход</h1>
+          <h1 className="t-h1">Вход</h1>
 
           <Button
             variant="outline"
@@ -182,7 +182,7 @@ export function OnboardingFlow() {
 
       {step === "register" && (
         <div className="space-y-4 px-5 pt-4">
-          <h1 className="font-heading text-lg font-semibold">Регистрация</h1>
+          <h1 className="t-h1">Регистрация</h1>
           <ChipRow>
             <Chip active={method === "phone"} onClick={() => setMethod("phone")}>
               Телефон + SMS
@@ -229,7 +229,7 @@ export function OnboardingFlow() {
 
       {step === "role" && (
         <div className="flex h-full flex-col justify-center space-y-3 px-5 pb-40">
-          <h1 className="text-center font-heading text-lg font-semibold">
+          <h1 className="t-h1 text-center">
             Выберите роль
           </h1>
           <p className="text-center text-sm text-muted-foreground">
@@ -251,8 +251,8 @@ export function OnboardingFlow() {
       )}
 
       {step === "profile" && (
-        <div className="space-y-4 px-5 pt-4 pb-6">
-          <h1 className="font-heading text-lg font-semibold">
+        <div className="space-y-4 px-4 pt-4 pb-6">
+          <h1 className="t-h1">
             Профиль {role === "shipper" ? "заказчика" : "перевозчика"}
           </h1>
           <Field label="ФИО">
@@ -308,7 +308,7 @@ export function OnboardingFlow() {
                     className="flex min-h-11 w-full items-center justify-between rounded-md border border-dashed border-border px-3 py-2 text-left text-[15px]"
                   >
                     <span className={docs.includes(d) ? "text-foreground" : "text-muted-foreground"}>{d}</span>
-                    <span className={"shrink-0 text-sm font-medium " + (docs.includes(d) ? "text-brand" : "text-muted-foreground")}>
+                    <span className={"shrink-0 text-sm font-medium " + (docs.includes(d) ? "text-success" : "text-muted-foreground")}>
                       {docs.includes(d) ? "✓ Готово" : "Загрузить"}
                     </span>
                   </button>
@@ -331,14 +331,16 @@ export function OnboardingFlow() {
             </>
           )}
 
-          <Button
-            size="xl"
-            className="w-full"
-            disabled={role === "carrier" && routes.length === 0}
-            onClick={() => enterApp(role, name.trim() ? { name: name.trim(), company: company.trim() || undefined } : undefined)}
-          >
-            Готово
-          </Button>
+          <StickyCTA>
+            <Button
+              size="xl"
+              className="w-full"
+              disabled={role === "carrier" && routes.length === 0}
+              onClick={() => enterApp(role, name.trim() ? { name: name.trim(), company: company.trim() || undefined } : undefined)}
+            >
+              Готово
+            </Button>
+          </StickyCTA>
         </div>
       )}
     </Shell>
@@ -418,7 +420,7 @@ function ValuePill({
   label: string
 }) {
   return (
-    <span className="surface-inset inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground">
+    <span className="surface-inset inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground">
       <Icon className="size-4 text-foreground/70" />
       {label}
     </span>
@@ -440,10 +442,10 @@ function RoleCard({
     <button
       onClick={onClick}
       className={cn(
-        "flex w-full items-start gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-brand hover:bg-muted/40"
+        "surface-glass flex w-full items-start gap-3 rounded-2xl p-4 text-left transition-[transform,box-shadow,background-color] duration-150 hover:bg-brand/12 hover:shadow-[inset_0_0_0_1.5px_var(--brand)] active:scale-[0.99]"
       )}
     >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-secondary text-foreground">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-foreground">
         <Icon className="size-5" />
       </span>
       <span className="min-w-0">

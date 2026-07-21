@@ -54,7 +54,7 @@ export function TermsScreen({ onBack }: { onBack?: () => void } = {}) {
       <ScreenHeader title="Условия и оферта" subtitle="Коротко и по-человечески" onBack={back} />
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pb-10">
         {/* Главное — одним абзацем, чтобы понял любой */}
-        <Card size="sm" className="ring-brand/40">
+        <Card size="sm" className="surface-glass-brand border-transparent">
           <CardContent className="space-y-1.5 py-3">
             <p className="text-[15px] font-semibold">Коротко</p>
             <p className="text-[15px] leading-relaxed text-muted-foreground">
@@ -72,7 +72,7 @@ export function TermsScreen({ onBack }: { onBack?: () => void } = {}) {
               const Icon = s.icon
               return (
                 <div key={s.title} className="flex items-start gap-3 py-3">
-                  <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-brand">
+                  <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
                     <Icon className="size-4" />
                   </span>
                   <div className="min-w-0">

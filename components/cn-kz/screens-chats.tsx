@@ -5,6 +5,7 @@ import { MessageCircle } from "lucide-react"
 import { Avatar } from "@/components/ui/avatar"
 import { ScreenHeader } from "./phone-frame"
 import { useCnKz } from "./store"
+import { EmptyState } from "./ui-bits"
 
 export function ChatsListScreen() {
   const { myOrders, feedOrders, role, push } = useCnKz()
@@ -17,15 +18,11 @@ export function ChatsListScreen() {
 
       <div className="flex-1 overflow-y-auto px-4 pb-24">
         {convos.length === 0 && (
-          <div className="flex flex-col items-center gap-2 pt-16 text-center">
-            <span className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-              <MessageCircle className="size-5" />
-            </span>
-            <p className="text-base font-medium">Чатов пока нет</p>
-            <p className="max-w-[16rem] text-sm text-muted-foreground">
-              Как только вы примете отклик или начнётся сделка — переписка появится здесь.
-            </p>
-          </div>
+          <EmptyState
+            icon={MessageCircle}
+            title="Чатов пока нет"
+            hint="Как только вы примете отклик или начнётся сделка — переписка появится здесь."
+          />
         )}
         <div className="animate-in fade-in slide-in-from-bottom-1 divide-y divide-border duration-300">
           {convos.map((o) => {
@@ -39,11 +36,11 @@ export function ChatsListScreen() {
                 onClick={() => push({ type: "chat", orderId: o.id })}
                 className="flex min-h-14 w-full items-center gap-3 py-3 text-left transition-colors active:bg-muted/40"
               >
-                <Avatar name={other.name} className="size-11 shrink-0" />
+                <Avatar name={other.name} className="size-11 shrink-0 bg-brand/10 text-brand" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-base font-semibold">{other.name}</p>
-                    {last && <span className="shrink-0 text-sm text-muted-foreground">{last.time}</span>}
+                    {last && <span className="shrink-0 text-sm text-muted-foreground tabular-nums">{last.time}</span>}
                   </div>
                   <p className="truncate text-sm text-muted-foreground">
                     {o.origin} → {o.destination}

@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input"
 import { countActive, EMPTY_FILTERS, matchesFilters, POPULAR_BODY_TYPES } from "@/lib/cn-kz/filters"
 import { OrderCard } from "./order-card"
 import { ScreenHeader } from "./phone-frame"
-import { Rating, Route, deals, money, plural } from "./shared"
-import { Chip, DetailRow, EmptyState, Section } from "./ui-bits"
+import { Rating, deals, money, plural } from "./shared"
+import { Chip, DetailRow, EmptyState, Section, StickyCTA } from "./ui-bits"
 import { useCnKz } from "./store"
 
 function LiveBadge() {
@@ -67,9 +67,9 @@ export function MarketFeedScreen() {
             <button
               onClick={refresh}
               aria-label="Обновить ленту"
-              className="text-muted-foreground transition-colors hover:text-foreground"
+              className="-mr-1.5 flex size-11 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
             >
-              <RefreshCw className={"size-4 " + (loading ? "animate-spin" : "")} />
+              <RefreshCw className={"size-5 " + (loading ? "animate-spin" : "")} />
             </button>
             <LiveBadge />
           </div>
@@ -78,12 +78,12 @@ export function MarketFeedScreen() {
 
       <div className="px-4 pb-2">
         <div className="relative">
-          <Search className="absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Город, груз или #тег…  #алматы #тент"
-            className="h-9 pl-7"
+            className="h-11 border-transparent bg-muted/40 pl-9 text-base"
           />
         </div>
       </div>
@@ -106,10 +106,10 @@ export function MarketFeedScreen() {
       <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-24">
         {loading &&
           [0, 1, 2].map((i) => (
-            <div key={i} className="surface-glass animate-pulse space-y-3 rounded-md p-4">
-              <div className="h-4 w-1/2 rounded bg-muted" />
-              <div className="h-6 w-2/3 rounded bg-muted" />
-              <div className="h-14 rounded bg-muted" />
+            <div key={i} className="surface-glass space-y-3 rounded-2xl p-4">
+              <div className="skeleton-shimmer h-4 w-1/2 rounded" />
+              <div className="skeleton-shimmer h-6 w-2/3 rounded" />
+              <div className="skeleton-shimmer h-14 rounded" />
             </div>
           ))}
         {!loading && list.length === 0 && (
@@ -119,8 +119,8 @@ export function MarketFeedScreen() {
             hint="Попробуйте другой город или сбросьте фильтры."
             action={
               <Button
-                variant="outline"
-                size="sm"
+                variant="secondary"
+                className="h-11"
                 onClick={() => {
                   setQ("")
                   setFilters(EMPTY_FILTERS)
@@ -166,16 +166,36 @@ export function MarketOrderScreen({ orderId }: { orderId: string }) {
         onBack={pop}
       />
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-24">
+      <div className="flex-1 space-y-3 overflow-y-auto px-4">
         <Card size="sm">
-          <CardContent className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Route from={order.origin} to={order.destination} />
-              <span className="font-mono-tech text-base font-semibold text-foreground">
-                {money(order.priceUsd)}
-              </span>
+          <CardContent className="space-y-3">
+            {/* Route-rail — origin muted, destination bold (подпись бренда, как в OrderCard) */}
+            <div className="flex gap-3">
+              <div className="flex flex-col items-center pt-2">
+                <span className="size-1.5 rounded-full bg-muted-foreground/60" />
+                <span className="my-1 w-px flex-1 bg-gradient-to-b from-border to-brand/50" />
+                <span className="size-2 rounded-full bg-brand ring-4 ring-brand/15" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[15px] font-medium text-muted-foreground">
+                  {order.origin}
+                </p>
+                <p className="mt-0.5 truncate text-[22px] leading-tight font-bold tracking-tight">
+                  {order.destination}
+                </p>
+              </div>
             </div>
+
             <p className="text-[15px] text-muted-foreground">{order.cargo}</p>
+
+            {/* Цена — суть этого экрана рыночных цен: hero-блок */}
+            <div className="rounded-xl bg-secondary px-4 py-3">
+              <p className="t-eyebrow text-muted-foreground">Цена заказчика</p>
+              <p className="font-mono-tech mt-1.5 text-[28px] leading-none font-bold tracking-tight tabular-nums">
+                {money(order.priceUsd)}
+              </p>
+            </div>
+
             <DetailRow label="Тип авто" value={order.truckType} />
             <DetailRow
               label="Вес / объём"
@@ -209,25 +229,25 @@ export function MarketOrderScreen({ orderId }: { orderId: string }) {
             ? "Заказ другого заказчика · только просмотр (рыночные цены и маршруты)"
             : "Контакты и точный адрес скрыты — войдите, чтобы связаться и откликнуться"}
         </p>
-      </div>
 
-      {!authed ? (
-        <div className="absolute inset-x-0 bottom-0 border-t border-border bg-card p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
-          <Button size="xl" className="w-full" onClick={openAuth}>
-            Войти, чтобы откликнуться
-          </Button>
-        </div>
-      ) : canClone ? (
-        <div className="absolute inset-x-0 bottom-0 border-t border-border bg-card p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
-          <Button
-            size="xl"
-            className="w-full"
-            onClick={() => push({ type: "createOrder", prefillFrom: order.id })}
-          >
-            <Copy className="size-5" /> Создать похожий заказ
-          </Button>
-        </div>
-      ) : null}
+        {!authed ? (
+          <StickyCTA>
+            <Button size="xl" className="w-full" onClick={openAuth}>
+              Войти, чтобы откликнуться
+            </Button>
+          </StickyCTA>
+        ) : canClone ? (
+          <StickyCTA>
+            <Button
+              size="xl"
+              className="w-full"
+              onClick={() => push({ type: "createOrder", prefillFrom: order.id })}
+            >
+              <Copy className="size-5" /> Создать похожий заказ
+            </Button>
+          </StickyCTA>
+        ) : null}
+      </div>
     </div>
   )
 }

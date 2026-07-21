@@ -69,7 +69,7 @@ function LogoMenu() {
               <Avatar name={me.name} className="size-11 text-base" />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{me.name}</p>
-                <p className="truncate text-xs text-muted-foreground">
+                <p className="truncate text-sm text-muted-foreground">
                   {role === "shipper" ? "Заказчик" : "Перевозчик"} · открыть профиль
                 </p>
               </div>
@@ -171,7 +171,7 @@ function NotificationBell() {
               Уведомления
             </div>
             {notifications.length === 0 ? (
-              <p className="px-3 py-6 text-center text-xs text-muted-foreground">
+              <p className="px-3 py-6 text-center text-sm text-muted-foreground">
                 Нет новых уведомлений
               </p>
             ) : (
@@ -203,7 +203,7 @@ function NotificationBell() {
                       <span className="block truncate text-sm font-medium">
                         {n.title}
                       </span>
-                      <span className="block truncate text-xs text-muted-foreground">
+                      <span className="block truncate text-sm text-muted-foreground">
                         {n.subtitle}
                       </span>
                     </span>
@@ -216,7 +216,7 @@ function NotificationBell() {
                 setOpen(false)
                 openNotifications()
               }}
-              className="flex w-full items-center justify-center gap-1 border-t border-border px-3 py-2 text-xs font-medium text-brand hover:bg-muted"
+              className="flex w-full items-center justify-center gap-1 border-t border-border px-3 py-2 text-sm font-medium text-brand hover:bg-muted"
             >
               Все сделки с новыми <ChevronRight className="size-3.5" />
             </button>
@@ -301,7 +301,7 @@ function BottomNav() {
   const { role, tab, setTab, push, authed, t } = useCnKz()
   const items = authed ? NAV[role] : GUEST_NAV
   return (
-    <nav className="flex shrink-0 items-stretch border-t border-border bg-card px-2 pt-2 pb-[max(10px,env(safe-area-inset-bottom))]">
+    <nav className="flex shrink-0 items-stretch border-t border-border bg-card shadow-[0_-4px_16px_-8px_rgba(20,17,14,0.10)] px-2 pt-2 pb-[max(10px,env(safe-area-inset-bottom))]">
       {items.map((item) => {
         const Icon = item.icon
         if (item.center) {
@@ -329,7 +329,7 @@ function BottomNav() {
           >
             <span
               className={cn(
-                "flex h-9 w-16 items-center justify-center rounded-md transition-colors",
+                "flex h-9 w-16 items-center justify-center rounded-full transition-colors",
                 active ? "bg-brand/12 text-brand" : "text-muted-foreground"
               )}
             >
@@ -353,8 +353,8 @@ function BottomNav() {
 export function PhoneFrame({ children }: { children: React.ReactNode }) {
   const { toast, authed, openAuth, role, setTab } = useCnKz()
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-neutral-950 to-black p-0 sm:p-6">
-      <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2rem] sm:border-[6px] sm:border-neutral-800 sm:shadow-2xl">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-foreground p-0 sm:p-6">
+      <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2rem] sm:border-[6px] sm:border-foreground sm:shadow-2xl">
         <StatusBar />
         {/* Header — гость видит логотип + «Войти», залогиненный — меню + колокольчик */}
         <header className="flex shrink-0 items-center justify-between border-b border-border bg-background px-4 py-3">
@@ -395,7 +395,7 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
         {/* Toast — z-50 + top placement so it's never hidden behind a fixed bottom action bar */}
         {toast && (
           <div className="pointer-events-none absolute inset-x-0 top-16 z-50 flex justify-center px-4">
-            <div className="animate-in fade-in slide-in-from-top-2 rounded-lg bg-foreground px-3 py-2 text-center text-xs font-medium text-background shadow-lg">
+            <div className="animate-in fade-in slide-in-from-top-2 rounded-lg bg-foreground px-3 py-2 text-center text-sm font-medium text-background shadow-lg">
               {toast}
             </div>
           </div>
