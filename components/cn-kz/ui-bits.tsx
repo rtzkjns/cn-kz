@@ -108,10 +108,10 @@ export function Chip({
     <button
       onClick={onClick}
       className={cn(
-        "flex h-11 shrink-0 items-center rounded-full border px-4 text-[15px] font-medium whitespace-nowrap transition-[scale,color,background-color,border-color] duration-150 active:scale-[0.96]",
+        "flex h-11 shrink-0 items-center rounded-md px-4 text-[16px] whitespace-nowrap transition-[scale,color,background-color] duration-150 active:scale-[0.96]",
         active
-          ? "border-transparent bg-brand text-white"
-          : "border-border bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground"
+          ? "bg-brand font-bold text-brand-foreground"
+          : "bg-secondary font-medium text-muted-foreground hover:text-foreground"
       )}
     >
       {children}

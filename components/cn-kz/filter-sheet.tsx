@@ -36,7 +36,7 @@ function Pill({
       className={cn(
         "flex h-11 items-center rounded-full border px-4 text-[15px] font-medium transition-colors",
         active
-          ? "border-transparent bg-brand text-white"
+          ? "border-transparent bg-brand font-bold text-brand-foreground"
           : "border-border text-muted-foreground hover:text-foreground"
       )}
     >

@@ -61,16 +61,16 @@ export function OrderCard({
       {/* Trust header: shipper + rating · freshness, status */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2.5">
-          <Avatar name={order.shipper.name} className="size-8 rounded-md text-[13px]" />
+          <Avatar name={order.shipper.name} className="size-11 shrink-0 rounded-full text-[15px] font-bold" />
           <div className="min-w-0 leading-tight">
-            <p className="truncate text-[15px] font-semibold">{order.shipper.name}</p>
-            <p className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Star className="size-3.5 fill-muted-foreground/80 text-muted-foreground/80" />
-              <span className="font-mono-tech text-foreground/80">
+            <p className="t-h3 truncate">{order.shipper.name}</p>
+            <p className="mt-0.5 flex min-w-0 items-center gap-1 overflow-hidden text-sm whitespace-nowrap text-muted-foreground">
+              <Star className="size-3.5 shrink-0 fill-[var(--star)] text-[var(--star)]" />
+              <span className="font-mono-tech shrink-0 text-foreground">
                 {order.shipper.rating.toFixed(1)}
               </span>
-              <span aria-hidden>·</span>
-              {order.createdAgo}
+              <span aria-hidden className="shrink-0">·</span>
+              <span className="truncate">{order.createdAgo}</span>
             </p>
           </div>
         </div>
@@ -114,20 +114,18 @@ export function OrderCard({
         </div>
       </div>
 
-      {/* Route — origin muted, destination bold */}
+      {/* Route block — origin blue ring → connector → destination lime ring */}
       <div className="mt-3 flex gap-3">
-        <div className="flex flex-col items-center pt-2">
-          <span className="size-1.5 rounded-full bg-muted-foreground/60" />
-          <span className="my-1 w-px flex-1 bg-gradient-to-b from-border to-brand/50" />
-          <span className="size-2 rounded-full bg-brand ring-4 ring-brand/15" />
+        <div className="flex flex-col items-center pt-1.5">
+          <span className="size-3 shrink-0 rounded-full border-2 border-[var(--route-from)] bg-background" />
+          <span className="route-connector my-1 flex-1" />
+          <span className="size-3 shrink-0 rounded-full border-2 border-[var(--route-to)] bg-[var(--route-to)]" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-medium text-muted-foreground">
+          <p className="truncate text-[16px] font-medium text-muted-foreground">
             {order.origin}
           </p>
-          <p className="mt-0.5 truncate text-[22px] leading-tight font-bold tracking-tight">
-            {order.destination}
-          </p>
+          <p className="t-h2 mt-1 truncate">{order.destination}</p>
         </div>
       </div>
 
@@ -147,10 +145,8 @@ export function OrderCard({
       {/* Price footer + contextual action */}
       <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-secondary px-4 py-3">
         <div className="min-w-0 leading-none">
-          <p className="t-eyebrow text-muted-foreground">Цена заказчика</p>
-          <p className="font-mono-tech mt-1.5 text-[28px] leading-none font-bold tracking-tight">
-            {price}
-          </p>
+          <p className="t-eyebrow">Цена заказчика</p>
+          <p className="t-display mt-1.5">{price}</p>
           {showKzt && (
             <p className="font-mono-tech mt-1.5 text-sm leading-none text-muted-foreground/80">
               {kzt(priceUsd)} · оплата в USD

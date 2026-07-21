@@ -149,10 +149,10 @@ export function CallButton({
       href={`tel:${phone.replace(/[^+\d]/g, "")}`}
       onClick={(e) => e.stopPropagation()}
       className={cn(
-        "flex items-center justify-center gap-2 rounded-lg font-semibold transition-transform active:scale-[0.98]",
+        "flex items-center justify-center gap-2 rounded-lg font-bold transition-transform active:scale-[0.98]",
         primary
-          ? "h-14 rounded-full bg-primary px-7 text-[17px] text-primary-foreground shadow-brand"
-          : "h-12 rounded-xl border border-brand/40 bg-brand/10 px-4 text-[15px] text-brand",
+          ? "h-14 bg-primary px-6 text-[17px] text-primary-foreground"
+          : "h-12 bg-secondary px-4 text-[15px] text-foreground",
         className
       )}
     >

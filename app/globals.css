@@ -8,8 +8,9 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-mono: var(--font-display);
+  --font-heading: var(--font-display);
+  --font-display: var(--font-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,7 +40,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  /* «Тракт» radius scale — generous, intentional (spec §Radius). badge 8 · input/button 14 · card 20 · sheet 24. */
+  /* «Signal» radius scale — chip 12 · button/input 14 · card 20 · sheet 24. */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 14px;
@@ -50,102 +51,111 @@
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-brand-strong: var(--brand-strong);
-  --color-brand-tint: var(--brand-tint);
+  --color-star: var(--star);
+  --color-gutter: var(--gutter);
   --color-success: var(--success);
   --color-warn: var(--warn);
   --color-info: var(--info);
+  --color-route-from: var(--route-from);
+  --color-route-to: var(--route-to);
 }
 
 :root {
-  /* «Тракт / Signal Dispatch» (docs/REDESIGN-SPEC.md) — warm-paper LIGHT canvas, white cards
-     floating on soft warm shadows, ONE signal-orange hero rationed to the single action per screen.
-     This is the DEFAULT rendered theme (app renders :root, no .dark class). */
-  --brand: #ea4e1b; /* signal orange — primary CTA, active nav, focus, price emphasis */
-  --brand-foreground: #ffffff;
-  --brand-strong: #c23d12; /* pressed */
-  --brand-tint: #fdede7; /* 12% wash — selected card / active nav pill / quiet emphasis */
-  --background: #fbf9f6; /* warm paper canvas */
-  --foreground: #14110e; /* warm ink (~16:1) */
-  --card: #ffffff; /* white cards float via shadow, not borders */
-  --card-foreground: #14110e;
+  /* «Signal» v3 (docs/CLONE-SPEC.md) — inDrive-system replication in CN-KZ's own identity.
+     Pure-white in-app surface, ONE signal-lime accent with BLACK text on it, flat cards
+     separated by gray gutters (not borders/shadows). This is the DEFAULT rendered theme. */
+  --brand: #c0f03c; /* CN-KZ signal lime — the ONE accent (primary CTA, accept, agreed/active) */
+  --brand-foreground: #141414; /* BLACK on lime — never white-on-lime */
+  --brand-strong: #a6d82a; /* pressed */
+  --background: #ffffff; /* pure white canvas + card */
+  --foreground: #141414; /* near-black ink */
+  --card: #ffffff;
+  --card-foreground: #141414;
   --popover: #ffffff;
-  --popover-foreground: #14110e;
-  --primary: #ea4e1b; /* = brand */
-  --primary-foreground: #ffffff;
-  --secondary: #f2eee8; /* warm quiet fill — meta pills, chat bubbles, avatars (contrast on white cards) */
-  --secondary-foreground: #14110e;
-  --muted: #f4f1ec; /* quiet nested block */
-  --muted-foreground: #6b6560; /* AA warm-grey secondary */
-  --accent: #f4f1ec;
-  --accent-foreground: #14110e;
-  --destructive: #d22f2f; /* cancel/claim — text + dot only, never a fill */
-  --success: #12925a; /* accept/deal fill, Доставлен/Завершено */
-  --success-strong: #0e7a4b; /* pressed/confirm state of --success */
-  --warn: #b7791f; /* amber text (+ #F6C453 dot) — in-transit/attention, never a fill */
-  --info: #2563c9; /* neutral/published status */
-  --border: #ece7e1; /* warm hairline — dividers/inputs only */
-  --input: #ded8d1; /* input border (a touch stronger than divider) */
-  --ring: #ea4e1b; /* orange focus */
-  --chart-1: #ea4e1b;
-  --chart-2: #12925a;
-  --chart-3: #2563c9;
-  --chart-4: #b7791f;
-  --chart-5: #6b6560;
-  --radius: 14px; /* base — friendly, consumer (was sharp 6px) */
-  /* Driver-first UI contract (docs/FINAL-SPEC.md §2.2): touch/CTA sizing floors — UNCHANGED. */
-  --cta-h: 56px; /* primary bottom-anchored CTA */
-  --tap-min: 48px; /* minimum interactive target */
+  --popover-foreground: #141414;
+  --primary: #c0f03c; /* = brand */
+  --primary-foreground: #141414;
+  --secondary: #f7f7f8; /* secondary-button + input fill */
+  --secondary-foreground: #141414;
+  --muted: #f2f2f2; /* gray gutter band between white blocks (Kaspi anti-empty) */
+  --muted-foreground: #94999d; /* secondary/meta text */
+  --accent: #f7f7f8;
+  --accent-foreground: #141414;
+  --destructive: #ea3b2e; /* cancel/claim — dot+text only */
+  --success: #1e9e57; /* delivered/completed (distinct green, NOT the lime brand) */
+  --success-strong: #17824a;
+  --warn: #e08a0c; /* in-transit/attention (amber, AA on white) */
+  --info: #4087e1; /* published/neutral (route blue) */
+  --border: #ececec; /* hairline divider */
+  --input: #e6e6e8; /* input border (mostly filled, subtle edge) */
+  --ring: #c0f03c; /* lime focus */
+  --star: #f7c649; /* gold rating stars */
+  --gutter: #f2f2f2; /* gray gutter band */
+  --route-from: #4087e1; /* origin dot (blue) */
+  --route-to: #c0f03c; /* destination dot (lime) */
+  --chart-1: #c0f03c;
+  --chart-2: #1e9e57;
+  --chart-3: #4087e1;
+  --chart-4: #e08a0c;
+  --chart-5: #94999d;
+  --radius: 14px; /* base */
+  /* Driver-first floors (docs/FINAL-SPEC.md §2.2) — unchanged. */
+  --cta-h: 56px;
+  --tap-min: 48px;
   --sidebar: #ffffff;
-  --sidebar-foreground: #14110e;
-  --sidebar-primary: #ea4e1b;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f4f1ec;
-  --sidebar-accent-foreground: #14110e;
-  --sidebar-border: #ece7e1;
-  --sidebar-ring: #ea4e1b;
+  --sidebar-foreground: #141414;
+  --sidebar-primary: #c0f03c;
+  --sidebar-primary-foreground: #141414;
+  --sidebar-accent: #f2f2f2;
+  --sidebar-accent-foreground: #141414;
+  --sidebar-border: #ececec;
+  --sidebar-ring: #c0f03c;
 }
 
 .dark {
-  /* «Тракт» night variant — warm charcoal, same orange hero, same rounding. Optional (not default). */
-  --brand: #ff5a2a;
-  --brand-foreground: #14110e;
-  --brand-strong: #e0491d;
-  --brand-tint: #2e211a;
-  --background: #14120f; /* warm near-black */
-  --foreground: #f7f4f0;
-  --card: #1f1c18; /* warm charcoal card */
-  --card-foreground: #f7f4f0;
-  --popover: #1f1c18;
-  --popover-foreground: #f7f4f0;
-  --primary: #ff5a2a;
-  --primary-foreground: #14110e;
-  --secondary: #262019; /* warm quiet fill (pills show on charcoal cards) */
-  --secondary-foreground: #f7f4f0;
-  --muted: #262019;
-  --muted-foreground: #a89f96;
-  --accent: #262019;
-  --accent-foreground: #f7f4f0;
-  --destructive: #f06060;
+  /* Optional night variant (app ships LIGHT — inDrive's real surface is white). */
+  --brand: #c0f03c;
+  --brand-foreground: #141414;
+  --brand-strong: #a6d82a;
+  --background: #141414;
+  --foreground: #f4f4f2;
+  --card: #1e1e1e;
+  --card-foreground: #f4f4f2;
+  --popover: #1e1e1e;
+  --popover-foreground: #f4f4f2;
+  --primary: #c0f03c;
+  --primary-foreground: #141414;
+  --secondary: #262626;
+  --secondary-foreground: #f4f4f2;
+  --muted: #232323;
+  --muted-foreground: #9a9a98;
+  --accent: #262626;
+  --accent-foreground: #f4f4f2;
+  --destructive: #f0574b;
   --success: #35c07f;
   --success-strong: #2aa96e;
-  --warn: #f6c453;
+  --warn: #f0a832;
   --info: #6aa9ff;
-  --border: #2a2621;
-  --input: #362f28;
-  --ring: #ff5a2a;
-  --chart-1: #ff5a2a;
+  --border: #2c2c2c;
+  --input: #333333;
+  --ring: #c0f03c;
+  --star: #f7c649;
+  --gutter: #1e1e1e;
+  --route-from: #6aa9ff;
+  --route-to: #c0f03c;
+  --chart-1: #c0f03c;
   --chart-2: #35c07f;
   --chart-3: #6aa9ff;
-  --chart-4: #f6c453;
-  --chart-5: #a89f96;
-  --sidebar: #1f1c18;
-  --sidebar-foreground: #f7f4f0;
-  --sidebar-primary: #ff5a2a;
-  --sidebar-primary-foreground: #14110e;
-  --sidebar-accent: #262019;
-  --sidebar-accent-foreground: #f7f4f0;
-  --sidebar-border: #2a2621;
-  --sidebar-ring: #ff5a2a;
+  --chart-4: #f0a832;
+  --chart-5: #9a9a98;
+  --sidebar: #1e1e1e;
+  --sidebar-foreground: #f4f4f2;
+  --sidebar-primary: #c0f03c;
+  --sidebar-primary-foreground: #141414;
+  --sidebar-accent: #262626;
+  --sidebar-accent-foreground: #f4f4f2;
+  --sidebar-border: #2c2c2c;
+  --sidebar-ring: #c0f03c;
 }
 
 @layer base {
@@ -163,93 +173,81 @@
 }
 
 @layer utilities {
-  /* ===== «Тракт» surfaces — white cards FLOAT on warm paper via soft shadows (no borders). ===== */
-
-  /* Card: white, soft two-layer warm shadow (rest state). The signature "shipped app" surface. */
+  /* ===== «Signal» surfaces — flat white cards separated by GRAY GUTTERS, not borders/heavy shadows.
+     Cards carry only a whisper of a shadow so they read as cards on white (inDrive offer stack). ===== */
   .surface-glass {
     background: var(--card);
     box-shadow:
-      0 1px 2px 0 rgba(20, 17, 14, 0.04),
-      0 6px 16px -8px rgba(20, 17, 14, 0.1);
+      0 1px 2px 0 rgba(20, 20, 20, 0.04),
+      0 1px 3px 0 rgba(20, 20, 20, 0.06);
   }
-  /* Active / your-offer / accepted surface — 1.5px orange ring + tint wash (no shadow bump). */
+  /* Selected / your-offer / accepted — lime tint + lime ring (no shadow bump). */
   .surface-glass-brand {
-    background: var(--brand-tint);
-    box-shadow: inset 0 0 0 1.5px var(--brand);
+    background: color-mix(in srgb, var(--brand) 12%, #ffffff);
+    box-shadow: inset 0 0 0 1.5px var(--brand-strong);
   }
-  /* Inset / quiet nested block — faint warm fill, no shadow. */
+  /* Inset / quiet nested block — gray gutter fill, flat. */
   .surface-inset {
     background: var(--muted);
     box-shadow: none;
   }
   .shadow-card {
     box-shadow:
-      0 1px 2px 0 rgba(20, 17, 14, 0.04),
-      0 6px 16px -8px rgba(20, 17, 14, 0.1);
+      0 1px 2px 0 rgba(20, 20, 20, 0.04),
+      0 1px 3px 0 rgba(20, 20, 20, 0.06);
   }
-  /* Raised pressable — a slightly deeper soft lift (used by sticky bars / raised tiles). */
+  /* Raised pressable / sticky bar lift. */
   .shadow-key {
-    box-shadow:
-      0 1px 2px 0 rgba(20, 17, 14, 0.05),
-      0 10px 24px -12px rgba(20, 17, 14, 0.16);
+    box-shadow: 0 6px 20px -10px rgba(20, 20, 20, 0.16);
   }
-  /* Signal-orange glow — the ONE primary CTA per screen. */
-  .shadow-brand {
-    box-shadow: 0 6px 16px -6px rgba(234, 78, 27, 0.45);
-  }
-  /* Dark-variant shadow overrides (warmer, deeper so cards separate from the charcoal canvas). */
   .dark .surface-glass,
   .dark .shadow-card {
     box-shadow:
       0 1px 2px 0 rgba(0, 0, 0, 0.4),
-      0 8px 20px -10px rgba(0, 0, 0, 0.55);
+      0 6px 16px -10px rgba(0, 0, 0, 0.5);
   }
-  .dark .surface-inset {
-    background: var(--muted);
-  }
+  .dark .surface-inset { background: var(--muted); }
 
-  /* Live numbers — prices, weights, counts — in TABULAR SANS (Golos Text with tnum), the consumer-app
-     treatment. Keeps column alignment without the "dev tool" monospace. (Was Geist Mono.) */
+  /* Live numbers — prices/weights/counts — tabular Manrope (numerals are the heaviest element). */
   .font-mono-tech {
+    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: "tnum" on;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
   }
 
-  /* ===== Driver-first type scale (docs/FINAL-SPEC.md §2.1) — re-skinned in Golos Text.
-     Floor holds: read text ≥14px, nothing <12px. tabular-nums on all live numbers. ===== */
+  /* ===== Type scale (docs/CLONE-SPEC.md). Manrope display + Inter body. read text ≥14px. ===== */
   .t-display {
-    /* Price hero — bold tabular SANS (consumer app), no longer monospace. */
-    font-weight: 800; font-size: 32px; line-height: 1.05; letter-spacing: -0.02em;
+    /* Price hero — the loudest thing on every card/sheet. */
+    font-family: var(--font-display), sans-serif;
+    font-weight: 800; font-size: 32px; line-height: 1.02; letter-spacing: -0.01em;
     font-feature-settings: "tnum" on; font-variant-numeric: tabular-nums;
   }
-  .t-h1 { font-weight: 800; font-size: 24px; line-height: 1.2; letter-spacing: -0.02em; }
-  .t-h2 { font-weight: 700; font-size: 20px; line-height: 1.25; letter-spacing: -0.015em; }
-  .t-h3 { font-weight: 600; font-size: 17px; line-height: 1.3; }
+  .t-h1 { font-family: var(--font-display), sans-serif; font-weight: 800; font-size: 24px; line-height: 1.16; letter-spacing: -0.02em; }
+  .t-h2 { font-family: var(--font-display), sans-serif; font-weight: 700; font-size: 20px; line-height: 1.2; letter-spacing: -0.015em; }
+  .t-h3 { font-family: var(--font-display), sans-serif; font-weight: 700; font-size: 17px; line-height: 1.3; }
   .t-body { font-weight: 400; font-size: 16px; line-height: 1.5; }
-  .t-body-strong { font-weight: 600; font-size: 16px; line-height: 1.5; }
+  .t-body-strong { font-weight: 600; font-size: 16px; line-height: 1.45; }
   .t-meta { font-weight: 500; font-size: 14px; line-height: 1.35; }
   .t-eyebrow {
-    font-weight: 700; font-size: 12px; line-height: 1.2; letter-spacing: 0.04em; text-transform: uppercase;
+    font-weight: 700; font-size: 12px; line-height: 1.2; letter-spacing: 0.02em; text-transform: uppercase;
+    color: var(--muted-foreground);
   }
 
-  /* ===== Route-rail motif (the signature brand device — graft from Cargo Line).
-     origin → dest connected by a dotted vertical rail with two terminal dots. ===== */
-  .route-rail {
-    background-image: linear-gradient(to bottom, var(--border) 0 60%, transparent 60%);
-    background-size: 2px 8px;
-    background-repeat: repeat-y;
-    background-position: center;
+  /* Route-block connector helper (origin ring → 2px line → destination ring). */
+  .route-connector {
+    width: 2px;
+    background: var(--border);
   }
 
-  /* Warm shimmer skeleton (graft — "shipped, not mocked" loading). */
+  /* Gray shimmer skeleton on white (shipped-not-mocked loading). */
   .skeleton-shimmer {
-    background: linear-gradient(90deg, var(--muted) 25%, #efeae3 37%, var(--muted) 63%);
+    background: linear-gradient(90deg, var(--muted) 25%, #eaeaea 37%, var(--muted) 63%);
     background-size: 400% 100%;
     animation: shimmer 1.4s ease-in-out infinite;
   }
   .dark .skeleton-shimmer {
-    background: linear-gradient(90deg, var(--muted) 25%, #322a22 37%, var(--muted) 63%);
+    background: linear-gradient(90deg, var(--muted) 25%, #2a2a2a 37%, var(--muted) 63%);
     background-size: 400% 100%;
   }
   @keyframes shimmer {
