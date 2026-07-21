@@ -119,7 +119,7 @@ export function GuestProfileScreen() {
             <ValueRow
               icon={ShieldCheck}
               title="Безопасная сделка"
-              hint="Оплата после подтверждения, контакты защищены"
+              hint="Стороны проверены по БИН, контакты открываются в сделке"
             />
           </CardContent>
         </Card>
