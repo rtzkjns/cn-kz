@@ -147,7 +147,7 @@ export function CarrierFeedScreen() {
         ))}
         <button
           onClick={openFilters}
-          className="inline-flex h-11 items-center gap-1.5 rounded-full border border-border px-4 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex h-11 items-center gap-1.5 rounded-md bg-secondary px-4 text-[15px] font-medium text-muted-foreground transition-[color,transform] duration-150 hover:text-foreground active:scale-[0.97]"
         >
           <SlidersHorizontal className="size-4" />
           Все фильтры{countActive(filters) > 0 ? ` · ${countActive(filters)}` : ""}
@@ -156,12 +156,12 @@ export function CarrierFeedScreen() {
 
       <div className="px-4 pb-2">
         <div className="relative">
-          <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Поиск: город, груз или #тег"
-            className="h-11 border-transparent bg-muted/40 pl-9 text-base"
+            className="h-12 rounded-lg border-transparent bg-secondary pl-11 text-base placeholder:text-muted-foreground"
           />
         </div>
       </div>
@@ -193,7 +193,7 @@ export function CarrierFeedScreen() {
             title="Под ваши фильтры грузов нет"
             hint="Смягчите фильтры или загляните позже — лента обновляется в реальном времени."
             action={
-              <Button variant="outline" size="lg" onClick={() => setFilters(EMPTY_FILTERS)}>
+              <Button variant="secondary" size="lg" onClick={() => setFilters(EMPTY_FILTERS)}>
                 Сбросить фильтры
               </Button>
             }
@@ -283,6 +283,16 @@ function CapBar({ label, used, max, pct, unit }: { label: string; used: number; 
   )
 }
 
+// Ячейка 2-колоночной спецификации груза — превращает пустоту в сканируемую таблицу (anti-empty).
+function SpecCell({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="surface-inset rounded-xl px-3 py-2.5">
+      <p className="t-eyebrow">{label}</p>
+      <p className="mt-1 text-[15px] font-semibold tabular-nums">{value}</p>
+    </div>
+  )
+}
+
 // «Сборный рейс» — вместимость фуры + грузы + «ещё по пути» + взять рейс.
 export function TripBuilderScreen() {
   const { tripDraft, feedOrders, addToTrip, removeFromTrip, clearTrip, submitTrip, pop } = useCnKz()
@@ -312,7 +322,21 @@ export function TripBuilderScreen() {
       />
       <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-0">
         <Card size="sm">
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3.5">
+            {/* Заработок-герой + счётчик грузов заполняют шапку (anti-empty) */}
+            <div className="flex items-end justify-between">
+              <div className="min-w-0">
+                <p className="t-eyebrow">Заработок за рейс</p>
+                <p className="t-display mt-1 tabular-nums">{money(total)}</p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="t-eyebrow">Грузов</p>
+                <p className="font-mono-tech mt-1 text-[22px] leading-none font-bold tabular-nums">
+                  {orders.length}
+                </p>
+              </div>
+            </div>
+            <div className="h-px bg-border" />
             <CapBar label="Вес" used={w} max={FLEET_MAX_WEIGHT} pct={Math.min(100, Math.round((w / FLEET_MAX_WEIGHT) * 100))} unit="кг" />
             <CapBar label="Объём" used={v} max={FLEET_MAX_VOLUME} pct={Math.min(100, Math.round((v / FLEET_MAX_VOLUME) * 100))} unit="м³" />
           </CardContent>
@@ -368,7 +392,7 @@ export function TripBuilderScreen() {
                       </p>
                     </div>
                     <span className="font-mono-tech text-[15px] font-semibold tabular-nums">{money(o.priceUsd)}</span>
-                    <span className="flex size-11 shrink-0 items-center justify-center rounded-md border border-border text-brand">
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-secondary text-foreground">
                       <Plus className="size-5" />
                     </span>
                   </CardContent>
@@ -376,6 +400,16 @@ export function TripBuilderScreen() {
               ))}
             </div>
           </Section>
+        )}
+
+        {orders.length > 0 && suggestions.length === 0 && (
+          <div className="surface-inset flex items-start gap-2.5 rounded-2xl px-4 py-3">
+            <Boxes className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+            <p className="text-[15px] leading-snug text-muted-foreground">
+              Попутных грузов{dest ? ` в ${dest}` : ""} под остаток фуры в ленте пока нет. Добавляйте
+              грузы в один город прямо из ленты — они появятся здесь.
+            </p>
+          </div>
         )}
 
         {orders.length > 0 && (
@@ -410,7 +444,7 @@ export function TripBuilderScreen() {
 
 // «Избранное» — грузы, которые перевозчик лайкнул в ленте, чтобы вернуться позже.
 export function FavoritesScreen() {
-  const { feedOrders, push, toggleFavorite, isFavorite, favorites, makeOffer } = useCnKz()
+  const { feedOrders, push, toggleFavorite, isFavorite, favorites, makeOffer, setTab } = useCnKz()
   const list = feedOrders.filter((o) => favorites.includes(o.id) && !o.deal)
 
   return (
@@ -425,6 +459,11 @@ export function FavoritesScreen() {
             icon={Heart}
             title="Пока пусто"
             hint="Нажимайте ♥ на грузах в ленте — они появятся здесь, чтобы вернуться позже."
+            action={
+              <Button size="lg" onClick={() => setTab("feed")}>
+                <Boxes className="size-4" /> Смотреть ленту
+              </Button>
+            }
           />
         )}
         {list.map((o) => (
@@ -464,6 +503,8 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
   const selectedTruck = MY_FLEET.find((t) => t.id === truckId) ?? MY_FLEET[0]
   const overCapacity =
     order.weightKg > selectedTruck.maxWeightKg || order.volumeM3 > selectedTruck.maxVolumeM3
+  // Быстрые шаги «своей цены» (inDrive-встречная): +5/10/15% от цены заказчика, округлённо до десятков.
+  const quickSteps = [1.05, 1.1, 1.15].map((m) => Math.round((order.priceUsd * m) / 10) * 10)
 
   return (
     <div className="flex h-full flex-col">
@@ -483,10 +524,10 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
           <CardContent className="space-y-2">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 flex-1 gap-3">
-                <div className="flex flex-col items-center pt-2">
-                  <span className="size-1.5 rounded-full bg-muted-foreground/60" />
-                  <span className="my-1 w-px flex-1 bg-gradient-to-b from-border to-brand/50" />
-                  <span className="size-2 rounded-full bg-brand ring-4 ring-brand/15" />
+                <div className="flex flex-col items-center pt-1.5">
+                  <span className="size-3 shrink-0 rounded-full border-2 border-[var(--route-from)] bg-background" />
+                  <span className="route-connector my-1 flex-1" />
+                  <span className="size-3 shrink-0 rounded-full border-2 border-[var(--route-to)] bg-[var(--route-to)]" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-medium text-muted-foreground">
@@ -507,12 +548,13 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
               </div>
             </div>
             <p className="text-[15px] text-muted-foreground">{order.cargo}</p>
-            <DetailRow label="Тип авто" value={order.truckType} />
-            <DetailRow
-              label="Вес / объём"
-              value={`${order.weightKg.toLocaleString("ru-RU")} кг · ${order.volumeM3} м³`}
-            />
-            <DetailRow label="Готов к погрузке" value={order.readyDate} />
+            {/* 2-колоночная спец-таблица — плотная сводка вместо пустоты (anti-empty) */}
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <SpecCell label="Вес" value={`${order.weightKg.toLocaleString("ru-RU")} кг`} />
+              <SpecCell label="Объём" value={`${order.volumeM3} м³`} />
+              <SpecCell label="Тип авто" value={order.truckType} />
+              <SpecCell label="Готов к погрузке" value={order.readyDate} />
+            </div>
             {order.pickupPoint && (
               <DetailRow label="Точка погрузки" value={order.pickupPoint} />
             )}
@@ -527,6 +569,10 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
               />
             )}
             <DetailRow label="Адрес доставки" value={order.address} />
+            <DetailRow
+              label="Оплата"
+              value={order.payment === "cash" ? "Наличными" : "Безналичный расчёт"}
+            />
             {order.notes && <DetailRow label="Примечание" value={order.notes} />}
             {order.safePay !== false && (
               <div className="surface-inset mt-1 flex items-start gap-1.5 rounded-xl px-2.5 py-2 text-sm text-foreground">
@@ -561,7 +607,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                 {/* Чат остаётся закрытым до сделки (§5) */}
                 <Button
                   size="icon-touch"
-                  variant="outline"
+                  variant="secondary"
                   onClick={() =>
                     showToast(
                       order.deal
@@ -630,7 +676,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                     </Button>
                     <Button
                       size="lg"
-                      variant="outline"
+                      variant="secondary"
                       className={declineConfirm ? "border-destructive text-destructive" : ""}
                       onClick={() => {
                         if (declineConfirm) {
@@ -658,7 +704,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                   {/* Повторный отклик: сбрасываем статус — снова появляется панель ставки (§7) */}
                   <Button
                     size="lg"
-                    variant="outline"
+                    variant="secondary"
                     className="w-full"
                     onClick={() => clearMyOffer(order.id)}
                   >
@@ -710,24 +756,42 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
             >
               <Check className="size-5" /> Принять цену {money(order.priceUsd)}
             </Button>
-            <div className="flex gap-2">
-              <Input
-                type="number"
-                inputMode="numeric"
-                value={counter}
-                onChange={(e) => setCounter(e.target.value)}
-                placeholder="Своя цена, $"
-                className="h-12 text-base tabular-nums"
-              />
-              <Button
-                variant="outline"
-                size="lg"
-                className="h-12 shrink-0"
-                disabled={!counter || Number(counter) <= 0 || overCapacity}
-                onClick={() => makeOffer(order.id, "counter", Number(counter), truckId)}
-              >
-                Назвать цену
-              </Button>
+            {/* Своя цена — быстрые лаймовые шаги (inDrive-встречная) + ручной ввод */}
+            <div className="space-y-2">
+              <p className="t-eyebrow">Своя цена</p>
+              <div className="grid grid-cols-3 gap-2">
+                {quickSteps.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setCounter(String(s))}
+                    className={
+                      "flex h-12 items-center justify-center rounded-md bg-brand text-[15px] font-bold text-brand-foreground tabular-nums transition-transform duration-150 active:scale-[0.96] " +
+                      (counter === String(s) ? "ring-2 ring-brand-strong ring-offset-1 ring-offset-background" : "")
+                    }
+                  >
+                    {money(s)}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  value={counter}
+                  onChange={(e) => setCounter(e.target.value)}
+                  placeholder="Ввести свою, $"
+                  className="h-12 rounded-lg bg-secondary text-base tabular-nums"
+                />
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="h-12 shrink-0"
+                  disabled={!counter || Number(counter) <= 0 || overCapacity}
+                  onClick={() => makeOffer(order.id, "counter", Number(counter), truckId)}
+                >
+                  Назвать цену
+                </Button>
+              </div>
             </div>
             <Button
               variant="ghost"

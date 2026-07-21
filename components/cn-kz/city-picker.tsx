@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, ChevronLeft, Search, X } from "lucide-react"
+import { ChevronDown, ChevronLeft, MapPin, MapPinOff, Search, X } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
 import { ALL_CITIES } from "@/lib/cn-kz/types"
@@ -9,6 +9,20 @@ import { Chip, ChipRow } from "./ui-bits"
 
 // Нормализация: нижний регистр + ё→е, чтобы поиск был предсказуемым.
 const norm = (s: string) => s.toLowerCase().replace(/ё/g, "е").trim()
+
+// Частые направления фрахта (существующие города из ALL_CITIES) — заполняют пустой
+// экран выбора до ввода: Китай-происхождение + узлы КЗ + основные точки СНГ.
+const POPULAR = [
+  "Алматы",
+  "Астана",
+  "Шымкент",
+  "Караганда",
+  "Хоргос",
+  "Урумчи",
+  "Москва",
+  "Ташкент",
+  "Бишкек",
+]
 
 function search(q: string, exclude: string[] = []) {
   const t = norm(q)
@@ -25,6 +39,19 @@ function search(q: string, exclude: string[] = []) {
   return matches.slice(0, 10)
 }
 
+// Строка города в списке результатов/популярных — с ведущей булавкой для сканируемости.
+function CityRow({ city, onPick }: { city: string; onPick: (c: string) => void }) {
+  return (
+    <button
+      onClick={() => onPick(city)}
+      className="flex h-12 w-full items-center gap-3 px-3.5 text-left text-base transition-colors hover:bg-muted active:bg-muted"
+    >
+      <MapPin className="size-4 shrink-0 text-muted-foreground" />
+      <span className="truncate">{city}</span>
+    </button>
+  )
+}
+
 function Results({
   items,
   onPick,
@@ -36,13 +63,7 @@ function Results({
   return (
     <div className="surface-glass divide-y divide-border overflow-hidden rounded-2xl">
       {items.map((c) => (
-        <button
-          key={c}
-          onClick={() => onPick(c)}
-          className="flex h-12 w-full items-center px-3 text-left text-base hover:bg-muted"
-        >
-          {c}
-        </button>
+        <CityRow key={c} city={c} onPick={onPick} />
       ))}
     </div>
   )
@@ -71,12 +92,13 @@ export function CityPicker({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-14 w-full items-center justify-between rounded-lg border-[1.5px] border-input bg-card px-3 text-base"
+        className="flex h-14 w-full items-center gap-2.5 rounded-lg bg-secondary px-4 text-base"
       >
-        <span className={value ? "text-foreground" : "text-muted-foreground"}>
+        <MapPin className="size-5 shrink-0 text-muted-foreground" />
+        <span className={"truncate " + (value ? "text-foreground" : "text-muted-foreground")}>
           {value || placeholder}
         </span>
-        <ChevronDown className="size-4 text-muted-foreground" />
+        <ChevronDown className="ml-auto size-4 shrink-0 text-muted-foreground" />
       </button>
 
       {open && (
@@ -93,41 +115,50 @@ export function CityPicker({
           </div>
           <div className="px-4 py-3">
             <div className="relative">
-              <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 autoFocus
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Введите город…"
-                className="h-12 pl-8 text-base"
+                className="h-14 rounded-lg border-0 bg-secondary pl-11 text-base"
               />
             </div>
           </div>
-          <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-6">
+          <div className="flex-1 space-y-5 overflow-y-auto px-4 pb-6">
             {q ? (
-              <div className="surface-glass divide-y divide-border overflow-hidden rounded-2xl">
-                {results.length === 0 && (
-                  <p className="px-3 py-4 text-base text-muted-foreground">Ничего не найдено</p>
-                )}
-                {results.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => pick(c)}
-                    className="flex h-12 w-full items-center px-3 text-left text-base hover:bg-muted"
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
+              results.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 pt-16 text-center">
+                  <span className="flex size-14 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                    <MapPinOff className="size-6" />
+                  </span>
+                  <p className="text-base font-semibold">Город не найден</p>
+                  <p className="max-w-[16rem] text-sm text-muted-foreground">
+                    Проверьте написание или попробуйте соседний крупный город.
+                  </p>
+                </div>
+              ) : (
+                <Results items={results} onPick={pick} />
+              )
             ) : (
               <>
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">Недавние</p>
+                  <p className="text-sm font-semibold text-muted-foreground">Недавние</p>
                   <div className="flex flex-wrap gap-2">
                     {["Алматы", "Астана"].map((c) => (
                       <Chip key={c} onClick={() => pick(c)}>
                         {c}
                       </Chip>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-muted-foreground">
+                    Популярные направления
+                  </p>
+                  <div className="surface-glass divide-y divide-border overflow-hidden rounded-2xl">
+                    {POPULAR.map((c) => (
+                      <CityRow key={c} city={c} onPick={pick} />
                     ))}
                   </div>
                 </div>
@@ -153,12 +184,12 @@ export function CityMultiPicker({
   return (
     <div className="space-y-2">
       <div className="relative">
-        <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Добавить город…"
-          className="h-11 pl-8 text-base"
+          className="h-14 rounded-lg border-0 bg-secondary pl-11 text-base"
         />
       </div>
       <Results

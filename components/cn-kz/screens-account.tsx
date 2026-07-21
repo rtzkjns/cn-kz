@@ -3,6 +3,7 @@
 import { useState } from "react"
 import {
   Bell,
+  Calendar,
   ChevronRight,
   CreditCard,
   FileText,
@@ -12,19 +13,24 @@ import {
   Lock,
   LogOut,
   Package,
+  Plus,
   Shield,
+  ShieldCheck,
   Smartphone,
+  Star,
   Trash2,
   Truck,
   User as UserIcon,
+  Weight,
 } from "lucide-react"
 
+import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Order } from "@/lib/cn-kz/types"
 import { LANGS } from "@/lib/cn-kz/i18n"
 import { ScreenHeader } from "./phone-frame"
-import { DealStatusBadge, Route, money } from "./shared"
+import { DealStatusBadge, money } from "./shared"
 import { Chip, ChipRow, EmptyState, Section } from "./ui-bits"
 import { useCnKz } from "./store"
 
@@ -227,7 +233,7 @@ export function SecurityScreen() {
         </Card>
 
         <div>
-          <p className="mb-1.5 px-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">Активные устройства</p>
+          <p className="t-eyebrow mb-1.5 px-1">Активные устройства</p>
           <Card size="sm">
             <CardContent className="divide-y divide-border py-1">
               {[
@@ -254,6 +260,15 @@ export function SecurityScreen() {
               ))}
             </CardContent>
           </Card>
+        </div>
+
+        {/* Anti-empty: honest SIM-swap / фишинг tip заполняет низ экрана полезной плотностью. */}
+        <div className="surface-inset flex items-start gap-2.5 rounded-2xl p-4">
+          <ShieldCheck className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+          <p className="text-sm leading-snug text-muted-foreground">
+            Вход подтверждается кодом из SMS. Никому не сообщайте код и PIN — поддержка CN-KZ
+            их не спрашивает.
+          </p>
         </div>
 
         <Button
@@ -302,16 +317,17 @@ export function HistoryScreen() {
         onBack={() => setTab("profile")}
       />
       <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-24">
-        {role === "carrier" && finished.length > 0 && (
+        {/* Стат-полоса для ОБЕИХ ролей (было только у перевозчика) — заполняет верх сводкой. */}
+        {finished.length > 0 && (
           <Card size="sm">
             <CardContent className="flex items-center justify-around text-center">
               <div>
                 <div className="font-mono-tech text-xl font-bold tabular-nums">{finished.length}</div>
-                <div className="text-sm text-muted-foreground">рейсов</div>
+                <div className="text-sm text-muted-foreground">{role === "carrier" ? "рейсов" : "заказов"}</div>
               </div>
               <div>
                 <div className="font-mono-tech text-xl font-bold tabular-nums">{money(earned)}</div>
-                <div className="text-sm text-muted-foreground">заработано</div>
+                <div className="text-sm text-muted-foreground">{role === "carrier" ? "заработано" : "потрачено"}</div>
               </div>
               <div>
                 <div className="font-mono-tech text-xl font-bold tabular-nums text-brand">{avgRating}</div>
@@ -321,51 +337,139 @@ export function HistoryScreen() {
           </Card>
         )}
 
-        <ChipRow>
-          {HFILTERS.map((x) => (
-            <Chip key={x.id} active={f === x.id} onClick={() => setF(x.id)}>
-              {x.label}
-            </Chip>
-          ))}
-        </ChipRow>
+        {finished.length > 0 && (
+          <ChipRow>
+            {HFILTERS.map((x) => (
+              <Chip key={x.id} active={f === x.id} onClick={() => setF(x.id)}>
+                {x.label}
+              </Chip>
+            ))}
+          </ChipRow>
+        )}
 
-        {list.length === 0 && (
+        {finished.length === 0 ? (
           <EmptyState
             icon={role === "carrier" ? Truck : Package}
-            title={`Здесь появятся ваши завершённые ${role === "carrier" ? "рейсы" : "заказы"}.`}
+            title={role === "carrier" ? "Пока нет завершённых рейсов" : "Пока нет завершённых заказов"}
+            hint={
+              role === "carrier"
+                ? "Здесь появятся доставленные рейсы и заработок по каждому из них."
+                : "Здесь появятся закрытые заказы, суммы и оценки перевозчиков."
+            }
+            action={
+              <Button
+                size="xl"
+                className="px-8"
+                onClick={() => (role === "carrier" ? setTab("feed") : push({ type: "createOrder" }))}
+              >
+                {role === "carrier" ? (
+                  <>
+                    <Truck className="size-5" /> К грузам
+                  </>
+                ) : (
+                  <>
+                    <Plus className="size-5" /> Создать заказ
+                  </>
+                )}
+              </Button>
+            }
           />
+        ) : list.length === 0 ? (
+          <EmptyState
+            icon={Package}
+            title="В этом фильтре пусто"
+            hint="Смените фильтр выше, чтобы увидеть другие записи истории."
+          />
+        ) : (
+          <div className="space-y-2.5">
+            {list.map((o) => (
+              <HistoryRow
+                key={o.id}
+                order={o}
+                carrier={role === "carrier"}
+                onClick={() => push({ type: "deal", orderId: o.id })}
+              />
+            ))}
+          </div>
         )}
-        <div className="space-y-2">
-          {list.map((o) => (
-            <HistoryRow key={o.id} order={o} carrier={role === "carrier"} onClick={() => push({ type: "deal", orderId: o.id })} />
-          ))}
-        </div>
       </div>
     </div>
   )
 }
 
-function HistoryRow({ order, carrier, onClick }: { order: Order; carrier: boolean; onClick: () => void }) {
-  const other = carrier ? order.shipper.name : order.deal!.carrier.name
+// Мета-пилл истории — тот же атом плотности, что и в ленте (вес/кузов/срок).
+function MetaPill({ icon: Icon, children }: { icon: typeof Truck; children: React.ReactNode }) {
   return (
-    <Card size="sm" onClick={onClick} className="cursor-pointer hover:ring-foreground/20">
-      <CardContent className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <Route from={order.origin} to={order.destination} className="text-base" />
-          <DealStatusBadge status={order.deal!.status} />
+    <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1.5 text-[14px] font-medium text-muted-foreground tabular-nums">
+      <Icon className="size-4 opacity-60" />
+      {children}
+    </span>
+  )
+}
+
+// Плотная карточка истории: аватар второй стороны + рейтинг, кольцевой маршрут,
+// мета-пиллы и КРУПНАЯ итоговая цена — строка заполнена 6+ атомами данных, не пустует.
+function HistoryRow({ order, carrier, onClick }: { order: Order; carrier: boolean; onClick: () => void }) {
+  const other = carrier ? order.shipper : order.deal!.carrier
+  const priceUsd = order.deal!.agreedPriceUsd
+  return (
+    <div
+      onClick={onClick}
+      className="surface-glass cursor-pointer rounded-2xl p-4 transition-transform duration-150 active:scale-[0.99]"
+    >
+      {/* Вторая сторона + статус сделки */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Avatar name={other.name} className="size-10 shrink-0 text-sm font-bold" />
+          <div className="min-w-0 leading-tight">
+            <p className="t-h3 truncate">{other.name}</p>
+            <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
+              <Star className="size-3.5 shrink-0 fill-[var(--star)] text-[var(--star)]" />
+              <span className="font-mono-tech text-foreground">{other.rating.toFixed(1)}</span>
+              <span aria-hidden>·</span>
+              <span className="truncate">{carrier ? "Заказчик" : "Перевозчик"}</span>
+            </p>
+          </div>
         </div>
-        <p className="line-clamp-1 text-sm text-muted-foreground">
-          {order.completedAt ?? order.readyDate} · {order.cargo}
-        </p>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            {carrier ? "Заказчик" : "Перевозчик"}: {other}
-          </span>
-          <span className="font-mono-tech text-base font-semibold tabular-nums text-foreground">
-            {money(order.deal!.agreedPriceUsd)}
-          </span>
+        <DealStatusBadge status={order.deal!.status} />
+      </div>
+
+      {/* Маршрут — синее кольцо → коннектор → лаймовое кольцо */}
+      <div className="mt-3 flex gap-3">
+        <div className="flex flex-col items-center pt-1.5">
+          <span className="size-3 shrink-0 rounded-full border-2 border-[var(--route-from)] bg-background" />
+          <span className="route-connector my-1 flex-1" />
+          <span className="size-3 shrink-0 rounded-full border-2 border-[var(--route-to)] bg-[var(--route-to)]" />
         </div>
-      </CardContent>
-    </Card>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-medium text-muted-foreground">{order.origin}</p>
+          <p className="t-h3 mt-0.5 truncate">{order.destination}</p>
+        </div>
+      </div>
+
+      {/* Мета-пиллы: кузов · вес · дата */}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <MetaPill icon={Truck}>{order.truckType}</MetaPill>
+        <MetaPill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} кг</MetaPill>
+        <MetaPill icon={Calendar}>{order.completedAt ?? order.readyDate}</MetaPill>
+      </div>
+
+      {/* Итоговая цена — самый громкий элемент строки, якорит правый низ */}
+      <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-secondary px-4 py-3">
+        <div className="min-w-0 leading-none">
+          <p className="t-eyebrow">{order.deal!.status === "completed" ? "Оплачено" : "Сумма сделки"}</p>
+          <p className="font-mono-tech mt-1.5 text-2xl font-bold tracking-tight tabular-nums">
+            {money(priceUsd)}
+          </p>
+        </div>
+        <span className="flex size-11 shrink-0 items-center justify-center text-muted-foreground">
+          <ChevronRight className="size-5" />
+        </span>
+      </div>
+
+      {order.cargo && (
+        <p className="mt-2 line-clamp-1 text-sm text-muted-foreground">{order.cargo}</p>
+      )}
+    </div>
   )
 }

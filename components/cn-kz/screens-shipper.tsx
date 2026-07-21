@@ -1,13 +1,33 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { BadgeCheck, Check, Copy, Gavel, Package, Pencil, RefreshCw, Search, ShieldCheck, Tag, Trash2, Truck, X } from "lucide-react"
+import {
+  BadgeCheck,
+  Box,
+  Calendar,
+  Check,
+  Clock,
+  Copy,
+  Gavel,
+  Package,
+  Pencil,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Star,
+  Tag,
+  Trash2,
+  Truck,
+  Weight,
+  X,
+  type LucideIcon,
+} from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { cn } from "@/lib/utils"
 import {
   TRUCK_TYPES,
   type Order,
@@ -16,9 +36,89 @@ import {
 import { CityPicker } from "./city-picker"
 import { OrderCard } from "./order-card"
 import { ScreenHeader } from "./phone-frame"
-import { CallButton, deals, offerLive, plural, Rating, StatusBadge, money } from "./shared"
+import {
+  CallButton,
+  DealStatusBadge,
+  OrderStatusBadge,
+  deals,
+  money,
+  offerLive,
+  plural,
+  StatusBadge,
+} from "./shared"
 import { Chip, ChipRow, Countdown, DetailRow, EmptyState, Section, StatStrip, StickyCTA } from "./ui-bits"
 import { useCnKz, type NewOrderDraft } from "./store"
+
+// ===== «Signal» local building blocks (skin/layout/density only — no new data) =====
+
+// Route rail — origin BLUE ring → 2px connector → destination LIME ring (CLONE-SPEC route block).
+function RouteRail({ className = "" }: { className?: string }) {
+  return (
+    <div className={cn("flex flex-col items-center", className)}>
+      <span className="size-3 shrink-0 rounded-full border-2 border-[var(--route-from)] bg-background" />
+      <span className="route-connector my-1 flex-1" />
+      <span className="size-3 shrink-0 rounded-full border-2 border-[var(--route-to)] bg-[var(--route-to)]" />
+    </div>
+  )
+}
+
+// Gold 5-star row + number — the trust signal on «Signal» offer/bid cards (CLONE-SPEC offer card).
+function Stars5({ value }: { value: number }) {
+  const full = Math.round(value)
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="flex items-center gap-0.5">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <Star
+            key={i}
+            className={cn(
+              "size-3.5",
+              i < full
+                ? "fill-[var(--star)] text-[var(--star)]"
+                : "fill-transparent text-muted-foreground/30"
+            )}
+          />
+        ))}
+      </span>
+      <span className="font-mono-tech text-sm font-semibold text-foreground">
+        {value.toFixed(1)}
+      </span>
+    </span>
+  )
+}
+
+// 2-col spec cell — gray inset, eyebrow + value; turns detail whitespace into a scannable table.
+function SpecCell({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string
+  value: React.ReactNode
+  icon?: LucideIcon
+}) {
+  return (
+    <div className="surface-inset rounded-xl px-3.5 py-3">
+      <p className="t-eyebrow flex items-center gap-1.5">
+        {Icon && <Icon className="size-3.5" />} {label}
+      </p>
+      <p className="mt-1.5 text-[15px] font-semibold text-foreground">{value}</p>
+    </div>
+  )
+}
+
+// One segment of the offer-summary strip above the bid stack (count / best price / top rating).
+function SummarySeg({ value, label, star }: { value: string; label: string; star?: boolean }) {
+  return (
+    <div className="flex-1 px-3 py-2.5 text-center">
+      <p className="font-mono-tech text-[17px] leading-none font-bold text-foreground">
+        {star && <span className="text-[var(--star)]">★ </span>}
+        {value}
+      </p>
+      <p className="t-eyebrow mt-1.5">{label}</p>
+    </div>
+  )
+}
 
 const FILTERS = [
   { id: "all", label: "Все" },
@@ -49,6 +149,17 @@ export function ShipperOrdersScreen() {
       o.status !== "archived" &&
       !(o.deal && (o.deal.status === "completed" || o.deal.status === "cancelled"))
   ).length
+
+  // Есть ли вообще заказы (не завершённые) — чтобы отличить «пустой фильтр» от «ничего не создано».
+  const anyOrders = myOrders.some(
+    (o) => !(o.deal && (o.deal.status === "completed" || o.deal.status === "cancelled"))
+  )
+  const resetView = () => {
+    setFilter("all")
+    setSort("new")
+    setQuery("")
+    setDealsNewOnly(false)
+  }
 
   const list = useMemo(() => {
     // Поиск по конечной точке / городу / грузу (теги #алматы #тент тоже работают).
@@ -104,12 +215,12 @@ export function ShipperOrdersScreen() {
 
       <div className="px-4 pb-2">
         <div className="relative">
-          <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Поиск по городу назначения, грузу…  #алматы #тент"
-            className="h-11 pl-9 text-base"
+            className="h-12 rounded-lg bg-secondary pl-10 text-base"
           />
         </div>
       </div>
@@ -138,18 +249,30 @@ export function ShipperOrdersScreen() {
       </ChipRow>
 
       <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-24">
-        {list.length === 0 && (
-          <EmptyState
-            icon={Package}
-            title="Здесь пока пусто"
-            hint="Опубликуйте заказ — перевозчики начнут откликаться в реальном времени."
-            action={
-              <Button size="lg" onClick={() => push({ type: "createOrder" })}>
-                Создать заказ
-              </Button>
-            }
-          />
-        )}
+        {list.length === 0 &&
+          (anyOrders ? (
+            <EmptyState
+              icon={Search}
+              title="Ничего не найдено"
+              hint="Под этот фильтр или поиск заказов нет — они никуда не делись."
+              action={
+                <Button size="lg" variant="secondary" onClick={resetView}>
+                  Сбросить фильтры
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState
+              icon={Package}
+              title="Здесь пока пусто"
+              hint="Опубликуйте заказ — перевозчики начнут откликаться в реальном времени."
+              action={
+                <Button size="lg" onClick={() => push({ type: "createOrder" })}>
+                  Создать заказ
+                </Button>
+              }
+            />
+          ))}
         {list.map((o, i) => (
           <div
             key={o.id}
@@ -193,6 +316,9 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
   const visible = order.offers.filter(
     (o) => o.status === "pending" || o.status === "countered"
   )
+  // Сводка по живым откликам — заполняет заголовок секции полезной плотностью (§anti-empty).
+  const minPrice = visible.length ? Math.min(...visible.map((o) => o.priceUsd)) : 0
+  const bestRating = visible.length ? Math.max(...visible.map((o) => o.carrier.rating)) : 0
 
   return (
     <div className="flex h-full flex-col">
@@ -207,248 +333,323 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
         onBack={pop}
       />
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-0">
-        <Card size="sm">
-          <CardContent className="space-y-2">
-            <div className="flex items-start justify-between gap-3">
-              {/* route-rail: origin muted → пунктирный коннектор → destination brand (сигнатурный мотив, как в OrderCard) */}
-              <div className="flex min-w-0 flex-1 gap-3">
-                <div className="flex flex-col items-center pt-1.5">
-                  <span className="size-1.5 rounded-full bg-muted-foreground/60" />
-                  <span className="my-1 w-px flex-1 bg-gradient-to-b from-border to-brand/50" />
-                  <span className="size-2 rounded-full bg-brand ring-4 ring-brand/15" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[15px] font-medium text-muted-foreground">
-                    {order.origin}
-                  </p>
-                  <p className="mt-0.5 truncate text-[22px] leading-tight font-bold tracking-tight">
-                    {order.destination}
-                  </p>
-                </div>
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-6">
+        {/* ===== Cargo detail: «Signal» route block + price hero + 2-col spec grid ===== */}
+        <div className="surface-glass space-y-4 rounded-2xl p-4">
+          {/* route block + status badge */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-1 gap-3">
+              <RouteRail className="pt-1.5" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[16px] font-medium text-muted-foreground">
+                  {order.origin}
+                </p>
+                <p className="t-h2 mt-1 truncate">{order.destination}</p>
               </div>
-              <span className="font-mono-tech shrink-0 text-2xl font-bold text-foreground tabular-nums">
-                {money(order.priceUsd)}
-              </span>
             </div>
-            <p className="text-[15px] text-muted-foreground">{order.cargo}</p>
-            <DetailRow label="Тип авто" value={order.truckType} />
-            <DetailRow
-              label="Вес / объём"
-              value={`${order.weightKg.toLocaleString("ru-RU")} кг · ${order.volumeM3} м³`}
-            />
-            <DetailRow label="Готов к погрузке" value={order.readyDate} />
-            {order.pickupPoint && (
-              <DetailRow label="Точка погрузки" value={order.pickupPoint} />
+            {order.deal ? (
+              <DealStatusBadge status={order.deal.status} />
+            ) : (
+              <OrderStatusBadge status={order.status} />
             )}
-            {order.pickupPhone && (
-              <DetailRow label="Контакт погрузки" value={order.pickupPhone} />
-            )}
-            {order.address && <DetailRow label="Адрес доставки" value={order.address} />}
-            {(order.recipientName || order.recipientPhone) && (
-              <DetailRow
-                label="Получатель"
-                value={[order.recipientName, order.recipientPhone].filter(Boolean).join(" · ")}
-              />
-            )}
-            <DetailRow
-              label="Оплата"
-              value={order.payment === "cash" ? "Наличные" : "Банковский перевод"}
-            />
-            {order.notes && (
-              <DetailRow label="Примечание" value={order.notes} />
-            )}
-          </CardContent>
-        </Card>
+          </div>
+
+          <p className="text-[15px] text-muted-foreground">{order.cargo}</p>
+
+          {/* price hero band + оплата (заполняет правую пустоту) */}
+          <div className="flex items-end justify-between gap-3 rounded-xl bg-secondary px-4 py-3">
+            <div className="min-w-0">
+              <p className="t-eyebrow">Цена заказчика</p>
+              <p className="t-display mt-1">{money(order.priceUsd)}</p>
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="t-eyebrow">Оплата</p>
+              <p className="mt-1 text-[15px] font-semibold">
+                {order.payment === "cash" ? "Наличные" : "Перевод"}
+              </p>
+            </div>
+          </div>
+
+          {/* 2-col spec grid — скан-таблица вместо пустоты */}
+          <div className="grid grid-cols-2 gap-2">
+            <SpecCell icon={Weight} label="Вес" value={`${order.weightKg.toLocaleString("ru-RU")} кг`} />
+            <SpecCell icon={Box} label="Объём" value={`${order.volumeM3} м³`} />
+            <SpecCell icon={Truck} label="Тип кузова" value={order.truckType} />
+            <SpecCell icon={Calendar} label="Готов к погрузке" value={order.readyDate} />
+          </div>
+
+          {/* адрес / контакты / примечание — в серой inset-полосе (gutter вместо бордеров) */}
+          {(order.pickupPoint ||
+            order.pickupPhone ||
+            order.address ||
+            order.recipientName ||
+            order.recipientPhone ||
+            order.notes) && (
+            <div className="surface-inset space-y-2.5 rounded-xl p-4">
+              {order.pickupPoint && <DetailRow label="Точка погрузки" value={order.pickupPoint} />}
+              {order.pickupPhone && <DetailRow label="Контакт погрузки" value={order.pickupPhone} />}
+              {order.address && <DetailRow label="Адрес доставки" value={order.address} />}
+              {(order.recipientName || order.recipientPhone) && (
+                <DetailRow
+                  label="Получатель"
+                  value={[order.recipientName, order.recipientPhone].filter(Boolean).join(" · ")}
+                />
+              )}
+              {order.notes && <DetailRow label="Примечание" value={order.notes} />}
+            </div>
+          )}
+        </div>
 
         <Section
           title="Отклики"
-          right={<span className="text-sm text-muted-foreground">{visible.length} активных</span>}
+          right={<span className="t-meta text-muted-foreground">{visible.length} активных</span>}
         >
-          {visible.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              {order.deal
-                ? "Сделка заключена — остальные отклики отклонены."
-                : order.status === "archived"
-                  ? "Заказ в архиве — откликов не было."
-                  : "Пока нет откликов. Пуш ушёл подходящим перевозчикам."}
-            </p>
-          )}
-          <div className="space-y-2">
-            {visible.map((of) => (
-              <Card
-                key={of.id}
-                size="sm"
-                onClick={() =>
-                  push({
-                    type: "carrierProfile",
-                    carrierId: of.carrier.id,
-                    orderId: order.id,
-                    offerId: of.id,
-                  })
-                }
-                className="cursor-pointer transition-transform duration-150 active:scale-[0.99]"
-              >
-                <CardContent className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Avatar name={of.carrier.name} className="size-9" />
-                    <div className="min-w-0 flex-1">
-                      <p className="flex items-center gap-1 truncate text-[15px] font-semibold">
-                        {of.carrier.name}
-                        {of.carrier.verified && <BadgeCheck className="size-4 shrink-0 text-brand" />}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        <Rating value={of.carrier.rating} /> · {deals(of.carrier.dealsCount)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-mono-tech text-lg font-bold text-foreground">
-                        {money(of.priceUsd)}
-                      </p>
-                      <p className="text-sm text-muted-foreground">{of.createdAgo}</p>
-                    </div>
-                  </div>
+          {visible.length === 0 ? (
+            <EmptyState
+              icon={Gavel}
+              title={
+                order.deal
+                  ? "Сделка заключена"
+                  : order.status === "archived"
+                    ? "Откликов не было"
+                    : "Пока нет откликов"
+              }
+              hint={
+                order.deal
+                  ? "Остальные отклики отклонены — сделка уже в работе."
+                  : order.status === "archived"
+                    ? "Заказ ушёл в архив без предложений. Можно перепубликовать."
+                    : "Пуш ушёл подходящим перевозчикам — первые ставки появятся здесь."
+              }
+            />
+          ) : (
+            <>
+              {/* summary strip: сколько откликов · лучшая цена · топ-рейтинг */}
+              <div className="surface-inset mb-3 flex items-stretch divide-x divide-border rounded-xl">
+                <SummarySeg value={String(visible.length)} label="откликов" />
+                <SummarySeg value={money(minPrice)} label="лучшая цена" />
+                <SummarySeg value={bestRating.toFixed(1)} label="топ-рейтинг" star />
+              </div>
 
-                  {/* vehicle params */}
-                  <div className="flex flex-wrap gap-1.5">
-                    <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1.5 text-sm font-medium text-muted-foreground">
-                      <Truck className="size-4 opacity-60" /> {of.truck}
-                    </span>
-                    {of.plate && (
-                      <span className="font-mono-tech inline-flex items-center rounded-md bg-secondary px-2.5 py-1.5 text-sm font-medium text-muted-foreground">
-                        {of.plate}
-                      </span>
-                    )}
-                    {of.capacityKg && (
-                      <span className="inline-flex items-center rounded-md bg-secondary px-2.5 py-1.5 text-sm font-medium text-muted-foreground tabular-nums">
-                        до {of.capacityKg.toLocaleString("ru-RU")} кг
-                      </span>
-                    )}
-                    {of.kind === "accept" ? (
-                      <StatusBadge tone="success" icon={Check}>Готов сразу</StatusBadge>
-                    ) : (
-                      <StatusBadge tone="info">Встречная</StatusBadge>
-                    )}
-                  </div>
+              <div className="space-y-3">
+                {visible.map((of) => {
+                  const pinned = of.awaitingConfirm || of.status === "countered"
+                  return (
+                    <div
+                      key={of.id}
+                      onClick={() =>
+                        push({
+                          type: "carrierProfile",
+                          carrierId: of.carrier.id,
+                          orderId: order.id,
+                          offerId: of.id,
+                        })
+                      }
+                      className={cn(
+                        "cursor-pointer rounded-2xl p-4 transition-transform duration-150 active:scale-[0.99]",
+                        pinned ? "surface-glass-brand" : "surface-glass"
+                      )}
+                    >
+                      {/* identity + freshness */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 gap-3">
+                          <Avatar
+                            name={of.carrier.name}
+                            className="size-11 shrink-0 rounded-full text-[15px] font-bold"
+                          />
+                          <div className="min-w-0">
+                            <p className="t-h3 flex items-center gap-1 truncate">
+                              {of.carrier.name}
+                              {of.carrier.verified && (
+                                <BadgeCheck className="size-4 shrink-0 text-brand" />
+                              )}
+                            </p>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <Stars5 value={of.carrier.rating} />
+                              <span className="t-meta text-muted-foreground">
+                                · {deals(of.carrier.dealsCount)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <span className="t-meta shrink-0 text-muted-foreground">{of.createdAgo}</span>
+                      </div>
 
-                  {of.awaitingConfirm && of.confirmDeadline ? (
-                    <div className="space-y-2 pt-1">
-                      <div className="rounded-md border border-warn/35 bg-warn/12 px-3 py-2 text-[15px] font-medium text-warn">
-                        Вы выбрали встречную {money(of.priceUsd)} · ждём подтверждения перевозчика · осталось{" "}
-                        <Countdown deadline={of.confirmDeadline} />
-                      </div>
-                      {/* §5: отклик «живой» — можно позвонить перевозчику, пока ждём подтверждения. */}
-                      <CallButton phone={of.carrier.phone} className="w-full" />
-                    </div>
-                  ) : of.status === "countered" ? (
-                    <div className="space-y-2 pt-1">
-                      <div className="rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-[15px] font-medium text-brand">
-                        Встречная отправлена: {money(of.shipperCounterUsd ?? of.priceUsd)} · ждём ответа перевозчика
-                      </div>
-                      {/* §5: контакт раскрыт, пока встречная на рассмотрении. */}
-                      <CallButton phone={of.carrier.phone} className="w-full" />
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex gap-2 pt-1">
-                        <Button
-                          size="lg"
-                          className="h-12 flex-1 bg-[var(--success)] text-[15px] text-white hover:bg-[var(--success-strong)]"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            if (of.kind === "counter") {
-                              // §5 Вариант Б: выбор встречной → 15-мин окно подтверждения перевозчика.
-                              pickCounterOffer(order.id, of.id)
-                            } else {
-                              acceptOffer(order.id, of.id)
-                              pop()
-                              push({ type: "deal", orderId: order.id })
-                            }
-                          }}
-                        >
-                          {of.kind === "accept" ? "Выбрать" : "Выбрать встречную"}
-                        </Button>
-                        <Button
-                          size="lg"
-                          variant="outline"
-                          className={`h-12 text-[15px] ${rejectFor === of.id ? "border-destructive text-destructive" : ""}`}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            if (rejectFor === of.id) {
-                              rejectOffer(order.id, of.id)
-                              setRejectFor(null)
-                            } else {
-                              setRejectFor(of.id)
-                            }
-                          }}
-                        >
-                          <X className="size-4" /> {rejectFor === of.id ? "Точно?" : "Отклонить"}
-                        </Button>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="lg"
-                          variant="ghost"
-                          className="h-12 flex-1 text-[15px]"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setCounterFor(counterFor === of.id ? null : of.id)
-                            setCounterVal("")
-                          }}
-                        >
-                          Своя цена
-                        </Button>
-                        {/* §5: контакт раскрыт, пока отклик «живой» — шипер может позвонить откликнувшемуся перевозчику. */}
-                        {offerLive(of.status) && (
-                          <CallButton phone={of.carrier.phone} className="flex-1" />
+                      {/* vehicle params */}
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1.5 text-[14px] font-medium text-muted-foreground">
+                          <Truck className="size-4 opacity-60" /> {of.truck}
+                        </span>
+                        {of.plate && (
+                          <span className="font-mono-tech inline-flex items-center rounded-md bg-secondary px-2.5 py-1.5 text-[14px] font-medium text-muted-foreground">
+                            {of.plate}
+                          </span>
+                        )}
+                        {of.capacityKg && (
+                          <span className="inline-flex items-center rounded-md bg-secondary px-2.5 py-1.5 text-[14px] font-medium text-muted-foreground tabular-nums">
+                            до {of.capacityKg.toLocaleString("ru-RU")} кг
+                          </span>
+                        )}
+                        {of.kind === "accept" ? (
+                          <StatusBadge tone="success" icon={Check}>Готов сразу</StatusBadge>
+                        ) : (
+                          <StatusBadge tone="info">Встречная</StatusBadge>
                         )}
                       </div>
-                      {counterFor === of.id && (
-                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                          <Input
-                            type="number"
-                            inputMode="numeric"
-                            value={counterVal}
-                            onChange={(e) => setCounterVal(e.target.value)}
-                            placeholder={`Ваша цена, $ (сейчас ${of.priceUsd})`}
-                            className="h-12 text-base"
-                          />
-                          <Button
-                            size="lg"
-                            className="h-12 text-[15px]"
-                            disabled={!counterVal}
-                            onClick={() => {
-                              counterOffer(order.id, of.id, Number(counterVal))
-                              setCounterFor(null)
-                            }}
-                          >
-                            Отправить
-                          </Button>
+
+                      {of.awaitingConfirm && of.confirmDeadline ? (
+                        <div className="mt-3 space-y-2">
+                          <div className="flex items-end justify-between gap-3 rounded-xl bg-secondary px-4 py-3">
+                            <div className="min-w-0">
+                              <p className="t-eyebrow">Вы выбрали встречную</p>
+                              <p className="t-display mt-1">{money(of.priceUsd)}</p>
+                            </div>
+                            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[color-mix(in_srgb,var(--warn)_14%,transparent)] px-2.5 py-1.5 text-sm font-semibold text-[var(--warn)]">
+                              <Clock className="size-4" /> <Countdown deadline={of.confirmDeadline} />
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Ждём подтверждения перевозчика.
+                          </p>
+                          {/* §5: отклик «живой» — можно позвонить перевозчику, пока ждём подтверждения. */}
+                          <CallButton phone={of.carrier.phone} className="w-full" />
                         </div>
+                      ) : of.status === "countered" ? (
+                        <div className="mt-3 space-y-2">
+                          <div className="flex items-end justify-between gap-3 rounded-xl bg-secondary px-4 py-3">
+                            <div className="min-w-0">
+                              <p className="t-eyebrow">Встречная отправлена</p>
+                              <p className="t-display mt-1">
+                                {money(of.shipperCounterUsd ?? of.priceUsd)}
+                              </p>
+                            </div>
+                            <StatusBadge tone="brand">Ждём ответа</StatusBadge>
+                          </div>
+                          {/* §5: контакт раскрыт, пока встречная на рассмотрении. */}
+                          <CallButton phone={of.carrier.phone} className="w-full" />
+                        </div>
+                      ) : (
+                        <>
+                          {/* price hero + accept (green) — цена самый громкий элемент карточки */}
+                          <div className="mt-3 flex items-end justify-between gap-3 rounded-xl bg-secondary px-4 py-3">
+                            <div className="min-w-0">
+                              <p className="t-eyebrow">Ставка перевозчика</p>
+                              <p className="t-display mt-1">{money(of.priceUsd)}</p>
+                            </div>
+                            <Button
+                              size="lg"
+                              className="h-12 shrink-0 bg-[var(--success)] px-5 text-[15px] text-white hover:bg-[var(--success-strong)]"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                if (of.kind === "counter") {
+                                  // §5 Вариант Б: выбор встречной → 15-мин окно подтверждения перевозчика.
+                                  pickCounterOffer(order.id, of.id)
+                                } else {
+                                  acceptOffer(order.id, of.id)
+                                  pop()
+                                  push({ type: "deal", orderId: order.id })
+                                }
+                              }}
+                            >
+                              <Check className="size-4" />
+                              {of.kind === "accept" ? "Выбрать" : "Выбрать встречную"}
+                            </Button>
+                          </div>
+
+                          {/* secondary actions — серые (gray-fill), без второго акцента */}
+                          <div className="mt-2 flex gap-2">
+                            <Button
+                              size="lg"
+                              variant="secondary"
+                              className="h-12 flex-1 text-[15px]"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setCounterFor(counterFor === of.id ? null : of.id)
+                                setCounterVal("")
+                              }}
+                            >
+                              <Tag className="size-4" /> Своя цена
+                            </Button>
+                            {/* §5: контакт раскрыт, пока отклик «живой». */}
+                            {offerLive(of.status) && (
+                              <CallButton phone={of.carrier.phone} className="flex-1" />
+                            )}
+                          </div>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (rejectFor === of.id) {
+                                rejectOffer(order.id, of.id)
+                                setRejectFor(null)
+                              } else {
+                                setRejectFor(of.id)
+                              }
+                            }}
+                            className={cn(
+                              "mt-2 flex h-11 w-full items-center justify-center gap-1.5 rounded-lg text-[14px] font-medium transition-colors",
+                              rejectFor === of.id
+                                ? "bg-destructive/10 text-destructive"
+                                : "text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            <X className="size-4" />
+                            {rejectFor === of.id ? "Точно отклонить?" : "Отклонить отклик"}
+                          </button>
+
+                          {counterFor === of.id && (
+                            <div className="mt-2 flex gap-2" onClick={(e) => e.stopPropagation()}>
+                              <div className="relative flex-1">
+                                <span className="absolute top-1/2 left-3.5 -translate-y-1/2 text-[15px] font-bold text-muted-foreground">
+                                  $
+                                </span>
+                                <Input
+                                  type="number"
+                                  inputMode="numeric"
+                                  value={counterVal}
+                                  onChange={(e) => setCounterVal(e.target.value)}
+                                  placeholder={`Ваша цена (сейчас ${of.priceUsd})`}
+                                  className="font-mono-tech h-12 pl-7 text-base tabular-nums"
+                                />
+                              </div>
+                              <Button
+                                size="lg"
+                                className="h-12 text-[15px]"
+                                disabled={!counterVal}
+                                onClick={() => {
+                                  counterOffer(order.id, of.id, Number(counterVal))
+                                  setCounterFor(null)
+                                }}
+                              >
+                                Отправить
+                              </Button>
+                            </div>
+                          )}
+                        </>
                       )}
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
         </Section>
 
         <div className="flex gap-2">
           {(order.status === "published" || order.status === "bidding") && (
             <Button
-              variant="outline"
+              variant="secondary"
               size="lg"
-              className="flex-1 text-[15px]"
+              className="h-12 flex-1 text-[15px]"
               onClick={() => push({ type: "createOrder", editId: order.id })}
             >
               <Pencil className="size-4" /> Редактировать
             </Button>
           )}
           <Button
-            variant="outline"
+            variant="secondary"
             size="lg"
-            className="flex-1 text-[15px]"
+            className="h-12 flex-1 text-[15px]"
             onClick={() => push({ type: "createOrder", prefillFrom: order.id })}
           >
             <Copy className="size-4" /> Создать копию
@@ -472,27 +673,28 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
 
         {order.status === "archived" && (
           <Button
-            variant="outline"
+            variant="secondary"
             size="lg"
-            className="w-full text-[15px]"
+            className="h-12 w-full text-[15px]"
             onClick={() => {
               republishOrder(order.id)
               pop()
             }}
           >
-            <RefreshCw className="size-5" /> Перепубликовать заказ
+            <RefreshCw className="size-4" /> Перепубликовать заказ
           </Button>
         )}
 
         {!order.deal && (
-          <Button
-            variant="outline"
-            size="lg"
-            className={`w-full text-[15px] ${confirmDelete ? "border-destructive text-destructive" : "text-muted-foreground"}`}
+          <button
             onClick={() => (confirmDelete ? deleteOrder(order.id) : setConfirmDelete(true))}
+            className={cn(
+              "flex h-11 w-full items-center justify-center gap-1.5 rounded-lg text-[14px] font-medium transition-colors",
+              confirmDelete ? "bg-destructive/10 text-destructive" : "text-muted-foreground hover:text-foreground"
+            )}
           >
             <Trash2 className="size-4" /> {confirmDelete ? "Точно удалить заказ?" : "Удалить заказ"}
-          </Button>
+          </button>
         )}
       </div>
     </div>
@@ -610,136 +812,55 @@ export function CreateOrderScreen({
         onBack={pop}
       />
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-0">
-        <Field label="Откуда">
-          <CityPicker value={d.origin} onChange={(c) => set("origin", c)} />
-        </Field>
-
-        <Field label="Точка погрузки">
-          <Input
-            value={d.pickupPoint}
-            onChange={(e) => set("pickupPoint", e.target.value)}
-            placeholder="Склад / терминал / адрес"
-            className="h-14 text-base"
-          />
-        </Field>
-
-        <Field label="Контакт на погрузке (тел.)">
-          <Input
-            value={d.pickupPhone}
-            onChange={(e) => set("pickupPhone", e.target.value)}
-            placeholder="+7…"
-            inputMode="tel"
-            className="h-14 text-base"
-          />
-        </Field>
-
-        <Field label="Куда">
-          <div className="space-y-1.5">
-            <CityPicker value={d.destination} onChange={(c) => set("destination", c)} />
+      <div className="flex-1 space-y-6 overflow-y-auto px-4 pb-6">
+        {/* ===== Маршрут — A/B route inputs по route-ring паттерну ===== */}
+        <div className="space-y-2">
+          <GroupLabel>Маршрут</GroupLabel>
+          <div className="surface-glass rounded-2xl p-4">
+            <div className="flex gap-3">
+              <RouteRail className="py-5" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <CityPicker
+                  value={d.origin}
+                  onChange={(c) => set("origin", c)}
+                  placeholder="Откуда — город отправления"
+                />
+                <CityPicker
+                  value={d.destination}
+                  onChange={(c) => set("destination", c)}
+                  placeholder="Куда — город назначения"
+                />
+              </div>
+            </div>
             {(d.origin || d.destination) && (
               <button
-                onClick={() => setD((c) => ({ ...c, origin: c.destination, destination: c.origin }))}
-                className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand"
+                onClick={() =>
+                  setD((c) => ({ ...c, origin: c.destination, destination: c.origin }))
+                }
+                className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-secondary text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 ⇅ Поменять откуда / куда
               </button>
             )}
           </div>
-        </Field>
-
-        <Field label="Описание груза">
-          <Textarea
-            value={d.cargo}
-            onChange={(e) => set("cargo", e.target.value)}
-            placeholder="Что везём, сколько мест…"
-            className="min-h-20 text-base"
-          />
-        </Field>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Вес, кг">
-            <Input
-              type="number"
-              inputMode="numeric"
-              value={d.weightKg || ""}
-              onChange={(e) => set("weightKg", Number(e.target.value))}
-              className="h-14 text-base"
-            />
-          </Field>
-          <Field label="Объём, м³">
-            <Input
-              type="number"
-              inputMode="numeric"
-              value={d.volumeM3 || ""}
-              onChange={(e) => set("volumeM3", Number(e.target.value))}
-              className="h-14 text-base"
-            />
-          </Field>
         </div>
 
-        <Field label="Тип авто">
-          <div className="flex flex-wrap gap-1.5">
-            {TRUCK_TYPES.map((t) => (
-              <Chip
-                key={t}
-                active={d.truckType === t}
-                onClick={() => set("truckType", t as TruckType)}
-              >
-                {t}
-              </Chip>
-            ))}
-          </div>
-        </Field>
-
-        <Field label="Ваша цена, $">
-          <Input
-            type="number"
-            inputMode="numeric"
-            placeholder="напр. 1500"
-            value={d.priceUsd || ""}
-            onChange={(e) => set("priceUsd", Number(e.target.value))}
-            className="h-14 text-base"
-          />
-          <p className="text-sm text-muted-foreground">
-            Ориентир по похожим маршрутам. Слишком низкая ставка = меньше откликов, а подозрительно
-            дешёвые заказы перевозчики обходят как приманку.
-          </p>
-        </Field>
-
-        <Field label="Дата готовности к погрузке">
-          <Input
-            type="date"
-            value={readyIso}
-            onChange={(e) => {
-              setReadyIso(e.target.value)
-              set("readyDate", formatReadyDate(e.target.value))
-            }}
-            className="h-14 text-base"
-          />
-        </Field>
-
-        <Field label="Адрес доставки">
-          <Input
-            value={d.address}
-            onChange={(e) => set("address", e.target.value)}
-            placeholder="Город, улица, дом"
-            className="h-14 text-base"
-          />
-        </Field>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Получатель">
+        {/* ===== Погрузка ===== */}
+        <div className="space-y-3">
+          <GroupLabel>Погрузка</GroupLabel>
+          <Field label="Точка погрузки">
             <Input
-              value={d.recipientName}
-              onChange={(e) => set("recipientName", e.target.value)}
+              value={d.pickupPoint}
+              onChange={(e) => set("pickupPoint", e.target.value)}
+              placeholder="Склад / терминал / адрес"
               className="h-14 text-base"
             />
           </Field>
-          <Field label="Телефон">
+
+          <Field label="Контакт на погрузке (тел.)">
             <Input
-              value={d.recipientPhone}
-              onChange={(e) => set("recipientPhone", e.target.value)}
+              value={d.pickupPhone}
+              onChange={(e) => set("pickupPhone", e.target.value)}
               placeholder="+7…"
               inputMode="tel"
               className="h-14 text-base"
@@ -747,70 +868,191 @@ export function CreateOrderScreen({
           </Field>
         </div>
 
-        <Field label="Тип оплаты (договорная)">
-          <ChipRow>
-            <Chip active={d.payment === "cash"} onClick={() => set("payment", "cash")}>
-              Наличные
-            </Chip>
-            <Chip
-              active={d.payment === "transfer"}
-              onClick={() => set("payment", "transfer")}
-            >
-              Перевод
-            </Chip>
-          </ChipRow>
-        </Field>
+        {/* ===== О грузе ===== */}
+        <div className="space-y-3">
+          <GroupLabel>О грузе</GroupLabel>
+          <Field label="Описание груза">
+            <Textarea
+              value={d.cargo}
+              onChange={(e) => set("cargo", e.target.value)}
+              placeholder="Что везём, сколько мест…"
+              className="min-h-20 text-base"
+            />
+          </Field>
 
-        {/* Честно для нейтральной площадки: денег не держим. Защита = проверка + записи + совет. */}
-        <div className="flex w-full items-start gap-3 rounded-md border border-brand/30 bg-brand/8 p-3">
-          <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand" />
-          <div className="min-w-0">
-            <span className="block text-[15px] font-semibold">Безопасная сделка</span>
-            <span className="mt-0.5 block text-sm text-muted-foreground">
-              Перевозчик проверяется по БИН, переписка и фото сохраняются — это ваша защита при споре.
-              Оплата напрямую: платите на счёт компании (по БИН), <span className="font-medium text-foreground">не на личную карту</span>. Площадка деньги не держит.
-            </span>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Вес, кг">
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={d.weightKg || ""}
+                onChange={(e) => set("weightKg", Number(e.target.value))}
+                className="h-14 text-base"
+              />
+            </Field>
+            <Field label="Объём, м³">
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={d.volumeM3 || ""}
+                onChange={(e) => set("volumeM3", Number(e.target.value))}
+                className="h-14 text-base"
+              />
+            </Field>
+          </div>
+
+          <Field label="Тип авто">
+            <div className="flex flex-wrap gap-1.5">
+              {TRUCK_TYPES.map((t) => (
+                <Chip
+                  key={t}
+                  active={d.truckType === t}
+                  onClick={() => set("truckType", t as TruckType)}
+                >
+                  {t}
+                </Chip>
+              ))}
+            </div>
+          </Field>
+
+          {/* LARGE price field — цена самый крупный ввод формы */}
+          <Field label="Ваша цена, $">
+            <div className="relative">
+              <span className="absolute top-1/2 left-4 -translate-y-1/2 text-xl font-bold text-muted-foreground">
+                $
+              </span>
+              <Input
+                type="number"
+                inputMode="numeric"
+                placeholder="напр. 1500"
+                value={d.priceUsd || ""}
+                onChange={(e) => set("priceUsd", Number(e.target.value))}
+                className="font-mono-tech h-14 pl-9 text-xl font-bold tabular-nums"
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Ориентир по похожим маршрутам. Слишком низкая ставка = меньше откликов, а подозрительно
+              дешёвые заказы перевозчики обходят как приманку.
+            </p>
+          </Field>
+
+          <Field label="Дата готовности к погрузке">
+            <Input
+              type="date"
+              value={readyIso}
+              onChange={(e) => {
+                setReadyIso(e.target.value)
+                set("readyDate", formatReadyDate(e.target.value))
+              }}
+              className="h-14 text-base"
+            />
+          </Field>
+        </div>
+
+        {/* ===== Доставка ===== */}
+        <div className="space-y-3">
+          <GroupLabel>Доставка</GroupLabel>
+          <Field label="Адрес доставки">
+            <Input
+              value={d.address}
+              onChange={(e) => set("address", e.target.value)}
+              placeholder="Город, улица, дом"
+              className="h-14 text-base"
+            />
+          </Field>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Получатель">
+              <Input
+                value={d.recipientName}
+                onChange={(e) => set("recipientName", e.target.value)}
+                className="h-14 text-base"
+              />
+            </Field>
+            <Field label="Телефон">
+              <Input
+                value={d.recipientPhone}
+                onChange={(e) => set("recipientPhone", e.target.value)}
+                placeholder="+7…"
+                inputMode="tel"
+                className="h-14 text-base"
+              />
+            </Field>
           </div>
         </div>
 
-        <Field label="Примечание">
-          <Textarea
-            value={d.notes}
-            onChange={(e) => set("notes", e.target.value)}
-            placeholder="Ограничения и требования: растаможка, пропуск, хрупкое, простой…"
-            className="min-h-20 text-base"
-          />
-        </Field>
+        {/* ===== Оплата и безопасность ===== */}
+        <div className="space-y-3">
+          <GroupLabel>Оплата и безопасность</GroupLabel>
+          <Field label="Тип оплаты (договорная)">
+            <ChipRow>
+              <Chip active={d.payment === "cash"} onClick={() => set("payment", "cash")}>
+                Наличные
+              </Chip>
+              <Chip
+                active={d.payment === "transfer"}
+                onClick={() => set("payment", "transfer")}
+              >
+                Перевод
+              </Chip>
+            </ChipRow>
+          </Field>
 
-        {/* Груз в РФ — санкционный риск на коридоре Китай→Россия. Точечная подсказка. */}
-        {RU_CITIES.has(d.destination) && (
-          <div className="flex items-start gap-2 rounded-md bg-warn/10 px-3 py-2 text-sm text-warn dark:text-warn">
-            <ShieldCheck className="mt-0.5 size-4 shrink-0" />
-            Груз в РФ: убедитесь, что это не санкционный товар двойного назначения (электроника, чипы,
-            дроны, станки, подшипники). Иначе застрянет на границе, а ответственность — на вас.
+          {/* Честно для нейтральной площадки: денег не держим. Защита = проверка + записи + совет. */}
+          <div className="surface-inset flex w-full items-start gap-3 rounded-xl p-4">
+            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand" />
+            <div className="min-w-0">
+              <span className="block text-[15px] font-semibold">Безопасная сделка</span>
+              <span className="mt-0.5 block text-sm text-muted-foreground">
+                Перевозчик проверяется по БИН, переписка и фото сохраняются — это ваша защита при споре.
+                Оплата напрямую: платите на счёт компании (по БИН), <span className="font-medium text-foreground">не на личную карту</span>. Площадка деньги не держит.
+              </span>
+            </div>
           </div>
-        )}
+        </div>
 
-        {/* Декларация запрещённых грузов — переносит ответственность на заказчика, площадка нейтральна. */}
-        <button
-          type="button"
-          onClick={() => setAttested((v) => !v)}
-          className="flex w-full items-start gap-3 rounded-md border border-border p-3 text-left"
-        >
-          <span
-            className={
-              "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border " +
-              (attested ? "border-brand bg-brand text-brand-foreground" : "border-border")
-            }
+        {/* ===== Примечание + декларация ===== */}
+        <div className="space-y-3">
+          <GroupLabel>Примечание</GroupLabel>
+          <Field label="Ограничения и требования">
+            <Textarea
+              value={d.notes}
+              onChange={(e) => set("notes", e.target.value)}
+              placeholder="Растаможка, пропуск, хрупкое, простой…"
+              className="min-h-20 text-base"
+            />
+          </Field>
+
+          {/* Груз в РФ — санкционный риск на коридоре Китай→Россия. Точечная подсказка. */}
+          {RU_CITIES.has(d.destination) && (
+            <div className="flex items-start gap-2 rounded-xl bg-warn/10 px-3 py-2.5 text-sm text-warn dark:text-warn">
+              <ShieldCheck className="mt-0.5 size-4 shrink-0" />
+              Груз в РФ: убедитесь, что это не санкционный товар двойного назначения (электроника, чипы,
+              дроны, станки, подшипники). Иначе застрянет на границе, а ответственность — на вас.
+            </div>
+          )}
+
+          {/* Декларация запрещённых грузов — переносит ответственность на заказчика, площадка нейтральна. */}
+          <button
+            type="button"
+            onClick={() => setAttested((v) => !v)}
+            className="surface-inset flex w-full items-start gap-3 rounded-xl p-4 text-left"
           >
-            {attested && <Check className="size-3.5" />}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            Подтверждаю: груз <span className="font-medium text-foreground">не запрещён и не под
-            санкциями</span> — без оружия, наркотиков, контрабанды и товаров двойного назначения в РФ.
-            Указанные вес и документы — верные.
-          </span>
-        </button>
+            <span
+              className={
+                "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border " +
+                (attested ? "border-brand bg-brand text-brand-foreground" : "border-border bg-background")
+              }
+            >
+              {attested && <Check className="size-3.5" />}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              Подтверждаю: груз <span className="font-medium text-foreground">не запрещён и не под
+              санкциями</span> — без оружия, наркотиков, контрабанды и товаров двойного назначения в РФ.
+              Указанные вес и документы — верные.
+            </span>
+          </button>
+        </div>
 
         <StickyCTA>
           <p className="text-center text-sm leading-snug text-muted-foreground">
@@ -834,6 +1076,11 @@ export function CreateOrderScreen({
       </div>
     </div>
   )
+}
+
+// Мелкий eyebrow-заголовок группы полей — структурирует длинную форму (§anti-empty).
+function GroupLabel({ children }: { children: React.ReactNode }) {
+  return <p className="t-eyebrow pt-1">{children}</p>
 }
 
 function Field({

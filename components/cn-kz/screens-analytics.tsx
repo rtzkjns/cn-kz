@@ -1,12 +1,12 @@
 "use client"
 
-import { AlertTriangle, Package, Star, Tag, TrendingUp } from "lucide-react"
+import { AlertTriangle, BarChart3, Info, Package, Plus, Star, Tag, TrendingUp, Truck, Wallet } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ScreenHeader } from "./phone-frame"
-import { money } from "./shared"
-import { Section } from "./ui-bits"
+import { money, plural } from "./shared"
+import { EmptyState, Section } from "./ui-bits"
 import { useCnKz } from "./store"
 
 function Kpi({
@@ -14,25 +14,18 @@ function Kpi({
   value,
   sub,
   icon: Icon,
-  accent,
 }: {
   label: string
   value: string
   sub?: string
   icon: typeof Package
-  accent?: boolean
 }) {
   return (
     <div className="surface-glass rounded-2xl p-3">
-      <span
-        className={
-          "mb-2 flex size-7 items-center justify-center rounded-lg " +
-          (accent ? "bg-brand/15 text-brand" : "bg-muted text-muted-foreground")
-        }
-      >
+      <span className="mb-2 flex size-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
         <Icon className="size-3.5" />
       </span>
-      <div className={"font-mono-tech text-2xl leading-none font-bold tracking-tight tabular-nums " + (accent ? "text-brand" : "")}>
+      <div className="font-mono-tech text-2xl leading-none font-bold tracking-tight tabular-nums">
         {value}
       </div>
       <div className="mt-1.5 text-sm leading-tight text-muted-foreground">{label}</div>
@@ -59,8 +52,20 @@ function Bar({ label, value, max, suffix, asMoney, neutral }: { label: string; v
   )
 }
 
+// Компактное пустое состояние ВНУТРИ карточки графика — вместо голого «нет данных».
+function ChartEmpty({ icon: Icon, text }: { icon: typeof Package; text: string }) {
+  return (
+    <div className="flex flex-col items-center gap-2 py-6 text-center">
+      <span className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <Icon className="size-5" />
+      </span>
+      <p className="max-w-[15rem] text-sm text-muted-foreground">{text}</p>
+    </div>
+  )
+}
+
 export function AnalyticsScreen() {
-  const { myOrders, setTab } = useCnKz()
+  const { myOrders, setTab, push } = useCnKz()
 
   const completed = myOrders.filter((o) => o.deal?.status === "completed")
   const active = myOrders.filter(
@@ -97,40 +102,75 @@ export function AnalyticsScreen() {
     (o) => (o.status === "published" || o.status === "bidding") && o.offers.length === 0
   ).length
 
+  // Совсем нет заказов → полноценный иллюстрированный empty с одним лаймовым действием.
+  if (myOrders.length === 0) {
+    return (
+      <div className="flex h-full flex-col">
+        <ScreenHeader title="Аналитика" subtitle="Ваша логистика в цифрах" onBack={() => setTab("profile")} />
+        <div className="flex-1 overflow-y-auto px-4 pb-24">
+          <EmptyState
+            icon={BarChart3}
+            title="Пока нет данных для аналитики"
+            hint="Опубликуйте первый заказ — здесь появятся расходы, топ маршрутов и рейтинг перевозчиков."
+            action={
+              <Button size="xl" className="px-8" onClick={() => push({ type: "createOrder" })}>
+                <Plus className="size-5" /> Создать заказ
+              </Button>
+            }
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader title="Аналитика" subtitle="Ваша логистика в цифрах" onBack={() => setTab("profile")} />
 
       <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-24">
-        <div className="grid grid-cols-2 gap-2">
-          <Kpi label="Всего заказов" value={String(myOrders.length)} icon={Package} />
-          <Kpi label="Завершено" value={String(completed.length)} sub={`${active.length} в работе`} icon={TrendingUp} />
-          <Kpi label="Общие расходы" value={money(spend)} icon={Tag} accent />
-          <Kpi label="Средняя цена" value={money(avgPrice)} sub="за рейс" icon={Tag} />
+        {/* Герой-число: общие расходы 32/800 — самый громкий элемент, якорит верх экрана. */}
+        <div className="surface-glass rounded-2xl p-4">
+          <p className="t-eyebrow">Общие расходы</p>
+          <p className="t-display mt-1.5 text-brand">{money(spend)}</p>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            {completed.length > 0
+              ? `${completed.length} ${plural(completed.length, "завершённый заказ", "завершённых заказа", "завершённых заказов")} · в среднем ${money(avgPrice)} за рейс`
+              : "Ещё нет завершённых заказов — расходы появятся после первой сделки"}
+          </p>
         </div>
 
-        {/* insights / exceptions */}
+        <div className="grid grid-cols-2 gap-2">
+          <Kpi label="Всего заказов" value={String(myOrders.length)} icon={Package} />
+          <Kpi label="Завершено" value={String(completed.length)} icon={TrendingUp} />
+          <Kpi label="Средняя цена" value={money(avgPrice)} sub="за рейс" icon={Tag} />
+          <Kpi label="В работе" value={String(active.length)} sub="активные сделки" icon={Truck} />
+        </div>
+
+        {/* insights / exceptions — Signal-медальон вместо цветной полоски-бордера */}
         {noOffers > 0 && (
-          <Card size="sm" className="border-l-4 border-warn">
-            <CardContent className="flex items-start gap-2">
-              <AlertTriangle className="mt-0.5 size-5 shrink-0 text-warn" />
-              <div className="text-base">
-                <p className="font-medium">{noOffers} заказ(а) без откликов</p>
-                <p className="text-sm text-muted-foreground">
-                  Возможно, цена ниже рынка на этих маршрутах — попробуйте поднять.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="surface-glass flex items-start gap-3 rounded-2xl p-4">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--warn)_16%,transparent)] text-warn">
+              <AlertTriangle className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="t-body-strong">
+                {noOffers} {plural(noOffers, "заказ", "заказа", "заказов")} без откликов
+              </p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Возможно, цена ниже рынка на этих маршрутах — попробуйте поднять.
+              </p>
+            </div>
+          </div>
         )}
 
         <Section title="Расходы по месяцам">
           <Card size="sm">
             <CardContent className="space-y-3">
-              {months.length === 0 && <p className="text-sm text-muted-foreground">Нет завершённых заказов</p>}
-              {months.map(([m, v]) => (
-                <Bar key={m} label={m} value={v} max={maxMonth} asMoney />
-              ))}
+              {months.length === 0 ? (
+                <ChartEmpty icon={Wallet} text="Расходы появятся после первых завершённых заказов" />
+              ) : (
+                months.map(([m, v]) => <Bar key={m} label={m} value={v} max={maxMonth} asMoney />)
+              )}
             </CardContent>
           </Card>
         </Section>
@@ -138,9 +178,11 @@ export function AnalyticsScreen() {
         <Section title="Топ маршрутов">
           <Card size="sm">
             <CardContent className="space-y-3">
-              {topRoutes.map(([r, n]) => (
-                <Bar key={r} label={r} value={n} max={maxRoute} suffix=" зак." neutral />
-              ))}
+              {topRoutes.length === 0 ? (
+                <ChartEmpty icon={TrendingUp} text="Здесь появятся ваши самые частые маршруты" />
+              ) : (
+                topRoutes.map(([r, n]) => <Bar key={r} label={r} value={n} max={maxRoute} suffix=" зак." neutral />)
+              )}
             </CardContent>
           </Card>
         </Section>
@@ -152,6 +194,13 @@ export function AnalyticsScreen() {
           </div>
         </Section>
 
+        {/* Закрывающая honest-подсказка — заполняет низ полезным контекстом (курс/USD). */}
+        <div className="surface-inset flex items-start gap-2.5 rounded-2xl p-4">
+          <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <p className="text-sm leading-snug text-muted-foreground">
+            Показатели считаются автоматически по вашим заказам и сделкам. Оплата в USD, ₸ — ориентировочно.
+          </p>
+        </div>
       </div>
     </div>
   )

@@ -1,15 +1,27 @@
 "use client"
 
-import { useState } from "react"
-import { Ban, BadgeCheck, MessageCircle, Phone, ShieldAlert, ShieldCheck, Star, Truck } from "lucide-react"
+import { useState, type ReactNode } from "react"
+import {
+  Ban,
+  BadgeCheck,
+  Box,
+  CalendarDays,
+  Clock,
+  MessageCircle,
+  Phone,
+  ShieldAlert,
+  ShieldCheck,
+  Star,
+  Truck,
+  Weight,
+  type LucideIcon,
+} from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { ScreenHeader } from "./phone-frame"
-import { CallButton, contactUnlocked, deals, money } from "./shared"
-import { Countdown, Section } from "./ui-bits"
+import { CallButton, OfferStatusBadge, StatusBadge, contactUnlocked, deals, money } from "./shared"
+import { Chip, Countdown, Section } from "./ui-bits"
 import { useCnKz } from "./store"
 
 export function CarrierProfileScreen({
@@ -39,60 +51,104 @@ export function CarrierProfileScreen({
     <div className="flex h-full flex-col">
       <ScreenHeader title="Профиль перевозчика" onBack={pop} />
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-44">
-        <Card size="sm">
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Avatar name={c.name} className="size-14 text-base" />
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pb-44">
+        {/* Identity — name, gold rating, trust badges */}
+        <div className="surface-glass space-y-3 rounded-2xl p-4">
+          <div className="flex items-center gap-3">
+            <Avatar name={c.name} className="size-14 shrink-0 rounded-full text-[17px] font-bold" />
+            <div className="min-w-0 flex-1">
+              <p className="t-h2 flex items-center gap-1.5">
+                <span className="truncate">{c.name}</span>
+                {c.verified && <BadgeCheck className="size-5 shrink-0 text-brand" />}
+              </p>
+              <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Star className="size-4 shrink-0 fill-[var(--star)] text-[var(--star)]" />
+                <span className="font-mono-tech text-foreground">{c.rating.toFixed(1)}</span>
+                <span aria-hidden>·</span>
+                <span className="truncate">{deals(c.dealsCount)}</span>
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {c.verified ? (
+              <StatusBadge tone="success" icon={ShieldCheck}>
+                Бизнес проверен · БИН
+              </StatusBadge>
+            ) : (
+              <StatusBadge tone="warn">Новичок · без БИН</StatusBadge>
+            )}
+            {c.insured && (
+              <StatusBadge tone="info" icon={ShieldCheck}>
+                Страховка · CMR
+              </StatusBadge>
+            )}
+          </div>
+        </div>
+
+        {/* Trust stat strip — вовремя / парк / стаж (kills the empty band under the name) */}
+        <div className="surface-glass flex items-stretch divide-x divide-border rounded-2xl">
+          <StatCell icon={Clock} value={c.onTimeRate != null ? `${c.onTimeRate}%` : "—"} label="Вовремя" />
+          <StatCell icon={Truck} value={c.trucks?.length ?? 0} label="Парк" />
+          <StatCell icon={CalendarDays} value={c.memberSince ?? "—"} label="На платформе" />
+        </div>
+
+        {/* Bid summary — that carrier's live offer on your cargo (the reason you're here) */}
+        {offer && order && (
+          <div className="surface-glass space-y-3 rounded-2xl p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="t-eyebrow">Отклик на ваш заказ</p>
+              <OfferStatusBadge status={offer.status} />
+            </div>
+            {/* route: blue origin → connector → lime destination */}
+            <div className="flex gap-3">
+              <div className="flex flex-col items-center pt-1.5">
+                <span className="size-3 shrink-0 rounded-full border-2 border-[var(--route-from)] bg-background" />
+                <span className="route-connector my-1 flex-1" />
+                <span className="size-3 shrink-0 rounded-full border-2 border-[var(--route-to)] bg-[var(--route-to)]" />
+              </div>
               <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-1.5 font-medium">
-                  <span className="truncate">{c.name}</span>
-                  {c.verified && <BadgeCheck className="size-4 shrink-0 text-brand" />}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  <span className="inline-flex items-center gap-0.5">
-                    <Star className="size-3.5 fill-muted-foreground/80 text-muted-foreground/80" />
-                    <span className="font-mono-tech text-foreground">{c.rating.toFixed(1)}</span>
-                  </span>{" "}
-                  · {deals(c.dealsCount)}
-                  {c.memberSince && <> · с {c.memberSince}</>}
-                </p>
+                <p className="truncate text-[15px] font-medium text-muted-foreground">{order.origin}</p>
+                <p className="t-h3 mt-0.5 truncate">{order.destination}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {c.verified ? (
-                <Badge variant="success">
-                  <ShieldCheck className="size-3" /> Бизнес проверен · БИН
-                </Badge>
-              ) : (
-                <Badge variant="warning">Новичок · без БИН</Badge>
-              )}
-              {c.insured && (
-                <Badge variant="muted">
-                  <ShieldCheck className="size-3" /> Страховка · CMR
-                </Badge>
-              )}
-              {c.onTimeRate != null && <Badge variant="muted">{c.onTimeRate}% вовремя</Badge>}
+            <p className="line-clamp-1 text-[15px] text-muted-foreground">{order.cargo}</p>
+            <div className="flex items-end justify-between gap-3 rounded-xl bg-secondary px-4 py-3">
+              <div className="min-w-0 leading-none">
+                <p className="t-eyebrow">{offer.kind === "accept" ? "Готов за вашу цену" : "Своя цена"}</p>
+                <p className="t-display mt-1.5">{money(offer.priceUsd)}</p>
+              </div>
+              <span className="font-mono-tech shrink-0 text-[14px] font-medium text-muted-foreground">
+                {offer.createdAgo}
+              </span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex flex-wrap gap-2">
+              <MetaPill icon={Truck}>{offer.truck}</MetaPill>
+              <MetaPill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} кг</MetaPill>
+              <MetaPill icon={Box}>{order.volumeM3} м³</MetaPill>
+            </div>
+            {(offer.plate || offer.capacityKg != null) && (
+              <p className="t-meta text-muted-foreground">
+                Авто{offer.plate ? ` · ${offer.plate}` : ""}
+                {offer.capacityKg != null ? ` · до ${offer.capacityKg.toLocaleString("ru-RU")} кг` : ""}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Проверка: БИН/ИНН сверяется с реестром юрлиц; личность — селфи + удостоверение. */}
         <Section title="Проверка профиля">
-          <Card size="sm">
-            <CardContent className="space-y-2 text-sm">
-              <VerifyRow ok label="Телефон подтверждён" />
-              <VerifyRow ok={!!c.verified} label="БИН/ИНН сверен с реестром юрлиц" />
-              <VerifyRow ok={!!c.verified} label="Селфи сверено с удостоверением" />
-              <VerifyRow ok label="Профиль с фото (селфи)" />
-              <VerifyRow ok={!!(c.trucks && c.trucks.length)} label="Транспорт · фото на файле" />
-              <p className="pt-1 text-sm leading-snug text-muted-foreground">
-                Значок «Бизнес проверен» = БИН/ИНН найден в реестре юрлиц и селфи совпало с
-                удостоверением. Доступ к базам МВД/розыска подключаем поэтапно — проверка снижает
-                риск, но не гарантия.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="surface-glass space-y-2 rounded-2xl p-4 text-sm">
+            <VerifyRow ok label="Телефон подтверждён" />
+            <VerifyRow ok={!!c.verified} label="БИН/ИНН сверен с реестром юрлиц" />
+            <VerifyRow ok={!!c.verified} label="Селфи сверено с удостоверением" />
+            <VerifyRow ok label="Профиль с фото (селфи)" />
+            <VerifyRow ok={!!(c.trucks && c.trucks.length)} label="Транспорт · фото на файле" />
+            <p className="pt-1 text-sm leading-snug text-muted-foreground">
+              Значок «Бизнес проверен» = БИН/ИНН найден в реестре юрлиц и селфи совпало с
+              удостоверением. Доступ к базам МВД/розыска подключаем поэтапно — проверка снижает
+              риск, но не гарантия.
+            </p>
+          </div>
         </Section>
 
         {/* fleet */}
@@ -100,17 +156,21 @@ export function CarrierProfileScreen({
           <Section title="Парк">
             <div className="space-y-2">
               {c.trucks.map((t) => (
-                <Card key={t.id} size="sm">
-                  <CardContent className="flex items-center gap-2">
-                    <Truck className="size-4 text-brand" />
-                    <div className="flex-1">
-                      <p className="text-[15px] font-medium capitalize">{t.type}</p>
-                      <p className="text-sm text-muted-foreground tabular-nums">
-                        {t.maxWeightKg.toLocaleString("ru-RU")} кг · {t.maxVolumeM3} м³ · {t.plate}
-                      </p>
+                <div key={t.id} className="surface-glass flex items-center gap-3 rounded-2xl p-4">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-secondary text-foreground">
+                    <Truck className="size-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="t-h3 capitalize">{t.type}</p>
+                    <div className="mt-1.5 flex flex-wrap gap-2">
+                      <MetaPill icon={Weight}>{t.maxWeightKg.toLocaleString("ru-RU")} кг</MetaPill>
+                      <MetaPill icon={Box}>{t.maxVolumeM3} м³</MetaPill>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                  <span className="font-mono-tech shrink-0 rounded-md bg-muted px-2 py-1 text-[14px] font-semibold text-foreground">
+                    {t.plate}
+                  </span>
+                </div>
               ))}
             </div>
           </Section>
@@ -121,19 +181,20 @@ export function CarrierProfileScreen({
           <Section title={`Отзывы (${c.reviews.length})`}>
             <div className="space-y-2">
               {c.reviews.map((r) => (
-                <Card key={r.id} size="sm">
-                  <CardContent className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[15px] font-medium">{r.author}</span>
-                      <span className="font-mono-tech text-sm text-muted-foreground">
-                        <span className="text-foreground">{"★".repeat(r.rating)}</span>
-                        <span className="text-muted-foreground/30">{"★".repeat(5 - r.rating)}</span>
-                      </span>
+                <div key={r.id} className="surface-glass space-y-1.5 rounded-2xl p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Avatar name={r.author} className="size-9 shrink-0 rounded-full text-[13px] font-bold" />
+                      <span className="t-h3 truncate">{r.author}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">{r.text}</p>
-                    <p className="text-sm text-muted-foreground">{r.ago}</p>
-                  </CardContent>
-                </Card>
+                    <span className="shrink-0 text-[14px] tracking-tight">
+                      <span className="text-[var(--star)]">{"★".repeat(r.rating)}</span>
+                      <span className="text-muted-foreground/25">{"★".repeat(5 - r.rating)}</span>
+                    </span>
+                  </div>
+                  <p className="t-body text-foreground/90">{r.text}</p>
+                  <p className="t-meta text-muted-foreground">{r.ago}</p>
+                </div>
               ))}
             </div>
           </Section>
@@ -143,11 +204,11 @@ export function CarrierProfileScreen({
       {/* action bar */}
       <div className="absolute inset-x-0 bottom-0 space-y-2 bg-card px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_rgba(20,17,14,0.12)]">
         {offer && order && offer.awaitingConfirm && offer.confirmDeadline ? (
-          <div className="rounded-md border border-warn/35 bg-warn/12 px-3 py-2 text-center text-sm font-medium text-warn">
+          <div className="rounded-lg border border-warn/35 bg-warn/12 px-3 py-2 text-center text-sm font-medium text-warn">
             Встречная выбрана — ждём подтверждения перевозчика · <Countdown deadline={offer.confirmDeadline} />
           </div>
         ) : offer && order && offer.status === "countered" ? (
-          <div className="rounded-md border border-brand/35 bg-brand/12 px-3 py-2 text-center text-sm font-medium text-brand">
+          <div className="rounded-lg border border-brand/35 bg-brand/12 px-3 py-2 text-center text-sm font-medium text-brand">
             Встречная отправлена: {money(offer.shipperCounterUsd ?? offer.priceUsd)} · ждём ответа перевозчика
           </div>
         ) : offer && order ? (
@@ -175,7 +236,7 @@ export function CarrierProfileScreen({
           /* Есть «Принять отклик» (основное действие экрана) → Чат + Звонок вторичной строкой. */
           <div className="flex gap-2">
             <Button
-              variant="outline"
+              variant="secondary"
               size="lg"
               className="h-12 flex-1"
               onClick={() => {
@@ -189,7 +250,7 @@ export function CarrierProfileScreen({
               <CallButton phone={c.phone} className="flex-1" />
             ) : (
               <Button
-                variant="outline"
+                variant="secondary"
                 size="lg"
                 className="h-12 flex-1"
                 onClick={() =>
@@ -207,7 +268,7 @@ export function CarrierProfileScreen({
               <CallButton phone={c.phone} variant="primary" className="w-full" />
             ) : (
               <Button
-                variant="outline"
+                variant="secondary"
                 className="h-12 w-full"
                 onClick={() =>
                   showToast("Номер откроется, когда перевозчик откликнется или начнётся сделка")
@@ -217,7 +278,7 @@ export function CarrierProfileScreen({
               </Button>
             )}
             <Button
-              variant="outline"
+              variant="secondary"
               className="h-12 w-full"
               onClick={() => {
                 if (order?.deal) push({ type: "chat", orderId: order.id })
@@ -246,21 +307,13 @@ export function CarrierProfileScreen({
             className="animate-in slide-in-from-bottom w-full space-y-2 rounded-t-3xl bg-card p-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-base font-semibold">Пожаловаться на {c.name}</p>
+            <p className="t-h3">Пожаловаться на {c.name}</p>
             <div className="flex flex-wrap gap-1.5 pb-1">
               {["Мошенничество", "Не выходит на связь", "Обман по грузу", "Оскорбления", "Другое"].map(
                 (r) => (
-                  <button
-                    key={r}
-                    onClick={() => setReportReason(r)}
-                    className={`inline-flex h-11 items-center rounded-full border px-4 text-sm font-medium transition-colors ${
-                      reportReason === r
-                        ? "border-brand bg-brand/15 text-brand"
-                        : "border-border text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
+                  <Chip key={r} active={reportReason === r} onClick={() => setReportReason(r)}>
                     {r}
-                  </button>
+                  </Chip>
                 )
               )}
             </div>
@@ -277,7 +330,7 @@ export function CarrierProfileScreen({
               <ShieldAlert className="size-4" /> Отправить жалобу
             </Button>
             <Button
-              variant="outline"
+              variant="destructive"
               size="lg"
               className="w-full"
               onClick={() => {
@@ -300,12 +353,36 @@ export function CarrierProfileScreen({
   )
 }
 
+// Плотная ячейка «иконка + число + подпись» — превращает пустую полосу под именем в дашборд доверия.
+function StatCell({ icon: Icon, value, label }: { icon: LucideIcon; value: ReactNode; label: string }) {
+  return (
+    <div className="flex flex-1 flex-col gap-2.5 px-3.5 py-3.5 first:rounded-l-2xl last:rounded-r-2xl">
+      <span className="flex size-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+        <Icon className="size-3.5" />
+      </span>
+      <div>
+        <div className="font-mono-tech text-[22px] leading-none font-bold tracking-tight">{value}</div>
+        <div className="mt-1 text-sm leading-tight font-medium text-muted-foreground">{label}</div>
+      </div>
+    </div>
+  )
+}
+
+function MetaPill({ icon: Icon, children }: { icon?: LucideIcon; children: ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1.5 text-[14px] font-medium text-muted-foreground tabular-nums">
+      {Icon && <Icon className="size-4 opacity-60" />}
+      {children}
+    </span>
+  )
+}
+
 function VerifyRow({ ok, label }: { ok: boolean; label: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className={ok ? "" : "text-muted-foreground"}>{label}</span>
+    <div className="flex items-center justify-between gap-3">
+      <span className={ok ? "text-foreground" : "text-muted-foreground"}>{label}</span>
       {ok ? (
-        <BadgeCheck className="size-4 text-brand" />
+        <BadgeCheck className="size-4 shrink-0 text-brand" />
       ) : (
         <span className="text-xs text-muted-foreground">—</span>
       )}

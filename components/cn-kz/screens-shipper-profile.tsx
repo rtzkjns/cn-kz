@@ -1,15 +1,27 @@
 "use client"
 
-import { useState } from "react"
-import { Ban, BadgeCheck, MessageCircle, Phone, ShieldAlert, ShieldCheck, Star } from "lucide-react"
+import { useState, type ReactNode } from "react"
+import {
+  Ban,
+  BadgeCheck,
+  Box,
+  Handshake,
+  MessageCircle,
+  Phone,
+  ShieldAlert,
+  ShieldCheck,
+  Star,
+  Truck,
+  Wallet,
+  Weight,
+  type LucideIcon,
+} from "lucide-react"
 
 import { Avatar } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { ScreenHeader } from "./phone-frame"
-import { CallButton, contactUnlocked, deals } from "./shared"
-import { Section } from "./ui-bits"
+import { CallButton, StatusBadge, contactUnlocked, kzt, money } from "./shared"
+import { Chip, Section } from "./ui-bits"
 import { useCnKz } from "./store"
 
 // Профиль ЗАКАЗЧИКА — симметрия с профилем перевозчика: перевозчик может проверить и пожаловаться.
@@ -28,70 +40,105 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
     <div className="flex h-full flex-col">
       <ScreenHeader title="Заказчик" onBack={pop} />
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pb-40">
-        <Card size="sm">
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Avatar name={s.name} className="size-14 text-base" />
+        {/* Identity — company + verification */}
+        <div className="surface-glass space-y-3 rounded-2xl p-4">
+          <div className="flex items-center gap-3">
+            <Avatar name={s.name} className="size-14 shrink-0 rounded-full text-[17px] font-bold" />
+            <div className="min-w-0 flex-1">
+              <p className="t-h2 flex items-center gap-1.5">
+                <span className="truncate">{s.name}</span>
+                {s.verified && <BadgeCheck className="size-5 shrink-0 text-brand" />}
+              </p>
+              <p className="mt-1 truncate text-sm text-muted-foreground">{s.company ?? "Заказчик"}</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {s.verified ? (
+              <StatusBadge tone="success" icon={ShieldCheck}>
+                Бизнес проверен · БИН
+              </StatusBadge>
+            ) : (
+              <StatusBadge tone="warn">Новичок · без БИН</StatusBadge>
+            )}
+          </div>
+        </div>
+
+        {/* Trust stat strip — рейтинг / сделки (big tabular numbers fill the band under the name) */}
+        <div className="surface-glass flex items-stretch divide-x divide-border rounded-2xl">
+          <StatCell icon={Star} value={s.rating.toFixed(1)} label="Рейтинг" />
+          <StatCell icon={Handshake} value={s.dealsCount} label="Сделок" />
+        </div>
+
+        {/* Что везёт этот заказчик — контекст заказа, из-за которого открыт профиль */}
+        {order && (
+          <div className="surface-glass space-y-3 rounded-2xl p-4">
+            <p className="t-eyebrow">Груз этого заказчика</p>
+            {/* route: blue origin → connector → lime destination */}
+            <div className="flex gap-3">
+              <div className="flex flex-col items-center pt-1.5">
+                <span className="size-3 shrink-0 rounded-full border-2 border-[var(--route-from)] bg-background" />
+                <span className="route-connector my-1 flex-1" />
+                <span className="size-3 shrink-0 rounded-full border-2 border-[var(--route-to)] bg-[var(--route-to)]" />
+              </div>
               <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-1.5 font-medium">
-                  <span className="truncate">{s.name}</span>
-                  {s.verified && <BadgeCheck className="size-4 shrink-0 text-brand" />}
-                </p>
-                {s.company && <p className="truncate text-sm text-muted-foreground">{s.company}</p>}
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  <span className="inline-flex items-center gap-0.5">
-                    <Star className="size-3.5 fill-muted-foreground/80 text-muted-foreground/80" />
-                    <span className="font-mono-tech text-foreground">{s.rating.toFixed(1)}</span>
-                  </span>{" "}
-                  · {deals(s.dealsCount)}
+                <p className="truncate text-[15px] font-medium text-muted-foreground">{order.origin}</p>
+                <p className="t-h3 mt-0.5 truncate">{order.destination}</p>
+              </div>
+            </div>
+            <p className="line-clamp-1 text-[15px] text-muted-foreground">{order.cargo}</p>
+            <div className="flex items-end justify-between gap-3 rounded-xl bg-secondary px-4 py-3">
+              <div className="min-w-0 leading-none">
+                <p className="t-eyebrow">Цена заказчика</p>
+                <p className="t-display mt-1.5">{money(order.priceUsd)}</p>
+                <p className="font-mono-tech mt-1.5 text-sm leading-none text-muted-foreground/80">
+                  {kzt(order.priceUsd)} · оплата в USD
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {s.verified ? (
-                <Badge variant="success">
-                  <ShieldCheck className="size-3" /> Бизнес проверен · БИН
-                </Badge>
-              ) : (
-                <Badge variant="warning">Новичок · без БИН</Badge>
-              )}
+            <div className="flex flex-wrap gap-2">
+              <MetaPill icon={Truck}>{order.truckType}</MetaPill>
+              <MetaPill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} кг</MetaPill>
+              <MetaPill icon={Box}>{order.volumeM3} м³</MetaPill>
+              <MetaPill icon={Wallet}>{order.payment === "cash" ? "Наличные" : "Перевод"}</MetaPill>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        )}
 
         {/* Как заказчик платит — важнее всего для перевозчика (риск неоплаты). */}
         <Section title="Проверка заказчика">
-          <Card size="sm">
-            <CardContent className="space-y-2 text-sm">
-              <VRow ok label="Телефон подтверждён" />
-              <VRow ok={!!s.verified} label="БИН/ИНН сверен с реестром юрлиц" />
-              <VRow ok={s.dealsCount > 0} label={`История: ${s.dealsCount} завершённых сделок`} />
-              <p className="pt-1 text-sm leading-snug text-muted-foreground">
-                Аванс берите на счёт компании по БИН, не на личную карту. Оплата — напрямую, площадка
-                деньги не держит.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="surface-glass space-y-2 rounded-2xl p-4 text-sm">
+            <VRow ok label="Телефон подтверждён" />
+            <VRow ok={!!s.verified} label="БИН/ИНН сверен с реестром юрлиц" />
+            <VRow ok={s.dealsCount > 0} label={`История: ${s.dealsCount} завершённых сделок`} />
+            <p className="pt-1 text-sm leading-snug text-muted-foreground">
+              Аванс берите на счёт компании по БИН, не на личную карту. Оплата — напрямую, площадка
+              деньги не держит.
+            </p>
+          </div>
         </Section>
 
         {s.reviews && s.reviews.length > 0 && (
-          <Section title="Отзывы перевозчиков">
+          <Section title={`Отзывы перевозчиков (${s.reviews.length})`}>
             <div className="space-y-2">
               {s.reviews.map((r) => (
-                <Card key={r.id} size="sm">
-                  <CardContent className="space-y-1">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">{r.author}</span>
-                      <span className="text-muted-foreground">{r.ago}</span>
+                <div key={r.id} className="surface-glass space-y-1.5 rounded-2xl p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Avatar name={r.author} className="size-9 shrink-0 rounded-full text-[13px] font-bold" />
+                      <span className="t-h3 truncate">{r.author}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">{r.text}</p>
-                  </CardContent>
-                </Card>
+                    <span className="shrink-0 text-[14px] tracking-tight">
+                      <span className="text-[var(--star)]">{"★".repeat(r.rating)}</span>
+                      <span className="text-muted-foreground/25">{"★".repeat(5 - r.rating)}</span>
+                    </span>
+                  </div>
+                  <p className="t-body text-foreground/90">{r.text}</p>
+                  <p className="t-meta text-muted-foreground">{r.ago}</p>
+                </div>
               ))}
             </div>
           </Section>
         )}
-
       </div>
 
       {/* Нижняя панель контакта — звонок = основное действие на экране профиля (§4/§5). */}
@@ -100,7 +147,7 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
           <>
             <CallButton phone={s.phone} variant="primary" className="w-full" />
             <Button
-              variant="outline"
+              variant="secondary"
               size="lg"
               className="h-12 w-full"
               onClick={() => {
@@ -114,7 +161,7 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
         ) : (
           <div className="flex gap-2">
             <Button
-              variant="outline"
+              variant="secondary"
               size="lg"
               className="h-12 flex-1"
               onClick={() => {
@@ -125,7 +172,7 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
               <MessageCircle className="size-5" /> Чат
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               size="lg"
               className="h-12 flex-1"
               onClick={() => showToast("Номер откроется после вашего отклика или начала сделки")}
@@ -151,26 +198,18 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
             className="animate-in slide-in-from-bottom w-full space-y-2 rounded-t-3xl bg-card p-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-base font-semibold">Пожаловаться на {s.name}</p>
+            <p className="t-h3">Пожаловаться на {s.name}</p>
             <div className="flex flex-wrap gap-1.5 pb-1">
               {["Не платит", "Мошенничество", "Груз не тот", "Не выходит на связь", "Другое"].map((r) => (
-                <button
-                  key={r}
-                  onClick={() => setReportReason(r)}
-                  className={`inline-flex h-11 items-center rounded-full border px-4 text-sm font-medium transition-colors ${
-                    reportReason === r
-                      ? "border-brand bg-brand/15 text-brand"
-                      : "border-border text-muted-foreground hover:text-foreground"
-                  }`}
-                >
+                <Chip key={r} active={reportReason === r} onClick={() => setReportReason(r)}>
                   {r}
-                </button>
+                </Chip>
               ))}
             </div>
             <Button size="lg" className="w-full" disabled={!reportReason} onClick={() => { setShowReport(false); showToast(`Жалоба отправлена (${reportReason}) — модерация проверит профиль`); setReportReason(null) }}>
               <ShieldAlert className="size-4" /> Отправить жалобу
             </Button>
-            <Button variant="outline" size="lg" className="w-full" onClick={() => { setShowReport(false); showToast(`${s.name} заблокирован — вы не увидите его заказы`) }}>
+            <Button variant="destructive" size="lg" className="w-full" onClick={() => { setShowReport(false); showToast(`${s.name} заблокирован — вы не увидите его заказы`) }}>
               <Ban className="size-4" /> Заблокировать
             </Button>
             <button onClick={() => setShowReport(false)} className="w-full py-3 text-center text-sm font-medium text-muted-foreground hover:text-foreground">
@@ -183,11 +222,35 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
   )
 }
 
+// Плотная ячейка «иконка + число + подпись» — большие табличные числа под именем.
+function StatCell({ icon: Icon, value, label }: { icon: LucideIcon; value: ReactNode; label: string }) {
+  return (
+    <div className="flex flex-1 flex-col gap-2.5 px-3.5 py-3.5 first:rounded-l-2xl last:rounded-r-2xl">
+      <span className="flex size-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+        <Icon className="size-3.5" />
+      </span>
+      <div>
+        <div className="font-mono-tech text-[22px] leading-none font-bold tracking-tight">{value}</div>
+        <div className="mt-1 text-sm leading-tight font-medium text-muted-foreground">{label}</div>
+      </div>
+    </div>
+  )
+}
+
+function MetaPill({ icon: Icon, children }: { icon?: LucideIcon; children: ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1.5 text-[14px] font-medium text-muted-foreground tabular-nums">
+      {Icon && <Icon className="size-4 opacity-60" />}
+      {children}
+    </span>
+  )
+}
+
 function VRow({ ok, label }: { ok: boolean; label: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className={ok ? "tabular-nums" : "tabular-nums text-muted-foreground"}>{label}</span>
-      {ok ? <BadgeCheck className="size-4 text-brand" /> : <span className="text-xs text-muted-foreground">—</span>}
+    <div className="flex items-center justify-between gap-3">
+      <span className={ok ? "tabular-nums text-foreground" : "tabular-nums text-muted-foreground"}>{label}</span>
+      {ok ? <BadgeCheck className="size-4 shrink-0 text-brand" /> : <span className="text-xs text-muted-foreground">—</span>}
     </div>
   )
 }

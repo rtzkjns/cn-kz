@@ -5,12 +5,16 @@ import {
   BadgeCheck,
   BarChart3,
   Bell,
+  Box,
   Camera,
   Check,
+  CheckCheck,
   ChevronRight,
   Clock,
   Flag,
+  Handshake,
   Plus,
+  Search,
   Settings as SettingsIcon,
   Lock,
   LogOut,
@@ -20,6 +24,8 @@ import {
   ShieldAlert,
   ShieldCheck,
   Truck,
+  Wallet,
+  Weight,
   type LucideIcon,
 } from "lucide-react"
 
@@ -37,19 +43,96 @@ import {
 } from "@/lib/cn-kz/mock-data"
 import { DEAL_FLOW, DEAL_STATUS_LABEL, type Order } from "@/lib/cn-kz/types"
 import { ScreenHeader } from "./phone-frame"
-import { CallButton, deals, DealStatusBadge, OfferStatusBadge, Rating, Route, StatusBadge, money } from "./shared"
-import { Chip, ChipRow, DetailRow, EmptyState, Section, StickyCTA } from "./ui-bits"
+import { CallButton, deals, DealStatusBadge, kzt, OfferStatusBadge, Rating, StatusBadge, money } from "./shared"
+import { Chip, ChipRow, DetailRow, EmptyState, Section, StatStrip, StickyCTA } from "./ui-bits"
 import { useCnKz } from "./store"
+
+// ===== «Signal» row primitives: meta-pill + vertical ring route-block (blue origin → lime dest). =====
+function Pill({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1.5 text-[14px] font-medium text-muted-foreground tabular-nums">
+      <Icon className="size-4 opacity-60" />
+      {children}
+    </span>
+  )
+}
+
+function RingRoute({ from, to }: { from: string; to: string }) {
+  return (
+    <div className="flex gap-2.5">
+      <div className="flex flex-col items-center pt-1">
+        <span className="size-2.5 shrink-0 rounded-full border-2 border-[var(--route-from)] bg-background" />
+        <span className="route-connector my-0.5 min-h-3 flex-1" />
+        <span className="size-2.5 shrink-0 rounded-full border-2 border-[var(--route-to)] bg-[var(--route-to)]" />
+      </div>
+      <div className="min-w-0 flex-1 leading-tight">
+        <p className="truncate text-[15px] font-medium text-muted-foreground">{from}</p>
+        <p className="t-h3 mt-0.5 truncate">{to}</p>
+      </div>
+    </div>
+  )
+}
+
+// Гроссбух-подвал карточки: eyebrow + цена-герой (32/800) + опц. ≈₸ для перевозчика + действие.
+function PriceFooter({
+  eyebrow,
+  usd,
+  showKzt,
+  action,
+}: {
+  eyebrow: string
+  usd: number
+  showKzt?: boolean
+  action?: React.ReactNode
+}) {
+  return (
+    <div className="mt-3 flex items-end justify-between gap-2 rounded-xl bg-secondary px-3.5 py-2.5">
+      <div className="min-w-0 leading-none">
+        <p className="t-eyebrow">{eyebrow}</p>
+        <p className="t-display mt-1.5">{money(usd)}</p>
+        {showKzt && (
+          <p className="font-mono-tech mt-1.5 text-sm leading-none text-muted-foreground/80">
+            {kzt(usd)}
+          </p>
+        )}
+      </div>
+      {action}
+    </div>
+  )
+}
+
+// Плитка спец-таблицы (вес/объём/кузов/оплата) — превращает пустое место детали в скан-таблицу.
+function Spec({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon
+  label: string
+  value: React.ReactNode
+}) {
+  return (
+    <div className="surface-inset rounded-xl px-3 py-2.5">
+      <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+        <Icon className="size-3.5 opacity-70" /> {label}
+      </p>
+      <p className="mt-1 text-[15px] font-semibold text-foreground capitalize tabular-nums">{value}</p>
+    </div>
+  )
+}
 
 // ---------- Deals dashboard ----------
 
 export function DealsScreen() {
-  const { myOrders, feedOrders, push, role, dealsNewOnly, setDealsNewOnly, isNew, tripDraft } = useCnKz()
+  const { myOrders, feedOrders, push, role, dealsNewOnly, setDealsNewOnly, isNew, tripDraft, setTab } = useCnKz()
   // Заказчик видит сделки по своим заказам; перевозчик — по выигранным грузам из ленты.
   const source = role === "carrier" ? feedOrders : myOrders
   const deals = source.filter((o) => o.deal)
   const visible = dealsNewOnly ? deals.filter((o) => isNew(o.id)) : deals
   const active = visible.filter((o) => o.deal!.status !== "completed" && o.deal!.status !== "cancelled")
+  // Итоги для верхней сводки (анти-пустота) — считаем по ВСЕМ сделкам, не по фильтру «только новые».
+  const activeTotal = deals.filter((o) => o.deal!.status !== "completed" && o.deal!.status !== "cancelled").length
+  const completedTotal = deals.filter((o) => o.deal!.status === "completed").length
   // Перевозчик: «Отклики» (ожидающие ставки без сделки) слиты в «Мои сделки».
   const myOffers =
     role === "carrier"
@@ -76,6 +159,23 @@ export function DealsScreen() {
             Только новые ✕
           </Chip>
         </ChipRow>
+      )}
+      {deals.length > 0 && (
+        <StatStrip
+          items={
+            role === "carrier"
+              ? [
+                  { value: activeTotal, label: "Активные рейсы", icon: Truck, accent: true },
+                  { value: myOffers.length, label: "Отклики в ожидании", icon: Clock },
+                  { value: completedTotal, label: "Завершено", icon: CheckCheck },
+                ]
+              : [
+                  { value: activeTotal, label: "Активные сделки", icon: Truck, accent: true },
+                  { value: completedTotal, label: "Завершено", icon: CheckCheck },
+                  { value: deals.length, label: "Всего сделок", icon: Handshake },
+                ]
+          }
+        />
       )}
       <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-24">
         {role === "carrier" && (
@@ -117,7 +217,26 @@ export function DealsScreen() {
           {active.length === 0 && (
             <EmptyState
               icon={Truck}
-              title={dealsNewOnly ? "Нет сделок с новыми событиями" : "Нет активных сделок"}
+              title={dealsNewOnly ? "Нет сделок с новыми событиями" : "Пока нет активных сделок"}
+              hint={
+                dealsNewOnly
+                  ? "Новые отклики и сообщения появятся здесь."
+                  : role === "carrier"
+                    ? "Откликнитесь на груз в ленте — принятый заказ появится здесь как рейс."
+                    : "Опубликуйте заказ и выберите перевозчика — сделка появится здесь."
+              }
+              action={
+                dealsNewOnly ? (
+                  <Button variant="secondary" className="h-12" onClick={() => setDealsNewOnly(false)}>
+                    Показать все сделки
+                  </Button>
+                ) : (
+                  <Button size="xl" onClick={() => setTab(role === "carrier" ? "feed" : "myorders")}>
+                    <Search className="size-5" />
+                    {role === "carrier" ? "Смотреть грузы" : "Мои заказы"}
+                  </Button>
+                )
+              }
             />
           )}
           <div className="space-y-2">
@@ -156,58 +275,125 @@ function DealRow({
 }) {
   const { role } = useCnKz()
   // Показываем ВТОРУЮ сторону: перевозчику — заказчика, заказчику — перевозчика.
-  const counterpart = role === "carrier" ? order.shipper.name : order.deal!.carrier.name
+  const other = role === "carrier" ? order.shipper : order.deal!.carrier
+  const unread = order.deal!.chat.filter((m) => !m.fromMe).length
   return (
-    <Card size="sm" onClick={onClick} className="cursor-pointer hover:ring-foreground/20">
-      <CardContent className="space-y-1.5">
-        <div className="flex flex-wrap items-center justify-between gap-1.5">
-          <div className="min-w-0 flex-1">
-            <Route from={order.origin} to={order.destination} className="block truncate text-base" />
+    <div
+      onClick={onClick}
+      className="surface-glass group cursor-pointer rounded-2xl p-4 transition-transform duration-150 active:scale-[0.99]"
+    >
+      {/* Trust header: контрагент + рейтинг · статусы справа */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Avatar name={other.name} className="size-11 shrink-0 rounded-full text-[15px] font-bold" />
+          <div className="min-w-0 leading-tight">
+            <p className="t-h3 flex items-center gap-1 truncate">
+              <span className="truncate">{other.name}</span>
+              {other.verified && <BadgeCheck className="size-4 shrink-0 text-brand" />}
+            </p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              <Rating value={other.rating} /> · {role === "carrier" ? "заказчик" : "перевозчик"}
+            </p>
           </div>
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <DealStatusBadge status={order.deal!.status} />
+          <div className="flex flex-wrap items-center justify-end gap-1">
             {order.overdue && order.deal!.status === "accepted" && (
               <StatusBadge tone="warn">Опаздывает</StatusBadge>
             )}
             {order.deal!.tripId && <Badge variant="outline">Рейс</Badge>}
             {isNew && <Badge variant="brand">новое</Badge>}
-            <DealStatusBadge status={order.deal!.status} />
           </div>
         </div>
-        <p className="line-clamp-1 text-sm text-muted-foreground">{order.cargo}</p>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{counterpart}</span>
-          <span className="font-mono-tech text-base font-semibold text-foreground">
-            {money(order.deal!.agreedPriceUsd)}
+      </div>
+
+      {/* Route block — origin blue ring → connector → destination lime ring */}
+      <div className="mt-3">
+        <RingRoute from={order.origin} to={order.destination} />
+      </div>
+
+      {/* Cargo */}
+      <p className="mt-3 line-clamp-1 text-[15px] text-muted-foreground">{order.cargo}</p>
+
+      {/* Meta pills — вес/кузов/объём */}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Pill icon={Truck}>{order.truckType}</Pill>
+        <Pill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} кг</Pill>
+        <Pill icon={Box}>{order.volumeM3} м³</Pill>
+      </div>
+
+      {/* Price footer — согласованная цена-герой + вход в сделку */}
+      <PriceFooter
+        eyebrow="Согласовано"
+        usd={order.deal!.agreedPriceUsd}
+        showKzt={role === "carrier"}
+        action={
+          <span className="mb-0.5 inline-flex h-11 shrink-0 items-center gap-1.5 rounded-md px-3 text-[15px] font-semibold text-foreground">
+            {unread > 0 && <MessageCircle className="size-4 text-brand" />}
+            Открыть
+            <ChevronRight className="size-4" />
           </span>
-        </div>
-      </CardContent>
-    </Card>
+        }
+      />
+    </div>
   )
 }
 
-// Compact row for a carrier's pending offer (bid) — folded into «Мои сделки».
+// Плотная карточка отклика перевозчика (ставка) — свёрнута в «Мои рейсы».
 function OfferRow({ order, onClick }: { order: Order; onClick: () => void }) {
   const countered = order.myOfferStatus === "countered"
+  const priceUsd = order.myCounterPriceUsd ?? order.myOfferPriceUsd ?? order.priceUsd
   return (
-    <Card size="sm" onClick={onClick} className="cursor-pointer hover:ring-foreground/20">
-      <CardContent className="space-y-1.5">
-        <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <Route from={order.origin} to={order.destination} className="block truncate text-base" />
+    <div
+      onClick={onClick}
+      className="surface-glass group cursor-pointer rounded-2xl p-4 transition-transform duration-150 active:scale-[0.99]"
+    >
+      {/* Trust header: заказчик + рейтинг · статус отклика справа */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Avatar name={order.shipper.name} className="size-11 shrink-0 rounded-full text-[15px] font-bold" />
+          <div className="min-w-0 leading-tight">
+            <p className="t-h3 flex items-center gap-1 truncate">
+              <span className="truncate">{order.shipper.name}</span>
+              {order.shipper.verified && <BadgeCheck className="size-4 shrink-0 text-brand" />}
+            </p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              <Rating value={order.shipper.rating} /> · заказчик
+            </p>
           </div>
-          <OfferStatusBadge status={order.myOfferStatus!} />
         </div>
-        <p className="line-clamp-1 text-sm text-muted-foreground">{order.cargo}</p>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            {countered ? "Встречная цена заказчика" : "Ваш отклик отправлен"}
+        <OfferStatusBadge status={order.myOfferStatus!} />
+      </div>
+
+      {/* Route block */}
+      <div className="mt-3">
+        <RingRoute from={order.origin} to={order.destination} />
+      </div>
+
+      {/* Cargo */}
+      <p className="mt-3 line-clamp-1 text-[15px] text-muted-foreground">{order.cargo}</p>
+
+      {/* Meta pills */}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Pill icon={Truck}>{order.truckType}</Pill>
+        <Pill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} кг</Pill>
+        <Pill icon={Box}>{order.volumeM3} м³</Pill>
+      </div>
+
+      {/* Price footer — ваша ставка / встречная цена-герой */}
+      <PriceFooter
+        eyebrow={countered ? "Встречная заказчика" : "Ваш отклик"}
+        usd={priceUsd}
+        showKzt
+        action={
+          <span className="mb-0.5 inline-flex h-11 shrink-0 items-center gap-1 rounded-md px-3 text-[15px] font-semibold text-foreground">
+            Открыть
+            <ChevronRight className="size-4" />
           </span>
-          <span className="font-mono-tech text-base font-semibold text-foreground">
-            {money(order.myCounterPriceUsd ?? order.myOfferPriceUsd ?? order.priceUsd)}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+        }
+      />
+    </div>
   )
 }
 
@@ -472,9 +658,32 @@ export function DealScreen({ orderId }: { orderId: string }) {
         {/* Сделка = контакт раскрыт (FINAL-SPEC §5). Звонок — высокоакцентная вторичная. */}
         <CallButton phone={other.phone} className="w-full" />
 
-        <DetailRow label="Груз" value={order.cargo} />
-        <DetailRow label="Согласованная цена" value={money(deal.agreedPriceUsd)} />
-        {order.deliverBy && <DetailRow label="Срок доставки" value={order.deliverBy} />}
+        {/* Детали груза — цена-герой + 2-колоночная спец-таблица (анти-пустота §детали). */}
+        <Card size="sm">
+          <CardContent className="space-y-3">
+            <div className="leading-none">
+              <p className="t-eyebrow">Согласованная цена</p>
+              <p className="t-display mt-1.5">{money(deal.agreedPriceUsd)}</p>
+              {role === "carrier" && (
+                <p className="font-mono-tech mt-1.5 text-sm leading-none text-muted-foreground/80">
+                  {kzt(deal.agreedPriceUsd)} · оплата в USD
+                </p>
+              )}
+            </div>
+            <p className="text-[15px] text-foreground">{order.cargo}</p>
+            <div className="grid grid-cols-2 gap-2">
+              <Spec icon={Weight} label="Вес" value={`${order.weightKg.toLocaleString("ru-RU")} кг`} />
+              <Spec icon={Box} label="Объём" value={`${order.volumeM3} м³`} />
+              <Spec icon={Truck} label="Кузов" value={order.truckType} />
+              <Spec icon={Wallet} label="Оплата" value={order.payment === "cash" ? "Наличные" : "Перевод"} />
+            </div>
+            <div className="space-y-1.5">
+              <DetailRow label="Готов к погрузке" value={order.readyDate} />
+              {order.deliverBy && <DetailRow label="Срок доставки" value={order.deliverBy} />}
+              <DetailRow label="Адрес доставки" value={order.address} />
+            </div>
+          </CardContent>
+        </Card>
 
         {order.overdue && !completed && !cancelled && (
           <div className="flex items-center gap-2 rounded-md bg-warn/10 px-3 py-2.5 text-sm text-warn dark:text-warn">
@@ -836,12 +1045,33 @@ export function ChatScreen({ orderId }: { orderId: string }) {
     <div className="flex h-full flex-col">
       <ScreenHeader title={other.name} subtitle="Чат сделки" onBack={pop} />
 
+      {/* Контекст сделки — чтобы чат не «висел в пустоте»: маршрут + груз + согласованная цена. */}
+      <div className="surface-glass mx-4 mt-2 flex shrink-0 items-center gap-3 rounded-2xl px-3.5 py-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-muted-foreground">
+          <Truck className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1 leading-tight">
+          <p className="truncate text-[15px] font-semibold">
+            {order.origin} <span className="font-normal text-muted-foreground">→</span> {order.destination}
+          </p>
+          <p className="truncate text-sm text-muted-foreground">{order.cargo}</p>
+        </div>
+        <div className="shrink-0 text-right leading-none">
+          <p className="font-mono-tech text-[17px] font-bold tabular-nums">
+            {money(order.deal.agreedPriceUsd)}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {DEAL_STATUS_LABEL[order.deal.status]}
+          </p>
+        </div>
+      </div>
+
       <div className="flex-1 space-y-2 overflow-y-auto px-4 py-2">
         {order.deal.chat.length === 0 && (
           <EmptyState
             icon={MessageCircle}
             title="Сообщений пока нет"
-            hint="Уточните детали груза"
+            hint="Уточните детали груза, время погрузки и место встречи."
           />
         )}
         {order.deal.chat.map((m) => (
@@ -877,9 +1107,9 @@ export function ChatScreen({ orderId }: { orderId: string }) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
           placeholder="Сообщение…"
-          className="h-[52px] text-base"
+          className="h-14 rounded-lg bg-secondary text-base"
         />
-        <Button className="size-[52px] shrink-0" onClick={send} disabled={!text.trim()}>
+        <Button className="size-14 shrink-0 rounded-lg" onClick={send} disabled={!text.trim()}>
           <Send className="size-5" />
         </Button>
       </div>
@@ -890,9 +1120,13 @@ export function ChatScreen({ orderId }: { orderId: string }) {
 // ---------- Profile ----------
 
 export function ProfileScreen() {
-  const { role, me, resetOnboarding, setTab, showToast, reliability, cancelCount } = useCnKz()
+  const { role, me, myOrders, resetOnboarding, setTab, showToast, reliability, cancelCount } = useCnKz()
   const reliable = reliability >= 90
   const [quiet, setQuiet] = useState(true)
+  // Заказы «в работе» заказчика (не архив, не завершено/отменено) — для сводки статистики.
+  const activeOrders = myOrders.filter(
+    (o) => o.status !== "archived" && o.deal?.status !== "completed" && o.deal?.status !== "cancelled"
+  ).length
 
   return (
     <div className="flex h-full flex-col">
@@ -913,6 +1147,30 @@ export function ProfileScreen() {
             <Badge variant="brand">{role === "shipper" ? "Заказчик" : "Перевозчик"}</Badge>
           </CardContent>
         </Card>
+
+        {/* Заказчик: сводка статистики — заполняет верх профиля (анти-пустота). */}
+        {role === "shipper" && (
+          <Section title="Моя статистика">
+            <Card size="sm">
+              <CardContent>
+                <div className="flex items-center justify-around text-center">
+                  <div>
+                    <div className="font-mono-tech text-xl font-bold">{me.dealsCount}</div>
+                    <div className="text-sm text-muted-foreground">сделок</div>
+                  </div>
+                  <div>
+                    <div className="font-mono-tech text-xl font-bold">{me.rating.toFixed(1)}</div>
+                    <div className="text-sm text-muted-foreground">рейтинг</div>
+                  </div>
+                  <div>
+                    <div className="font-mono-tech text-xl font-bold text-brand">{activeOrders}</div>
+                    <div className="text-sm text-muted-foreground">в работе</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Section>
+        )}
 
         {/* История + Настройки — быстрый доступ */}
         <Card size="sm">

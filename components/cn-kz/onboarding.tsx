@@ -1,7 +1,26 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronLeft, Gavel, Package, Star, Truck, User, Zap } from "lucide-react"
+import {
+  Building2,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Gavel,
+  Hash,
+  Lock,
+  Mail,
+  MessageSquare,
+  Package,
+  Phone,
+  ShieldCheck,
+  Star,
+  Truck,
+  User,
+  UserPlus,
+  Zap,
+  type LucideIcon,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -80,21 +99,18 @@ export function OnboardingFlow() {
             </ChipRow>
           </div>
 
-          {/* CTAs — single accent: only «Войти» is the primary action. */}
+          {/* CTAs — single lime accent: only «Войти» is the primary. «Создать аккаунт» = gray secondary. */}
           <div className="flex flex-col gap-2.5">
-            <Button
-              size="xl"
-              className="w-full"
-              onClick={() => setStep("login")}
-            >
+            <Button size="xl" className="w-full" onClick={() => setStep("login")}>
               Войти
             </Button>
             <Button
-              size="lg"
-              variant="outline"
-              className="h-12 w-full text-base"
+              size="xl"
+              variant="secondary"
+              className="w-full gap-2"
               onClick={() => setStep("register")}
             >
+              <UserPlus className="size-5" />
               Создать аккаунт
             </Button>
             <button
@@ -136,9 +152,9 @@ export function OnboardingFlow() {
           <h1 className="t-h1">Вход</h1>
 
           <Button
-            variant="outline"
-            size="lg"
-            className="h-12 w-full gap-2.5 text-base"
+            variant="secondary"
+            size="xl"
+            className="w-full gap-2.5"
             onClick={() => enterApp(accountRole)}
           >
             <span className="flex size-5 items-center justify-center rounded-full bg-white text-[13px] font-bold text-[#4285F4]">
@@ -162,15 +178,15 @@ export function OnboardingFlow() {
           </ChipRow>
           {method === "phone" ? (
             <Field label="Телефон">
-              <Input className="h-14 text-base md:text-base" placeholder="+7 705 123 45 67" inputMode="tel" />
+              <SignalInput icon={Phone} placeholder="+7 705 123 45 67" inputMode="tel" />
             </Field>
           ) : (
             <>
               <Field label="Email">
-                <Input className="h-14 text-base md:text-base" type="email" placeholder="you@mail.kz" />
+                <SignalInput icon={Mail} type="email" placeholder="you@mail.kz" />
               </Field>
               <Field label="Пароль">
-                <Input className="h-14 text-base md:text-base" type="password" placeholder="Ваш пароль" />
+                <SignalInput icon={Lock} type="password" placeholder="Ваш пароль" />
               </Field>
             </>
           )}
@@ -194,19 +210,19 @@ export function OnboardingFlow() {
           {method === "phone" ? (
             <>
               <Field label="Телефон">
-                <Input className="h-14 text-base md:text-base" placeholder="+7 7__ ___ __ __" inputMode="tel" />
+                <SignalInput icon={Phone} placeholder="+7 7__ ___ __ __" inputMode="tel" />
               </Field>
               <Field label="SMS-код">
-                <Input className="h-14 text-base md:text-base" placeholder="____" inputMode="numeric" />
+                <SignalInput icon={MessageSquare} placeholder="____" inputMode="numeric" />
               </Field>
             </>
           ) : (
             <>
               <Field label="Email">
-                <Input className="h-14 text-base md:text-base" type="email" placeholder="you@mail.kz" />
+                <SignalInput icon={Mail} type="email" placeholder="you@mail.kz" />
               </Field>
               <Field label="Пароль">
-                <Input className="h-14 text-base md:text-base" type="password" placeholder="••••••••" />
+                <SignalInput icon={Lock} type="password" placeholder="••••••••" />
               </Field>
             </>
           )}
@@ -228,25 +244,37 @@ export function OnboardingFlow() {
       )}
 
       {step === "role" && (
-        <div className="flex h-full flex-col justify-center space-y-3 px-5 pb-40">
-          <h1 className="t-h1 text-center">
-            Выберите роль
-          </h1>
-          <p className="text-center text-sm text-muted-foreground">
-            Роль выбирается один раз и не меняется.
-          </p>
+        <div className="flex flex-col gap-3 px-5 pt-5 pb-8">
+          <div className="space-y-1">
+            <h1 className="t-h1">Выберите роль</h1>
+            <p className="t-meta text-muted-foreground">
+              Роль выбирается один раз и не меняется — выберите, кто вы на площадке.
+            </p>
+          </div>
           <RoleCard
             icon={Package}
             title="Заказчик"
             desc="У меня есть груз — публикую заказы и выбираю перевозчика."
+            features={["Публикую заказы", "Выбираю фуру", "Торги · inDrive"]}
             onClick={() => pickRole("shipper")}
           />
           <RoleCard
             icon={Truck}
             title="Перевозчик"
             desc="У меня есть фура — беру заказы из ленты и вожу."
+            features={["Лента грузов", "Своя цена", "Вожу рейсы"]}
             onClick={() => pickRole("carrier")}
           />
+          {/* заполняем нижнюю часть экрана: почему CN-KZ (существующие ценности площадки) */}
+          <div className="mt-1 space-y-2.5">
+            <span className="t-eyebrow">Почему CN-KZ</span>
+            <div className="flex flex-wrap gap-1.5">
+              <ValuePill icon={Zap} label="Realtime лента" />
+              <ValuePill icon={Gavel} label="Торги · inDrive" />
+              <ValuePill icon={Star} label="Рейтинги сторон" />
+              <ValuePill icon={ShieldCheck} label="Проверка сторон" />
+            </div>
+          </div>
         </div>
       )}
 
@@ -256,23 +284,23 @@ export function OnboardingFlow() {
             Профиль {role === "shipper" ? "заказчика" : "перевозчика"}
           </h1>
           <Field label="ФИО">
-            <Input className="h-14 text-base md:text-base" value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя Фамилия" />
+            <SignalInput icon={User} value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя Фамилия" />
           </Field>
           <Field label="Телефон">
-            <Input className="h-14 text-base md:text-base" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+7…" inputMode="tel" />
+            <SignalInput icon={Phone} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+7…" inputMode="tel" />
           </Field>
 
           {role === "shipper" ? (
             <Field label="Юр. лицо (необязательно)">
-              <Input className="h-14 text-base md:text-base" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="ИП / ТОО" />
+              <SignalInput icon={Building2} value={company} onChange={(e) => setCompany(e.target.value)} placeholder="ИП / ТОО" />
             </Field>
           ) : (
             <>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <span className="text-sm font-medium text-muted-foreground">
                   Тип первой фуры
                 </span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {TRUCK_TYPES.map((t) => (
                     <Chip key={t} active={truck === t} onClick={() => setTruck(t)}>
                       {t}
@@ -282,17 +310,17 @@ export function OnboardingFlow() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Макс. вес, кг">
-                  <Input className="h-14 text-base md:text-base" type="number" inputMode="numeric" placeholder="20000" />
+                  <SignalInput type="number" inputMode="numeric" placeholder="20000" />
                 </Field>
                 <Field label="Объём, м³">
-                  <Input className="h-14 text-base md:text-base" type="number" inputMode="numeric" placeholder="86" />
+                  <SignalInput type="number" inputMode="numeric" placeholder="86" />
                 </Field>
               </div>
               <Field label="Гос. номер">
-                <Input className="h-14 text-base md:text-base" placeholder="777 ABC 02" />
+                <SignalInput icon={Hash} placeholder="777 ABC 02" />
               </Field>
 
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <span className="text-sm font-medium text-muted-foreground">
                   Проверка профиля — значок «Бизнес проверен» и доступ к премиум-грузам
                 </span>
@@ -301,21 +329,34 @@ export function OnboardingFlow() {
                   "Селфи · подтверждение, что вы реальный человек",
                   "Удостоверение личности · сверим с селфи",
                   "Фото фуры с гос. номером",
-                ].map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => toggleDoc(d)}
-                    className="flex min-h-11 w-full items-center justify-between rounded-md border border-dashed border-border px-3 py-2 text-left text-[15px]"
-                  >
-                    <span className={docs.includes(d) ? "text-foreground" : "text-muted-foreground"}>{d}</span>
-                    <span className={"shrink-0 text-sm font-medium " + (docs.includes(d) ? "text-success" : "text-muted-foreground")}>
-                      {docs.includes(d) ? "✓ Готово" : "Загрузить"}
-                    </span>
-                  </button>
-                ))}
+                ].map((d) => {
+                  const done = docs.includes(d)
+                  return (
+                    <button
+                      key={d}
+                      onClick={() => toggleDoc(d)}
+                      className="flex min-h-[52px] w-full items-center gap-3 rounded-lg bg-secondary px-3.5 py-2.5 text-left transition-transform active:scale-[0.99]"
+                    >
+                      <span
+                        className={cn(
+                          "flex size-6 shrink-0 items-center justify-center rounded-full text-white transition-colors",
+                          done ? "bg-[var(--success)]" : "border-[1.5px] border-input bg-card"
+                        )}
+                      >
+                        {done && <Check className="size-3.5" />}
+                      </span>
+                      <span className={cn("min-w-0 flex-1 text-[15px] leading-snug", done ? "text-foreground" : "text-muted-foreground")}>
+                        {d}
+                      </span>
+                      <span className={cn("shrink-0 text-sm font-semibold", done ? "text-[var(--success)]" : "text-muted-foreground")}>
+                        {done ? "Готово" : "Загрузить"}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <span className="text-sm font-medium text-muted-foreground">
                   Маршруты — пришлём уведомление о новых грузах
                 </span>
@@ -355,8 +396,8 @@ function Shell({
   onBack?: () => void
 }) {
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-neutral-950 to-black p-0 sm:p-6">
-      <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2rem] sm:border-[6px] sm:border-neutral-800 sm:shadow-2xl">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-foreground p-0 sm:p-6">
+      <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2rem] sm:border-[6px] sm:border-foreground sm:shadow-2xl">
         <StatusBar />
         <header className="flex h-14 shrink-0 items-center gap-1 border-b border-border px-1">
           {onBack && (
@@ -384,10 +425,10 @@ function Frame({
   className?: string
 }) {
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-gradient-to-b from-neutral-950 to-black p-0 sm:p-6">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-foreground p-0 sm:p-6">
       <div
         className={cn(
-          "relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2rem] sm:border-[6px] sm:border-neutral-800 sm:shadow-2xl",
+          "relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2rem] sm:border-[6px] sm:border-foreground sm:shadow-2xl",
           className
         )}
       >
@@ -397,14 +438,14 @@ function Frame({
   )
 }
 
-// Brand logo — flat green tile (Linear: no glows).
+// Brand logo — flat lime tile, black glyph («Signal»: no glows, the one accent).
 function LogoMark({ size = "md" }: { size?: "md" | "lg" }) {
   const big = size === "lg"
   return (
     <span
       className={cn(
-        "flex items-center justify-center rounded-md bg-brand text-brand-foreground",
-        big ? "size-14" : "size-11"
+        "flex items-center justify-center bg-brand text-brand-foreground",
+        big ? "size-14 rounded-2xl" : "size-11 rounded-lg"
       )}
     >
       <Package className={big ? "size-7" : "size-5"} />
@@ -416,7 +457,7 @@ function ValuePill({
   icon: Icon,
   label,
 }: {
-  icon: typeof Zap
+  icon: LucideIcon
   label: string
 }) {
   return (
@@ -431,27 +472,42 @@ function RoleCard({
   icon: Icon,
   title,
   desc,
+  features,
   onClick,
 }: {
-  icon: typeof Package
+  icon: LucideIcon
   title: string
   desc: string
+  features: string[]
   onClick: () => void
 }) {
   return (
     <button
       onClick={onClick}
       className={cn(
-        "surface-glass flex w-full items-start gap-3 rounded-2xl p-4 text-left transition-[transform,box-shadow,background-color] duration-150 hover:bg-brand/12 hover:shadow-[inset_0_0_0_1.5px_var(--brand)] active:scale-[0.99]"
+        "surface-glass flex w-full flex-col gap-3 rounded-2xl p-4 text-left transition-[transform,box-shadow,background-color] duration-150 hover:bg-brand/12 hover:shadow-[inset_0_0_0_1.5px_var(--brand)] active:scale-[0.99]"
       )}
     >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-foreground">
-        <Icon className="size-5" />
-      </span>
-      <span className="min-w-0">
-        <span className="block text-[17px] font-semibold">{title}</span>
-        <span className="block text-[15px] text-muted-foreground">{desc}</span>
-      </span>
+      <div className="flex items-start gap-3">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-secondary text-foreground">
+          <Icon className="size-6" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block t-h3">{title}</span>
+          <span className="mt-0.5 block text-[15px] leading-snug text-muted-foreground">{desc}</span>
+        </span>
+        <ChevronRight className="mt-1 size-5 shrink-0 text-muted-foreground" />
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {features.map((f) => (
+          <span
+            key={f}
+            className="rounded-md bg-secondary px-2.5 py-1 text-sm font-medium text-muted-foreground"
+          >
+            {f}
+          </span>
+        ))}
+      </div>
     </button>
   )
 }
@@ -462,5 +518,28 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="text-sm font-medium text-muted-foreground">{label}</span>
       {children}
     </label>
+  )
+}
+
+// «Signal» input — h56 r14, gray-fill (bg-secondary), 20px leading glyph, 16px placeholder.
+function SignalInput({
+  icon: Icon,
+  className,
+  ...props
+}: React.ComponentProps<"input"> & { icon?: LucideIcon }) {
+  return (
+    <div className="relative">
+      {Icon && (
+        <Icon className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground" />
+      )}
+      <Input
+        className={cn(
+          "h-14 rounded-lg border-transparent bg-secondary text-base placeholder:text-muted-foreground md:text-base",
+          Icon && "pl-11",
+          className
+        )}
+        {...props}
+      />
+    </div>
   )
 }
