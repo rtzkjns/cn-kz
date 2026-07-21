@@ -56,7 +56,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 
 // «Все фильтры» — нижний лист (как на Ламода/kolesa): фасеты чипами + «Показать N».
 export function FilterSheet() {
-  const { showFilters, closeFilters, filters, setFilters, feedOrders } = useCnKz()
+  const { showFilters, closeFilters, filters, setFilters, feedOrders, t } = useCnKz()
   const [draft, setDraft] = useState<FilterState>(filters)
   const [showAllTypes, setShowAllTypes] = useState(false)
 
@@ -91,10 +91,10 @@ export function FilterSheet() {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <span className="text-base font-semibold">Все фильтры</span>
+          <span className="text-base font-semibold">{t("Все фильтры")}</span>
           <button
             onClick={closeFilters}
-            aria-label="Закрыть"
+            aria-label={t("Закрыть")}
             className="-mr-2 flex size-11 items-center justify-center text-muted-foreground hover:text-foreground"
           >
             <X className="size-5" />
@@ -103,7 +103,7 @@ export function FilterSheet() {
 
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold">Куда (город назначения)</h3>
+            <h3 className="text-sm font-semibold">{t("Куда (город назначения)")}</h3>
             <CityPicker
               value={draft.destination ?? undefined}
               onChange={(c) => setOne("destination", c)}
@@ -114,12 +114,12 @@ export function FilterSheet() {
                 onClick={() => setOne("destination", "")}
                 className="text-sm font-medium text-muted-foreground"
               >
-                Сбросить город
+                {t("Сбросить город")}
               </button>
             )}
           </div>
 
-          <Group title="Тип кузова">
+          <Group title={t("Тип кузова")}>
             {(showAllTypes ? [] : POPULAR_BODY_TYPES).map((t) => (
               <Pill key={t} active={draft.bodyTypes.includes(t)} onClick={() => toggleArr("bodyTypes", t)}>
                 {t}
@@ -130,7 +130,7 @@ export function FilterSheet() {
                 onClick={() => setShowAllTypes(true)}
                 className="flex h-11 items-center rounded-md border border-dashed border-border px-4 text-[15px] font-medium text-muted-foreground"
               >
-                Показать все типы
+                {t("Показать все типы")}
               </button>
             )}
             {showAllTypes &&
@@ -148,7 +148,7 @@ export function FilterSheet() {
               ))}
           </Group>
 
-          <Group title="Тип загрузки">
+          <Group title={t("Тип загрузки")}>
             {LOADING_TYPES.map((t) => (
               <Pill key={t} active={draft.loading.includes(t)} onClick={() => toggleArr("loading", t)}>
                 {t}
@@ -156,7 +156,7 @@ export function FilterSheet() {
             ))}
           </Group>
 
-          <Group title="Грузоподъёмность">
+          <Group title={t("Грузоподъёмность")}>
             {TONNAGE_TIERS.map((t) => (
               <Pill key={t} active={draft.tonnage === t} onClick={() => setOne("tonnage", t)}>
                 {t}
@@ -164,7 +164,7 @@ export function FilterSheet() {
             ))}
           </Group>
 
-          <Group title="Объём кузова, м³">
+          <Group title={t("Объём кузова, м³")}>
             {VOLUME_TIERS.map((t) => (
               <Pill key={t} active={draft.volume === t} onClick={() => setOne("volume", t)}>
                 {t}
@@ -173,7 +173,7 @@ export function FilterSheet() {
           </Group>
 
           {tempApplies && (
-            <Group title="Температурный режим">
+            <Group title={t("Температурный режим")}>
               {TEMP_MODES.map((t) => (
                 <Pill key={t} active={draft.temp.includes(t)} onClick={() => toggleArr("temp", t)}>
                   {t}
@@ -182,7 +182,7 @@ export function FilterSheet() {
             </Group>
           )}
 
-          <Group title="Опасный груз (ADR)">
+          <Group title={t("Опасный груз (ADR)")}>
             {ADR_OPTIONS.map((t) => (
               <Pill key={t} active={draft.adr === t} onClick={() => setOne("adr", t)}>
                 {t}
@@ -190,7 +190,7 @@ export function FilterSheet() {
             ))}
           </Group>
 
-          <Group title="Категория груза">
+          <Group title={t("Категория груза")}>
             {CARGO_CATEGORIES.map((t) => (
               <Pill key={t} active={draft.cargo === t} onClick={() => setOne("cargo", t)}>
                 {t}
@@ -206,7 +206,7 @@ export function FilterSheet() {
             className="h-12 w-full text-[15px]"
             onClick={() => setDraft(EMPTY_FILTERS)}
           >
-            <RotateCcw className="size-4" /> Сбросить
+            <RotateCcw className="size-4" /> {t("Сбросить")}
           </Button>
           <Button
             size="xl"
@@ -216,7 +216,7 @@ export function FilterSheet() {
               closeFilters()
             }}
           >
-            Показать <span className="tabular-nums">{count}</span>
+            {t("Показать")} <span className="tabular-nums">{count}</span>
           </Button>
         </div>
       </div>

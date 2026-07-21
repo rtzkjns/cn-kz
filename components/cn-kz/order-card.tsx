@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/avatar"
 import type { Order } from "@/lib/cn-kz/types"
 import { cn } from "@/lib/utils"
 import { DealStatusBadge, OfferStatusBadge, OrderStatusBadge, kzt, money } from "./shared"
+import { useCnKz } from "./store"
 
 function MetaPill({ icon: Icon, children }: { icon: typeof Truck; children: React.ReactNode }) {
   return (
@@ -45,6 +46,7 @@ export function OrderCard({
   onQuickAccept?: () => void // перевозчик: принять цену заказчика в один тап прямо из ленты
   showKzt?: boolean // перевозчик видит ориентир ≈₸ под ценой (FINAL-SPEC §7)
 }) {
+  const { t } = useCnKz()
   const [confirmAccept, setConfirmAccept] = useState(false)
   const newOffers = order.offers.filter((o) => o.status === "pending").length
   const hasUnread = order.deal?.chat.some((m) => !m.fromMe)
@@ -81,7 +83,7 @@ export function OrderCard({
                 e.stopPropagation()
                 onToggleFavorite()
               }}
-              aria-label="В избранное"
+              aria-label={t("В избранное")}
               className={cn(
                 "flex size-11 items-center justify-center rounded-md transition-colors",
                 favorited ? "text-rose-400" : "text-muted-foreground/50 hover:text-foreground"
@@ -96,7 +98,7 @@ export function OrderCard({
                 e.stopPropagation()
                 onTogglePin()
               }}
-              aria-label="Закрепить"
+              aria-label={t("Закрепить")}
               className={cn(
                 "flex size-11 items-center justify-center rounded-md transition-colors",
                 pinned ? "text-brand" : "text-muted-foreground/50 hover:text-foreground"
@@ -137,35 +139,35 @@ export function OrderCard({
       {/* Meta pills */}
       <div className="mt-3 flex flex-wrap gap-2">
         <MetaPill icon={Truck}>{order.truckType}</MetaPill>
-        <MetaPill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} кг</MetaPill>
-        <MetaPill icon={Box}>{order.volumeM3} м³</MetaPill>
+        <MetaPill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} {t("кг")}</MetaPill>
+        <MetaPill icon={Box}>{order.volumeM3} {t("м³")}</MetaPill>
         <MetaPill icon={Calendar}>{order.readyDate}</MetaPill>
       </div>
 
       {/* Price footer + contextual action */}
       <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-secondary px-4 py-3">
         <div className="min-w-0 leading-none">
-          <p className="t-eyebrow">Цена заказчика</p>
+          <p className="t-eyebrow">{t("Цена заказчика")}</p>
           <p className="t-display mt-1.5">{price}</p>
           {showKzt && (
             <p className="font-mono-tech mt-1.5 text-sm leading-none text-muted-foreground/80">
-              {kzt(priceUsd)} · оплата в USD
+              {kzt(priceUsd)} · {t("оплата в USD")}
             </p>
           )}
         </div>
 
         {browse ? (
           <span className="inline-flex h-12 shrink-0 items-center gap-1 rounded-md border border-border px-4 text-[15px] font-medium text-muted-foreground">
-            Смотреть <ChevronRight className="size-4" />
+            {t("Смотреть")} <ChevronRight className="size-4" />
           </span>
         ) : order.deal ? (
           <span className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-md border border-border px-4 text-[15px] font-semibold text-foreground">
             {hasUnread && <MessageCircle className="size-4 text-brand" />}
-            Открыть <ChevronRight className="size-4" />
+            {t("Открыть")} <ChevronRight className="size-4" />
           </span>
         ) : newOffers > 0 ? (
           <span className="inline-flex h-12 shrink-0 items-center gap-1 rounded-md border border-brand/35 bg-brand/12 px-4 text-[15px] font-semibold text-brand tabular-nums">
-            {newOffers} {newOffers === 1 ? "отклик" : newOffers < 5 ? "отклика" : "откликов"}
+            {newOffers} {newOffers === 1 ? t("отклик") : newOffers < 5 ? t("отклика") : t("откликов")}
             <ChevronRight className="size-4" />
           </span>
         ) : showMyOffer && order.myOfferStatus ? (
@@ -187,11 +189,11 @@ export function OrderCard({
               confirmAccept ? "bg-[var(--success-strong)] ring-2 ring-[var(--success)]/40" : "bg-[var(--success)]"
             )}
           >
-            <Check className="size-5" /> {confirmAccept ? "Точно?" : "Принять"}
+            <Check className="size-5" /> {confirmAccept ? t("Точно?") : t("Принять")}
           </button>
         ) : showMyOffer ? (
           <span className="inline-flex h-12 shrink-0 items-center gap-1 rounded-md bg-primary px-5 text-[15px] font-semibold text-primary-foreground shadow-key transition-transform group-active:scale-95">
-            Откликнуться
+            {t("Откликнуться")}
             <ChevronRight className="size-4" />
           </span>
         ) : (
@@ -216,11 +218,11 @@ export function OrderCard({
         >
           {inTrip ? (
             <>
-              <Check className="size-4" /> В рейсе
+              <Check className="size-4" /> {t("В рейсе")}
             </>
           ) : (
             <>
-              <Plus className="size-4" /> Добавить в рейс
+              <Plus className="size-4" /> {t("Добавить в рейс")}
             </>
           )}
         </button>

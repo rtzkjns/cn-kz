@@ -5,6 +5,7 @@ import { ChevronDown, ChevronLeft, MapPin, MapPinOff, Search, X } from "lucide-r
 
 import { Input } from "@/components/ui/input"
 import { ALL_CITIES } from "@/lib/cn-kz/types"
+import { useCnKz } from "./store"
 import { Chip, ChipRow } from "./ui-bits"
 
 // Нормализация: нижний регистр + ё→е, чтобы поиск был предсказуемым.
@@ -79,6 +80,7 @@ export function CityPicker({
   onChange: (c: string) => void
   placeholder?: string
 }) {
+  const { t } = useCnKz()
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState("")
   const results = search(q)
@@ -96,7 +98,7 @@ export function CityPicker({
       >
         <MapPin className="size-5 shrink-0 text-muted-foreground" />
         <span className={"truncate " + (value ? "text-foreground" : "text-muted-foreground")}>
-          {value || placeholder}
+          {value || t(placeholder)}
         </span>
         <ChevronDown className="ml-auto size-4 shrink-0 text-muted-foreground" />
       </button>
@@ -106,12 +108,12 @@ export function CityPicker({
           <div className="flex items-center gap-2 border-b border-border px-4 py-3">
             <button
               onClick={() => setOpen(false)}
-              aria-label="Назад"
+              aria-label={t("Назад")}
               className="-ml-2 flex size-11 items-center justify-center text-muted-foreground"
             >
               <ChevronLeft className="size-5" />
             </button>
-            <span className="text-base font-semibold">Выберите город</span>
+            <span className="text-base font-semibold">{t("Выберите город")}</span>
           </div>
           <div className="px-4 py-3">
             <div className="relative">
@@ -120,7 +122,7 @@ export function CityPicker({
                 autoFocus
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Введите город…"
+                placeholder={t("Введите город…")}
                 className="h-14 rounded-lg border-0 bg-secondary pl-11 text-base"
               />
             </div>
@@ -132,9 +134,9 @@ export function CityPicker({
                   <span className="flex size-14 items-center justify-center rounded-full bg-muted text-muted-foreground">
                     <MapPinOff className="size-6" />
                   </span>
-                  <p className="text-base font-semibold">Город не найден</p>
+                  <p className="text-base font-semibold">{t("Город не найден")}</p>
                   <p className="max-w-[16rem] text-sm text-muted-foreground">
-                    Проверьте написание или попробуйте соседний крупный город.
+                    {t("Проверьте написание или попробуйте соседний крупный город.")}
                   </p>
                 </div>
               ) : (
@@ -143,7 +145,7 @@ export function CityPicker({
             ) : (
               <>
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold text-muted-foreground">Недавние</p>
+                  <p className="text-sm font-semibold text-muted-foreground">{t("Недавние")}</p>
                   <div className="flex flex-wrap gap-2">
                     {["Алматы", "Астана"].map((c) => (
                       <Chip key={c} onClick={() => pick(c)}>
@@ -154,7 +156,7 @@ export function CityPicker({
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-muted-foreground">
-                    Популярные направления
+                    {t("Популярные направления")}
                   </p>
                   <div className="surface-glass divide-y divide-border overflow-hidden rounded-2xl">
                     {POPULAR.map((c) => (
@@ -179,6 +181,7 @@ export function CityMultiPicker({
   selected: string[]
   onToggle: (c: string) => void
 }) {
+  const { t } = useCnKz()
   const [q, setQ] = useState("")
   const results = search(q, selected)
   return (
@@ -188,7 +191,7 @@ export function CityMultiPicker({
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Добавить город…"
+          placeholder={t("Добавить город…")}
           className="h-14 rounded-lg border-0 bg-secondary pl-11 text-base"
         />
       </div>

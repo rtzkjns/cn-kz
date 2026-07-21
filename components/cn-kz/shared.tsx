@@ -25,6 +25,7 @@ import {
   type OfferStatus,
   type OrderStatus,
 } from "@/lib/cn-kz/types"
+import { useCnKz } from "./store"
 
 export function money(usd: number) {
   return "$" + usd.toLocaleString("en-US")
@@ -89,8 +90,9 @@ const ORDER_STATUS: Record<OrderStatus, { label: string; tone: Tone; icon: Lucid
 }
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
+  const { t } = useCnKz()
   const s = ORDER_STATUS[status]
-  return <StatusBadge tone={s.tone} icon={s.icon}>{s.label}</StatusBadge>
+  return <StatusBadge tone={s.tone} icon={s.icon}>{t(s.label)}</StatusBadge>
 }
 
 // FINAL-SPEC §2.3 complete map: accepted=brand(agreed), picked_up=warn(в пути), at_border=info,
@@ -105,8 +107,9 @@ const DEAL_STATUS: Record<DealStatus, { tone: Tone; icon: LucideIcon }> = {
 }
 
 export function DealStatusBadge({ status }: { status: DealStatus }) {
+  const { t } = useCnKz()
   const s = DEAL_STATUS[status]
-  return <StatusBadge tone={s.tone} icon={s.icon}>{DEAL_STATUS_LABEL[status]}</StatusBadge>
+  return <StatusBadge tone={s.tone} icon={s.icon}>{t(DEAL_STATUS_LABEL[status])}</StatusBadge>
 }
 
 const OFFER_STATUS: Record<OfferStatus, { label: string; tone: Tone; icon: LucideIcon }> = {
@@ -118,8 +121,9 @@ const OFFER_STATUS: Record<OfferStatus, { label: string; tone: Tone; icon: Lucid
 }
 
 export function OfferStatusBadge({ status }: { status: OfferStatus }) {
+  const { t } = useCnKz()
   const s = OFFER_STATUS[status]
-  return <StatusBadge tone={s.tone} icon={s.icon}>{s.label}</StatusBadge>
+  return <StatusBadge tone={s.tone} icon={s.icon}>{t(s.label)}</StatusBadge>
 }
 
 // ===== Раскрытие контакта (FINAL-SPEC §5). Маскировка снимается только внутри «живой» сделки/отклика. =====
@@ -143,6 +147,7 @@ export function CallButton({
   variant?: "secondary" | "primary"
   className?: string
 }) {
+  const { t } = useCnKz()
   const primary = variant === "primary"
   return (
     <a
@@ -156,7 +161,7 @@ export function CallButton({
         className
       )}
     >
-      <Phone className={primary ? "size-5" : "size-5"} /> Позвонить
+      <Phone className={primary ? "size-5" : "size-5"} /> {t("Позвонить")}
     </a>
   )
 }

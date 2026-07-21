@@ -65,7 +65,7 @@ function ChartEmpty({ icon: Icon, text }: { icon: typeof Package; text: string }
 }
 
 export function AnalyticsScreen() {
-  const { myOrders, setTab, push } = useCnKz()
+  const { myOrders, setTab, push, t } = useCnKz()
 
   const completed = myOrders.filter((o) => o.deal?.status === "completed")
   const active = myOrders.filter(
@@ -106,15 +106,15 @@ export function AnalyticsScreen() {
   if (myOrders.length === 0) {
     return (
       <div className="flex h-full flex-col">
-        <ScreenHeader title="Аналитика" subtitle="Ваша логистика в цифрах" onBack={() => setTab("profile")} />
+        <ScreenHeader title={t("Аналитика")} subtitle={t("Ваша логистика в цифрах")} onBack={() => setTab("profile")} />
         <div className="flex-1 overflow-y-auto px-4 pb-24">
           <EmptyState
             icon={BarChart3}
-            title="Пока нет данных для аналитики"
-            hint="Опубликуйте первый заказ — здесь появятся расходы, топ маршрутов и рейтинг перевозчиков."
+            title={t("Пока нет данных для аналитики")}
+            hint={t("Опубликуйте первый заказ — здесь появятся расходы, топ маршрутов и рейтинг перевозчиков.")}
             action={
               <Button size="xl" className="px-8" onClick={() => push({ type: "createOrder" })}>
-                <Plus className="size-5" /> Создать заказ
+                <Plus className="size-5" /> {t("Создать заказ")}
               </Button>
             }
           />
@@ -125,25 +125,25 @@ export function AnalyticsScreen() {
 
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title="Аналитика" subtitle="Ваша логистика в цифрах" onBack={() => setTab("profile")} />
+      <ScreenHeader title={t("Аналитика")} subtitle={t("Ваша логистика в цифрах")} onBack={() => setTab("profile")} />
 
       <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-24">
         {/* Герой-число: общие расходы 32/800 — самый громкий элемент, якорит верх экрана. */}
         <div className="surface-glass rounded-2xl p-4">
-          <p className="t-eyebrow">Общие расходы</p>
+          <p className="t-eyebrow">{t("Общие расходы")}</p>
           <p className="t-display mt-1.5 text-brand">{money(spend)}</p>
           <p className="mt-1.5 text-sm text-muted-foreground">
             {completed.length > 0
-              ? `${completed.length} ${plural(completed.length, "завершённый заказ", "завершённых заказа", "завершённых заказов")} · в среднем ${money(avgPrice)} за рейс`
-              : "Ещё нет завершённых заказов — расходы появятся после первой сделки"}
+              ? `${completed.length} ${plural(completed.length, t("завершённый заказ"), t("завершённых заказа"), t("завершённых заказов"))} · ${t("в среднем")} ${money(avgPrice)} ${t("за рейс")}`
+              : t("Ещё нет завершённых заказов — расходы появятся после первой сделки")}
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <Kpi label="Всего заказов" value={String(myOrders.length)} icon={Package} />
-          <Kpi label="Завершено" value={String(completed.length)} icon={TrendingUp} />
-          <Kpi label="Средняя цена" value={money(avgPrice)} sub="за рейс" icon={Tag} />
-          <Kpi label="В работе" value={String(active.length)} sub="активные сделки" icon={Truck} />
+          <Kpi label={t("Всего заказов")} value={String(myOrders.length)} icon={Package} />
+          <Kpi label={t("Завершено")} value={String(completed.length)} icon={TrendingUp} />
+          <Kpi label={t("Средняя цена")} value={money(avgPrice)} sub={t("за рейс")} icon={Tag} />
+          <Kpi label={t("В работе")} value={String(active.length)} sub={t("активные сделки")} icon={Truck} />
         </div>
 
         {/* insights / exceptions — Signal-медальон вместо цветной полоски-бордера */}
@@ -154,20 +154,20 @@ export function AnalyticsScreen() {
             </span>
             <div className="min-w-0">
               <p className="t-body-strong">
-                {noOffers} {plural(noOffers, "заказ", "заказа", "заказов")} без откликов
+                {noOffers} {plural(noOffers, t("заказ"), t("заказа"), t("заказов"))} {t("без откликов")}
               </p>
               <p className="mt-0.5 text-sm text-muted-foreground">
-                Возможно, цена ниже рынка на этих маршрутах — попробуйте поднять.
+                {t("Возможно, цена ниже рынка на этих маршрутах — попробуйте поднять.")}
               </p>
             </div>
           </div>
         )}
 
-        <Section title="Расходы по месяцам">
+        <Section title={t("Расходы по месяцам")}>
           <Card size="sm">
             <CardContent className="space-y-3">
               {months.length === 0 ? (
-                <ChartEmpty icon={Wallet} text="Расходы появятся после первых завершённых заказов" />
+                <ChartEmpty icon={Wallet} text={t("Расходы появятся после первых завершённых заказов")} />
               ) : (
                 months.map(([m, v]) => <Bar key={m} label={m} value={v} max={maxMonth} asMoney />)
               )}
@@ -175,22 +175,22 @@ export function AnalyticsScreen() {
           </Card>
         </Section>
 
-        <Section title="Топ маршрутов">
+        <Section title={t("Топ маршрутов")}>
           <Card size="sm">
             <CardContent className="space-y-3">
               {topRoutes.length === 0 ? (
-                <ChartEmpty icon={TrendingUp} text="Здесь появятся ваши самые частые маршруты" />
+                <ChartEmpty icon={TrendingUp} text={t("Здесь появятся ваши самые частые маршруты")} />
               ) : (
-                topRoutes.map(([r, n]) => <Bar key={r} label={r} value={n} max={maxRoute} suffix=" зак." neutral />)
+                topRoutes.map(([r, n]) => <Bar key={r} label={r} value={n} max={maxRoute} suffix={` ${t("зак.")}`} neutral />)
               )}
             </CardContent>
           </Card>
         </Section>
 
-        <Section title="Качество">
+        <Section title={t("Качество")}>
           <div className="grid grid-cols-2 gap-2">
-            <Kpi label="откликов / заказ" value={avgOffers} icon={Tag} />
-            <Kpi label="рейтинг перевозчиков" value={String(avgCarrierRating)} icon={Star} />
+            <Kpi label={t("откликов / заказ")} value={avgOffers} icon={Tag} />
+            <Kpi label={t("рейтинг перевозчиков")} value={String(avgCarrierRating)} icon={Star} />
           </div>
         </Section>
 
@@ -198,7 +198,7 @@ export function AnalyticsScreen() {
         <div className="surface-inset flex items-start gap-2.5 rounded-2xl p-4">
           <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <p className="text-sm leading-snug text-muted-foreground">
-            Показатели считаются автоматически по вашим заказам и сделкам. Оплата в USD, ₸ — ориентировочно.
+            {t("Показатели считаются автоматически по вашим заказам и сделкам. Оплата в USD, ₸ — ориентировочно.")}
           </p>
         </div>
       </div>

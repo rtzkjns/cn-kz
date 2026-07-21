@@ -38,7 +38,7 @@ type Step = "auth" | "login" | "register" | "role" | "profile" | "terms"
 // Mirrors User Flow «1. Онбординг»: splash → вход → главный экран; регистрация → выбор роли → профиль → главный экран.
 export function OnboardingFlow() {
   // Вход использует роль уже существующего аккаунта (последнюю в сторе); роль выбирается только при регистрации.
-  const { enterApp, role: accountRole, closeAuth, lang, setLang } = useCnKz()
+  const { enterApp, role: accountRole, closeAuth, lang, setLang, t } = useCnKz()
   const [step, setStep] = useState<Step>("auth")
   const [method, setMethod] = useState<"email" | "phone">("phone")
   const [role, setRole] = useState<Role>("shipper")
@@ -72,24 +72,24 @@ export function OnboardingFlow() {
             <LogoMark size="lg" />
             <div className="flex flex-col items-center gap-3">
               <h1 className="t-display text-center text-balance">
-                Грузоперевозки
+                {t("Грузоперевозки")}
                 <br />
-                по всей СНГ
+                {t("по всей СНГ")}
               </h1>
               <p className="max-w-[18rem] text-center text-base leading-relaxed text-muted-foreground text-pretty">
-                Маркетплейс грузов и перевозчиков. Прямые сделки, торги и рейтинги — без посредников.
+                {t("Маркетплейс грузов и перевозчиков. Прямые сделки, торги и рейтинги — без посредников.")}
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-1.5">
-              <ValuePill icon={Zap} label="Realtime лента" />
-              <ValuePill icon={Gavel} label="Торги · inDrive" />
-              <ValuePill icon={Star} label="Рейтинги сторон" />
+              <ValuePill icon={Zap} label={t("Realtime лента")} />
+              <ValuePill icon={Gavel} label={t("Торги · inDrive")} />
+              <ValuePill icon={Star} label={t("Рейтинги сторон")} />
             </div>
           </div>
 
           {/* Язык — реальный выбор появится позже; на первом экране виден как первичный контрол. */}
           <div className="mb-3 flex flex-col gap-2">
-            <span className="t-eyebrow text-muted-foreground">Язык</span>
+            <span className="t-eyebrow text-muted-foreground">{t("Язык")}</span>
             <ChipRow>
               {LANGS.map((l) => (
                 <Chip key={l.id} active={lang === l.id} onClick={() => setLang(l.id)}>
@@ -102,7 +102,7 @@ export function OnboardingFlow() {
           {/* CTAs — single lime accent: only «Войти» is the primary. «Создать аккаунт» = gray secondary. */}
           <div className="flex flex-col gap-2.5">
             <Button size="xl" className="w-full" onClick={() => setStep("login")}>
-              Войти
+              {t("Войти")}
             </Button>
             <Button
               size="xl"
@@ -111,13 +111,13 @@ export function OnboardingFlow() {
               onClick={() => setStep("register")}
             >
               <UserPlus className="size-5" />
-              Создать аккаунт
+              {t("Создать аккаунт")}
             </Button>
             <button
               onClick={closeAuth}
               className="mt-1 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Смотреть грузы без входа →
+              {t("Смотреть грузы без входа →")}
             </button>
           </div>
         </div>
@@ -149,7 +149,7 @@ export function OnboardingFlow() {
     >
       {step === "login" && (
         <div className="space-y-4 px-5 pt-4">
-          <h1 className="t-h1">Вход</h1>
+          <h1 className="t-h1">{t("Вход")}</h1>
 
           <Button
             variant="secondary"
@@ -160,85 +160,85 @@ export function OnboardingFlow() {
             <span className="flex size-5 items-center justify-center rounded-full bg-white text-[13px] font-bold text-[#4285F4]">
               G
             </span>
-            Продолжить с Google
+            {t("Продолжить с Google")}
           </Button>
 
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <span className="h-px flex-1 bg-border" /> или по телефону
+            <span className="h-px flex-1 bg-border" /> {t("или по телефону")}
             <span className="h-px flex-1 bg-border" />
           </div>
 
           <ChipRow>
             <Chip active={method === "phone"} onClick={() => setMethod("phone")}>
-              Телефон + SMS
+              {t("Телефон + SMS")}
             </Chip>
             <Chip active={method === "email"} onClick={() => setMethod("email")}>
-              Email + пароль
+              {t("Email + пароль")}
             </Chip>
           </ChipRow>
           {method === "phone" ? (
-            <Field label="Телефон">
+            <Field label={t("Телефон")}>
               <SignalInput icon={Phone} placeholder="+7 705 123 45 67" inputMode="tel" />
             </Field>
           ) : (
             <>
-              <Field label="Email">
+              <Field label={t("Email")}>
                 <SignalInput icon={Mail} type="email" placeholder="you@mail.kz" />
               </Field>
-              <Field label="Пароль">
-                <SignalInput icon={Lock} type="password" placeholder="Ваш пароль" />
+              <Field label={t("Пароль")}>
+                <SignalInput icon={Lock} type="password" placeholder={t("Ваш пароль")} />
               </Field>
             </>
           )}
           <Button size="xl" className="w-full" onClick={() => enterApp(accountRole)}>
-            {method === "phone" ? "Войти по SMS" : "Войти"}
+            {method === "phone" ? t("Войти по SMS") : t("Войти")}
           </Button>
         </div>
       )}
 
       {step === "register" && (
         <div className="space-y-4 px-5 pt-4">
-          <h1 className="t-h1">Регистрация</h1>
+          <h1 className="t-h1">{t("Регистрация")}</h1>
           <ChipRow>
             <Chip active={method === "phone"} onClick={() => setMethod("phone")}>
-              Телефон + SMS
+              {t("Телефон + SMS")}
             </Chip>
             <Chip active={method === "email"} onClick={() => setMethod("email")}>
-              Email + пароль
+              {t("Email + пароль")}
             </Chip>
           </ChipRow>
           {method === "phone" ? (
             <>
-              <Field label="Телефон">
+              <Field label={t("Телефон")}>
                 <SignalInput icon={Phone} placeholder="+7 7__ ___ __ __" inputMode="tel" />
               </Field>
-              <Field label="SMS-код">
+              <Field label={t("SMS-код")}>
                 <SignalInput icon={MessageSquare} placeholder="____" inputMode="numeric" />
               </Field>
             </>
           ) : (
             <>
-              <Field label="Email">
+              <Field label={t("Email")}>
                 <SignalInput icon={Mail} type="email" placeholder="you@mail.kz" />
               </Field>
-              <Field label="Пароль">
+              <Field label={t("Пароль")}>
                 <SignalInput icon={Lock} type="password" placeholder="••••••••" />
               </Field>
             </>
           )}
           <Button size="xl" className="w-full" onClick={() => setStep("role")}>
-            Зарегистрироваться
+            {t("Зарегистрироваться")}
           </Button>
           <p className="text-center text-sm leading-snug text-muted-foreground">
-            Регистрируясь, вы принимаете{" "}
+            {t("Регистрируясь, вы принимаете")}{" "}
             <button
               type="button"
               onClick={openTerms}
               className="font-medium text-brand underline underline-offset-2"
             >
-              Условия и публичную оферту
+              {t("Условия и публичную оферту")}
             </button>
-            : CN-KZ — площадка для поиска, не перевозчик и не гарант доставки.
+            {t(": CN-KZ — площадка для поиска, не перевозчик и не гарант доставки.")}
           </p>
         </div>
       )}
@@ -246,33 +246,33 @@ export function OnboardingFlow() {
       {step === "role" && (
         <div className="flex flex-col gap-3 px-5 pt-5 pb-8">
           <div className="space-y-1">
-            <h1 className="t-h1">Выберите роль</h1>
+            <h1 className="t-h1">{t("Выберите роль")}</h1>
             <p className="t-meta text-muted-foreground">
-              Роль выбирается один раз и не меняется — выберите, кто вы на площадке.
+              {t("Роль выбирается один раз и не меняется — выберите, кто вы на площадке.")}
             </p>
           </div>
           <RoleCard
             icon={Package}
-            title="Заказчик"
-            desc="У меня есть груз — публикую заказы и выбираю перевозчика."
-            features={["Публикую заказы", "Выбираю фуру", "Торги · inDrive"]}
+            title={t("Заказчик")}
+            desc={t("У меня есть груз — публикую заказы и выбираю перевозчика.")}
+            features={[t("Публикую заказы"), t("Выбираю фуру"), t("Торги · inDrive")]}
             onClick={() => pickRole("shipper")}
           />
           <RoleCard
             icon={Truck}
-            title="Перевозчик"
-            desc="У меня есть фура — беру заказы из ленты и вожу."
-            features={["Лента грузов", "Своя цена", "Вожу рейсы"]}
+            title={t("Перевозчик")}
+            desc={t("У меня есть фура — беру заказы из ленты и вожу.")}
+            features={[t("Лента грузов"), t("Своя цена"), t("Вожу рейсы")]}
             onClick={() => pickRole("carrier")}
           />
           {/* заполняем нижнюю часть экрана: почему CN-KZ (существующие ценности площадки) */}
           <div className="mt-1 space-y-2.5">
-            <span className="t-eyebrow">Почему CN-KZ</span>
+            <span className="t-eyebrow">{t("Почему CN-KZ")}</span>
             <div className="flex flex-wrap gap-1.5">
-              <ValuePill icon={Zap} label="Realtime лента" />
-              <ValuePill icon={Gavel} label="Торги · inDrive" />
-              <ValuePill icon={Star} label="Рейтинги сторон" />
-              <ValuePill icon={ShieldCheck} label="Проверка сторон" />
+              <ValuePill icon={Zap} label={t("Realtime лента")} />
+              <ValuePill icon={Gavel} label={t("Торги · inDrive")} />
+              <ValuePill icon={Star} label={t("Рейтинги сторон")} />
+              <ValuePill icon={ShieldCheck} label={t("Проверка сторон")} />
             </div>
           </div>
         </div>
@@ -281,24 +281,24 @@ export function OnboardingFlow() {
       {step === "profile" && (
         <div className="space-y-4 px-4 pt-4 pb-6">
           <h1 className="t-h1">
-            Профиль {role === "shipper" ? "заказчика" : "перевозчика"}
+            {role === "shipper" ? t("Профиль заказчика") : t("Профиль перевозчика")}
           </h1>
-          <Field label="ФИО">
-            <SignalInput icon={User} value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя Фамилия" />
+          <Field label={t("ФИО")}>
+            <SignalInput icon={User} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("Имя Фамилия")} />
           </Field>
-          <Field label="Телефон">
+          <Field label={t("Телефон")}>
             <SignalInput icon={Phone} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+7…" inputMode="tel" />
           </Field>
 
           {role === "shipper" ? (
-            <Field label="Юр. лицо (необязательно)">
-              <SignalInput icon={Building2} value={company} onChange={(e) => setCompany(e.target.value)} placeholder="ИП / ТОО" />
+            <Field label={t("Юр. лицо (необязательно)")}>
+              <SignalInput icon={Building2} value={company} onChange={(e) => setCompany(e.target.value)} placeholder={t("ИП / ТОО")} />
             </Field>
           ) : (
             <>
               <div className="space-y-2">
                 <span className="text-sm font-medium text-muted-foreground">
-                  Тип первой фуры
+                  {t("Тип первой фуры")}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {TRUCK_TYPES.map((t) => (
@@ -309,20 +309,20 @@ export function OnboardingFlow() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Макс. вес, кг">
+                <Field label={t("Макс. вес, кг")}>
                   <SignalInput type="number" inputMode="numeric" placeholder="20000" />
                 </Field>
-                <Field label="Объём, м³">
+                <Field label={t("Объём, м³")}>
                   <SignalInput type="number" inputMode="numeric" placeholder="86" />
                 </Field>
               </div>
-              <Field label="Гос. номер">
+              <Field label={t("Гос. номер")}>
                 <SignalInput icon={Hash} placeholder="777 ABC 02" />
               </Field>
 
               <div className="space-y-2">
                 <span className="text-sm font-medium text-muted-foreground">
-                  Проверка профиля — значок «Бизнес проверен» и доступ к премиум-грузам
+                  {t("Проверка профиля — значок «Бизнес проверен» и доступ к премиум-грузам")}
                 </span>
                 {[
                   "БИН/ИНН · сверим с реестром юрлиц",
@@ -346,10 +346,10 @@ export function OnboardingFlow() {
                         {done && <Check className="size-3.5" />}
                       </span>
                       <span className={cn("min-w-0 flex-1 text-[15px] leading-snug", done ? "text-foreground" : "text-muted-foreground")}>
-                        {d}
+                        {t(d)}
                       </span>
                       <span className={cn("shrink-0 text-sm font-semibold", done ? "text-[var(--success)]" : "text-muted-foreground")}>
-                        {done ? "Готово" : "Загрузить"}
+                        {done ? t("Готово") : t("Загрузить")}
                       </span>
                     </button>
                   )
@@ -358,7 +358,7 @@ export function OnboardingFlow() {
 
               <div className="space-y-2">
                 <span className="text-sm font-medium text-muted-foreground">
-                  Маршруты — пришлём уведомление о новых грузах
+                  {t("Маршруты — пришлём уведомление о новых грузах")}
                 </span>
                 <CityMultiPicker
                   selected={routes}
@@ -379,7 +379,7 @@ export function OnboardingFlow() {
               disabled={role === "carrier" && routes.length === 0}
               onClick={() => enterApp(role, name.trim() ? { name: name.trim(), company: company.trim() || undefined } : undefined)}
             >
-              Готово
+              {t("Готово")}
             </Button>
           </StickyCTA>
         </div>
@@ -395,6 +395,7 @@ function Shell({
   children: React.ReactNode
   onBack?: () => void
 }) {
+  const { t } = useCnKz()
   return (
     <div className="flex min-h-dvh w-full items-center justify-center bg-foreground p-0 sm:p-6">
       <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2rem] sm:border-[6px] sm:border-foreground sm:shadow-2xl">
@@ -404,7 +405,7 @@ function Shell({
             <button
               onClick={onBack}
               className="flex size-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label="Назад"
+              aria-label={t("Назад")}
             >
               <ChevronLeft className="size-6" />
             </button>

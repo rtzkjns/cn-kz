@@ -57,21 +57,21 @@ const FACTS: { icon: typeof FileText; label: string }[] = [
 ]
 
 export function TermsScreen({ onBack }: { onBack?: () => void } = {}) {
-  const { pop } = useCnKz()
+  const { pop, t } = useCnKz()
   const back = onBack ?? pop
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title="Условия и оферта" subtitle="Коротко и по-человечески" onBack={back} />
+      <ScreenHeader title={t("Условия и оферта")} subtitle={t("Коротко и по-человечески")} onBack={back} />
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pb-4">
         {/* Главное — одним абзацем, чтобы понял любой */}
         <Card size="sm" className="surface-glass-brand rounded-2xl border-transparent">
           <CardContent className="space-y-1.5 py-3">
-            <p className="text-[15px] font-semibold">Коротко</p>
+            <p className="text-[15px] font-semibold">{t("Коротко")}</p>
             <p className="text-[15px] leading-relaxed text-muted-foreground">
-              CN-KZ — это <span className="font-medium text-foreground">доска объявлений о грузах</span>,
-              а не перевозчик и не гарант. Мы соединяем стороны, но{" "}
-              <span className="font-medium text-foreground">не участвуем в сделке и не отвечаем за неё</span>.
-              Оплата, доставка и проверка контрагента — на вас.
+              {t("CN-KZ — это")} <span className="font-medium text-foreground">{t("доска объявлений о грузах")}</span>
+              {t(", а не перевозчик и не гарант. Мы соединяем стороны, но")}{" "}
+              <span className="font-medium text-foreground">{t("не участвуем в сделке и не отвечаем за неё")}</span>
+              {t(". Оплата, доставка и проверка контрагента — на вас.")}
             </p>
           </CardContent>
         </Card>
@@ -88,7 +88,7 @@ export function TermsScreen({ onBack }: { onBack?: () => void } = {}) {
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-card text-foreground">
                   <Icon className="size-4" />
                 </span>
-                <span className="text-sm leading-tight font-semibold">{f.label}</span>
+                <span className="text-sm leading-tight font-semibold">{t(f.label)}</span>
               </div>
             )
           })}
@@ -104,8 +104,8 @@ export function TermsScreen({ onBack }: { onBack?: () => void } = {}) {
                     <Icon className="size-4" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[15px] font-semibold">{s.title}</p>
-                    <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+                    <p className="text-[15px] font-semibold">{t(s.title)}</p>
+                    <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">{t(s.body)}</p>
                   </div>
                 </div>
               )
@@ -114,13 +114,13 @@ export function TermsScreen({ onBack }: { onBack?: () => void } = {}) {
         </Card>
 
         <p className="px-1 text-center text-sm text-muted-foreground">
-          Используя CN-KZ, вы принимаете эти условия. Редакция v1.0 · полная оферта — на сайте.
+          {t("Используя CN-KZ, вы принимаете эти условия. Редакция v1.0 · полная оферта — на сайте.")}
         </p>
 
         {/* Единственное основное действие — липкая лаймовая кнопка закрывает оферту (§4). */}
         <StickyCTA>
           <Button size="xl" className="w-full" onClick={back}>
-            Понятно
+            {t("Понятно")}
           </Button>
         </StickyCTA>
       </div>

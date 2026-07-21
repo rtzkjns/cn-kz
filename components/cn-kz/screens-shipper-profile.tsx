@@ -26,7 +26,7 @@ import { useCnKz } from "./store"
 
 // Профиль ЗАКАЗЧИКА — симметрия с профилем перевозчика: перевозчик может проверить и пожаловаться.
 export function ShipperProfileScreen({ orderId }: { orderId: string }) {
-  const { getOrder, pop, push, showToast } = useCnKz()
+  const { getOrder, pop, push, showToast, t } = useCnKz()
   const [showReport, setShowReport] = useState(false)
   const [reportReason, setReportReason] = useState<string | null>(null)
   const order = getOrder(orderId)
@@ -38,7 +38,7 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
 
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title="Заказчик" onBack={pop} />
+      <ScreenHeader title={t("Заказчик")} onBack={pop} />
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pb-40">
         {/* Identity — company + verification */}
         <div className="surface-glass space-y-3 rounded-2xl p-4">
@@ -49,30 +49,30 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
                 <span className="truncate">{s.name}</span>
                 {s.verified && <BadgeCheck className="size-5 shrink-0 text-brand" />}
               </p>
-              <p className="mt-1 truncate text-sm text-muted-foreground">{s.company ?? "Заказчик"}</p>
+              <p className="mt-1 truncate text-sm text-muted-foreground">{s.company ?? t("Заказчик")}</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {s.verified ? (
               <StatusBadge tone="success" icon={ShieldCheck}>
-                Бизнес проверен · БИН
+                {t("Бизнес проверен · БИН")}
               </StatusBadge>
             ) : (
-              <StatusBadge tone="warn">Новичок · без БИН</StatusBadge>
+              <StatusBadge tone="warn">{t("Новичок · без БИН")}</StatusBadge>
             )}
           </div>
         </div>
 
         {/* Trust stat strip — рейтинг / сделки (big tabular numbers fill the band under the name) */}
         <div className="surface-glass flex items-stretch divide-x divide-border rounded-2xl">
-          <StatCell icon={Star} value={s.rating.toFixed(1)} label="Рейтинг" />
-          <StatCell icon={Handshake} value={s.dealsCount} label="Сделок" />
+          <StatCell icon={Star} value={s.rating.toFixed(1)} label={t("Рейтинг")} />
+          <StatCell icon={Handshake} value={s.dealsCount} label={t("Сделок")} />
         </div>
 
         {/* Что везёт этот заказчик — контекст заказа, из-за которого открыт профиль */}
         {order && (
           <div className="surface-glass space-y-3 rounded-2xl p-4">
-            <p className="t-eyebrow">Груз этого заказчика</p>
+            <p className="t-eyebrow">{t("Груз этого заказчика")}</p>
             {/* route: blue origin → connector → lime destination */}
             <div className="flex gap-3">
               <div className="flex flex-col items-center pt-1.5">
@@ -88,37 +88,36 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
             <p className="line-clamp-1 text-[15px] text-muted-foreground">{order.cargo}</p>
             <div className="flex items-end justify-between gap-3 rounded-xl bg-secondary px-4 py-3">
               <div className="min-w-0 leading-none">
-                <p className="t-eyebrow">Цена заказчика</p>
+                <p className="t-eyebrow">{t("Цена заказчика")}</p>
                 <p className="t-display mt-1.5">{money(order.priceUsd)}</p>
                 <p className="font-mono-tech mt-1.5 text-sm leading-none text-muted-foreground/80">
-                  {kzt(order.priceUsd)} · оплата в USD
+                  {kzt(order.priceUsd)} · {t("оплата в USD")}
                 </p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <MetaPill icon={Truck}>{order.truckType}</MetaPill>
-              <MetaPill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} кг</MetaPill>
-              <MetaPill icon={Box}>{order.volumeM3} м³</MetaPill>
-              <MetaPill icon={Wallet}>{order.payment === "cash" ? "Наличные" : "Перевод"}</MetaPill>
+              <MetaPill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} {t("кг")}</MetaPill>
+              <MetaPill icon={Box}>{order.volumeM3} {t("м³")}</MetaPill>
+              <MetaPill icon={Wallet}>{order.payment === "cash" ? t("Наличные") : t("Перевод")}</MetaPill>
             </div>
           </div>
         )}
 
         {/* Как заказчик платит — важнее всего для перевозчика (риск неоплаты). */}
-        <Section title="Проверка заказчика">
+        <Section title={t("Проверка заказчика")}>
           <div className="surface-glass space-y-2 rounded-2xl p-4 text-sm">
-            <VRow ok label="Телефон подтверждён" />
-            <VRow ok={!!s.verified} label="БИН/ИНН сверен с реестром юрлиц" />
-            <VRow ok={s.dealsCount > 0} label={`История: ${s.dealsCount} завершённых сделок`} />
+            <VRow ok label={t("Телефон подтверждён")} />
+            <VRow ok={!!s.verified} label={t("БИН/ИНН сверен с реестром юрлиц")} />
+            <VRow ok={s.dealsCount > 0} label={`${t("История:")} ${s.dealsCount} ${t("завершённых сделок")}`} />
             <p className="pt-1 text-sm leading-snug text-muted-foreground">
-              Аванс берите на счёт компании по БИН, не на личную карту. Оплата — напрямую, площадка
-              деньги не держит.
+              {t("Аванс берите на счёт компании по БИН, не на личную карту. Оплата — напрямую, площадка деньги не держит.")}
             </p>
           </div>
         </Section>
 
         {s.reviews && s.reviews.length > 0 && (
-          <Section title={`Отзывы перевозчиков (${s.reviews.length})`}>
+          <Section title={`${t("Отзывы перевозчиков")} (${s.reviews.length})`}>
             <div className="space-y-2">
               {s.reviews.map((r) => (
                 <div key={r.id} className="surface-glass space-y-1.5 rounded-2xl p-4">
@@ -152,10 +151,10 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
               className="h-12 w-full"
               onClick={() => {
                 if (order?.deal) push({ type: "chat", orderId })
-                else showToast("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»")
+                else showToast(t("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»"))
               }}
             >
-              <MessageCircle className="size-5" /> Чат
+              <MessageCircle className="size-5" /> {t("Чат")}
             </Button>
           </>
         ) : (
@@ -166,18 +165,18 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
               className="h-12 flex-1"
               onClick={() => {
                 if (order?.deal) push({ type: "chat", orderId })
-                else showToast("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»")
+                else showToast(t("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»"))
               }}
             >
-              <MessageCircle className="size-5" /> Чат
+              <MessageCircle className="size-5" /> {t("Чат")}
             </Button>
             <Button
               variant="secondary"
               size="lg"
               className="h-12 flex-1"
-              onClick={() => showToast("Номер откроется после вашего отклика или начала сделки")}
+              onClick={() => showToast(t("Номер откроется после вашего отклика или начала сделки"))}
             >
-              <Phone className="size-5" /> Номер скрыт
+              <Phone className="size-5" /> {t("Номер скрыт")}
             </Button>
           </div>
         )}
@@ -185,7 +184,7 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
           onClick={() => setShowReport(true)}
           className="flex w-full items-center justify-center gap-1.5 py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
         >
-          <ShieldAlert className="size-3.5" /> Пожаловаться на заказчика
+          <ShieldAlert className="size-3.5" /> {t("Пожаловаться на заказчика")}
         </button>
       </div>
 
@@ -198,22 +197,22 @@ export function ShipperProfileScreen({ orderId }: { orderId: string }) {
             className="animate-in slide-in-from-bottom w-full space-y-2 rounded-t-3xl bg-card p-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="t-h3">Пожаловаться на {s.name}</p>
+            <p className="t-h3">{t("Пожаловаться на")} {s.name}</p>
             <div className="flex flex-wrap gap-1.5 pb-1">
               {["Не платит", "Мошенничество", "Груз не тот", "Не выходит на связь", "Другое"].map((r) => (
                 <Chip key={r} active={reportReason === r} onClick={() => setReportReason(r)}>
-                  {r}
+                  {t(r)}
                 </Chip>
               ))}
             </div>
-            <Button size="lg" className="w-full" disabled={!reportReason} onClick={() => { setShowReport(false); showToast(`Жалоба отправлена (${reportReason}) — модерация проверит профиль`); setReportReason(null) }}>
-              <ShieldAlert className="size-4" /> Отправить жалобу
+            <Button size="lg" className="w-full" disabled={!reportReason} onClick={() => { setShowReport(false); showToast(`${t("Жалоба отправлена")} (${reportReason}) — ${t("модерация проверит профиль")}`); setReportReason(null) }}>
+              <ShieldAlert className="size-4" /> {t("Отправить жалобу")}
             </Button>
-            <Button variant="destructive" size="lg" className="w-full" onClick={() => { setShowReport(false); showToast(`${s.name} заблокирован — вы не увидите его заказы`) }}>
-              <Ban className="size-4" /> Заблокировать
+            <Button variant="destructive" size="lg" className="w-full" onClick={() => { setShowReport(false); showToast(`${s.name} ${t("заблокирован — вы не увидите его заказы")}`) }}>
+              <Ban className="size-4" /> {t("Заблокировать")}
             </Button>
             <button onClick={() => setShowReport(false)} className="w-full py-3 text-center text-sm font-medium text-muted-foreground hover:text-foreground">
-              Отмена
+              {t("Отмена")}
             </button>
           </div>
         </div>

@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Order } from "@/lib/cn-kz/types"
 import { LANGS } from "@/lib/cn-kz/i18n"
+import { cn } from "@/lib/utils"
 import { ScreenHeader } from "./phone-frame"
 import { DealStatusBadge, money } from "./shared"
 import { Chip, ChipRow, EmptyState, Section } from "./ui-bits"
@@ -95,96 +96,100 @@ function Row({
 }
 
 export function SettingsScreen() {
-  const { setTab, resetOnboarding, showToast, push, lang, setLang } = useCnKz()
-  const curLang = LANGS.find((l) => l.id === lang)
-  const cycleLang = () => {
-    const i = LANGS.findIndex((l) => l.id === lang)
-    setLang(LANGS[(i + 1) % LANGS.length].id)
-  }
+  const { setTab, resetOnboarding, showToast, push, lang, setLang, t } = useCnKz()
   const [confirmDel, setConfirmDel] = useState(false)
   const back = () => setTab("profile")
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title="Настройки" onBack={back} />
+      <ScreenHeader title={t("Настройки")} onBack={back} />
       <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-24">
-        <Section title="Аккаунт">
+        <Section title={t("Аккаунт")}>
           <Card size="sm">
             <CardContent className="divide-y divide-border">
-              <Row icon={UserIcon} label="Профиль" onClick={() => setTab("profile")} />
-              <Row icon={Bell} label="Номер телефона" value={<span className="text-sm text-muted-foreground">+7 ··· 34</span>} onClick={() => showToast("Изменение номера — по SMS")} />
-              <Row icon={Lock} label="Вход и безопасность" onClick={() => push({ type: "security" })} />
+              <Row icon={UserIcon} label={t("Профиль")} onClick={() => setTab("profile")} />
+              <Row icon={Bell} label={t("Номер телефона")} value={<span className="text-sm text-muted-foreground">+7 ··· 34</span>} onClick={() => showToast(t("Изменение номера — по SMS"))} />
+              <Row icon={Lock} label={t("Вход и безопасность")} onClick={() => push({ type: "security" })} />
             </CardContent>
           </Card>
         </Section>
 
-        <Section title="Уведомления">
+        <Section title={t("Уведомления")}>
           <Card size="sm">
             <CardContent className="space-y-1 divide-y divide-border">
               <div className="flex items-center gap-3 py-3 text-base">
                 <Bell className="size-5 text-muted-foreground" />
-                <span className="flex-1">Новые отклики и грузы</span>
-                <Toggle on label="Новые отклики и грузы" />
+                <span className="flex-1">{t("Новые отклики и грузы")}</span>
+                <Toggle on label={t("Новые отклики и грузы")} />
               </div>
               <div className="flex items-center gap-3 py-3 text-base">
                 <Bell className="size-5 text-muted-foreground" />
-                <span className="flex-1">Сообщения в чате</span>
-                <Toggle on label="Сообщения в чате" />
+                <span className="flex-1">{t("Сообщения в чате")}</span>
+                <Toggle on label={t("Сообщения в чате")} />
               </div>
               <div className="flex items-center gap-3 py-3 text-base">
                 <Bell className="size-5 text-muted-foreground" />
-                <span className="flex-1">SMS-уведомления</span>
-                <Toggle on={false} label="SMS-уведомления" />
+                <span className="flex-1">{t("SMS-уведомления")}</span>
+                <Toggle on={false} label={t("SMS-уведомления")} />
               </div>
             </CardContent>
           </Card>
         </Section>
 
-        <Section title="Приложение">
+        <Section title={t("Приложение")}>
           <Card size="sm">
             <CardContent className="divide-y divide-border">
-              <Row
-                icon={Globe}
-                label="Язык"
-                value={
-                  <span className="text-right text-sm leading-tight">
-                    <span className="block text-foreground">{curLang?.label}</span>
-                    <span className="block text-sm text-muted-foreground">Рус · Қаз · 中文</span>
-                  </span>
-                }
-                onClick={cycleLang}
-              />
+              <div className="flex items-center gap-3 py-3">
+                <Globe className="size-5 shrink-0 text-muted-foreground" />
+                <span className="flex-1 text-base">{t("Язык")}</span>
+                <div className="flex gap-1 rounded-lg bg-secondary p-1">
+                  {LANGS.map((l) => (
+                    <button
+                      key={l.id}
+                      onClick={() => setLang(l.id)}
+                      className={cn(
+                        "min-h-9 rounded-md px-3 text-sm font-bold transition-colors",
+                        lang === l.id
+                          ? "bg-brand text-brand-foreground"
+                          : "text-muted-foreground"
+                      )}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <Row
                 icon={CreditCard}
-                label="Валюта"
+                label={t("Валюта")}
                 value={
                   <span className="text-right text-sm leading-tight">
                     <span className="block text-foreground">$ USD</span>
-                    <span className="block text-sm text-muted-foreground">тенге — ориентир</span>
+                    <span className="block text-sm text-muted-foreground">{t("тенге — ориентир")}</span>
                   </span>
                 }
-                onClick={() => showToast("Оплата в USD · ₸ показан ориентировочно")}
+                onClick={() => showToast(t("Оплата в USD · ₸ показан ориентировочно"))}
               />
             </CardContent>
           </Card>
         </Section>
 
-        <Section title="Прочее">
+        <Section title={t("Прочее")}>
           <Card size="sm">
             <CardContent className="divide-y divide-border">
-              <Row icon={Shield} label="Конфиденциальность" onClick={() => showToast("Кто видит ваш профиль и телефон")} />
-              <Row icon={HelpCircle} label="Помощь и поддержка" onClick={() => showToast("Открываем чат поддержки")} />
-              <Row icon={FileText} label="Условия и оферта" onClick={() => push({ type: "terms" })} />
-              <Row icon={Info} label="О приложении" value={<span className="text-sm text-muted-foreground">v1.0</span>} onClick={() => showToast("CN-KZ · Грузоперевозки по СНГ")} />
+              <Row icon={Shield} label={t("Конфиденциальность")} onClick={() => showToast(t("Кто видит ваш профиль и телефон"))} />
+              <Row icon={HelpCircle} label={t("Помощь и поддержка")} onClick={() => showToast(t("Открываем чат поддержки"))} />
+              <Row icon={FileText} label={t("Условия и оферта")} onClick={() => push({ type: "terms" })} />
+              <Row icon={Info} label={t("О приложении")} value={<span className="text-sm text-muted-foreground">v1.0</span>} onClick={() => showToast(t("CN-KZ · Грузоперевозки по СНГ"))} />
             </CardContent>
           </Card>
         </Section>
 
         <Card size="sm">
           <CardContent className="divide-y divide-border">
-            <Row icon={LogOut} label="Выйти" onClick={resetOnboarding} />
+            <Row icon={LogOut} label={t("Выйти")} onClick={resetOnboarding} />
             <Row
               icon={Trash2}
-              label={confirmDel ? "Нажмите ещё раз для подтверждения" : "Удалить аккаунт"}
+              label={confirmDel ? t("Нажмите ещё раз для подтверждения") : t("Удалить аккаунт")}
               danger
               armed={confirmDel}
               onClick={() => {
@@ -193,12 +198,12 @@ export function SettingsScreen() {
                   return
                 }
                 setConfirmDel(false)
-                showToast("Запрос на удаление отправлен в поддержку")
+                showToast(t("Запрос на удаление отправлен в поддержку"))
               }}
             />
             {confirmDel && (
               <p className="px-1 pt-2 text-sm text-muted-foreground">
-                Аккаунт удаляется по запросу в поддержку — это действие необратимо.
+                {t("Аккаунт удаляется по запросу в поддержку — это действие необратимо.")}
               </p>
             )}
           </CardContent>
@@ -212,33 +217,33 @@ export function SettingsScreen() {
 
 // Вход и безопасность — защита от угона аккаунта (SIM-swap): 2FA, список устройств.
 export function SecurityScreen() {
-  const { pop, showToast } = useCnKz()
+  const { pop, showToast, t } = useCnKz()
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title="Вход и безопасность" subtitle="Защита аккаунта от угона" onBack={pop} />
+      <ScreenHeader title={t("Вход и безопасность")} subtitle={t("Защита аккаунта от угона")} onBack={pop} />
       <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 pb-24">
         <Card size="sm">
           <CardContent className="space-y-1 py-1">
             <div className="flex items-center gap-3 py-3 text-base">
               <Lock className="size-5 shrink-0 text-muted-foreground" />
-              <span className="flex-1">Вход по коду из SMS + PIN</span>
-              <Toggle on label="Двухфакторный вход" />
+              <span className="flex-1">{t("Вход по коду из SMS + PIN")}</span>
+              <Toggle on label={t("Двухфакторный вход")} />
             </div>
             <div className="flex items-center gap-3 py-3 text-base">
               <Shield className="size-5 shrink-0 text-muted-foreground" />
-              <span className="flex-1">Просить подтверждение при смене номера и реквизитов</span>
-              <Toggle on label="Подтверждение важных действий" />
+              <span className="flex-1">{t("Просить подтверждение при смене номера и реквизитов")}</span>
+              <Toggle on label={t("Подтверждение важных действий")} />
             </div>
           </CardContent>
         </Card>
 
         <div>
-          <p className="t-eyebrow mb-1.5 px-1">Активные устройства</p>
+          <p className="t-eyebrow mb-1.5 px-1">{t("Активные устройства")}</p>
           <Card size="sm">
             <CardContent className="divide-y divide-border py-1">
               {[
-                ["iPhone · Алматы", "это устройство · сейчас", true],
-                ["Android · Астана", "был вход 2 дня назад", false],
+                ["iPhone · Алматы", t("это устройство · сейчас"), true],
+                ["Android · Астана", t("был вход 2 дня назад"), false],
               ].map(([name, when, current]) => (
                 <div key={name as string} className="flex items-center gap-3 py-3 text-base">
                   <Smartphone className="size-5 shrink-0 text-muted-foreground" />
@@ -247,13 +252,13 @@ export function SecurityScreen() {
                     <span className="block text-sm text-muted-foreground">{when}</span>
                   </span>
                   {current ? (
-                    <span className="text-sm font-medium text-success">активно</span>
+                    <span className="text-sm font-medium text-success">{t("активно")}</span>
                   ) : (
                     <button
-                      onClick={() => showToast("Устройство отключено от аккаунта")}
+                      onClick={() => showToast(t("Устройство отключено от аккаунта"))}
                       className="min-h-11 px-2 text-sm font-medium text-destructive"
                     >
-                      Выйти
+                      {t("Выйти")}
                     </button>
                   )}
                 </div>
@@ -266,23 +271,22 @@ export function SecurityScreen() {
         <div className="surface-inset flex items-start gap-2.5 rounded-2xl p-4">
           <ShieldCheck className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
           <p className="text-sm leading-snug text-muted-foreground">
-            Вход подтверждается кодом из SMS. Никому не сообщайте код и PIN — поддержка CN-KZ
-            их не спрашивает.
+            {t("Вход подтверждается кодом из SMS. Никому не сообщайте код и PIN — поддержка CN-KZ их не спрашивает.")}
           </p>
         </div>
 
         <Button
           variant="secondary"
-          onClick={() => showToast("Код для смены PIN отправлен по SMS")}
+          onClick={() => showToast(t("Код для смены PIN отправлен по SMS"))}
           className="h-12 w-full rounded-xl text-base"
         >
-          Сменить PIN-код
+          {t("Сменить PIN-код")}
         </Button>
         <button
-          onClick={() => showToast("Вы вышли на всех устройствах, кроме этого")}
+          onClick={() => showToast(t("Вы вышли на всех устройствах, кроме этого"))}
           className="flex min-h-11 w-full items-center justify-center gap-1.5 py-2 text-sm font-medium text-destructive"
         >
-          <LogOut className="size-4" /> Выйти на всех устройствах
+          <LogOut className="size-4" /> {t("Выйти на всех устройствах")}
         </button>
       </div>
     </div>
@@ -296,7 +300,7 @@ const HFILTERS = [
 ] as const
 
 export function HistoryScreen() {
-  const { role, myOrders, feedOrders, setTab, push } = useCnKz()
+  const { role, myOrders, feedOrders, setTab, push, t } = useCnKz()
   const [f, setF] = useState<(typeof HFILTERS)[number]["id"]>("all")
   const source = role === "carrier" ? feedOrders : myOrders
   const finished = source.filter(
@@ -313,7 +317,7 @@ export function HistoryScreen() {
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader
-        title={role === "carrier" ? "История рейсов" : "История заказов"}
+        title={role === "carrier" ? t("История рейсов") : t("История заказов")}
         onBack={() => setTab("profile")}
       />
       <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-24">
@@ -323,15 +327,15 @@ export function HistoryScreen() {
             <CardContent className="flex items-center justify-around text-center">
               <div>
                 <div className="font-mono-tech text-xl font-bold tabular-nums">{finished.length}</div>
-                <div className="text-sm text-muted-foreground">{role === "carrier" ? "рейсов" : "заказов"}</div>
+                <div className="text-sm text-muted-foreground">{role === "carrier" ? t("рейсов") : t("заказов")}</div>
               </div>
               <div>
                 <div className="font-mono-tech text-xl font-bold tabular-nums">{money(earned)}</div>
-                <div className="text-sm text-muted-foreground">{role === "carrier" ? "заработано" : "потрачено"}</div>
+                <div className="text-sm text-muted-foreground">{role === "carrier" ? t("заработано") : t("потрачено")}</div>
               </div>
               <div>
                 <div className="font-mono-tech text-xl font-bold tabular-nums text-brand">{avgRating}</div>
-                <div className="text-sm text-muted-foreground">рейтинг</div>
+                <div className="text-sm text-muted-foreground">{t("рейтинг")}</div>
               </div>
             </CardContent>
           </Card>
@@ -341,7 +345,7 @@ export function HistoryScreen() {
           <ChipRow>
             {HFILTERS.map((x) => (
               <Chip key={x.id} active={f === x.id} onClick={() => setF(x.id)}>
-                {x.label}
+                {t(x.label)}
               </Chip>
             ))}
           </ChipRow>
@@ -350,11 +354,11 @@ export function HistoryScreen() {
         {finished.length === 0 ? (
           <EmptyState
             icon={role === "carrier" ? Truck : Package}
-            title={role === "carrier" ? "Пока нет завершённых рейсов" : "Пока нет завершённых заказов"}
+            title={role === "carrier" ? t("Пока нет завершённых рейсов") : t("Пока нет завершённых заказов")}
             hint={
               role === "carrier"
-                ? "Здесь появятся доставленные рейсы и заработок по каждому из них."
-                : "Здесь появятся закрытые заказы, суммы и оценки перевозчиков."
+                ? t("Здесь появятся доставленные рейсы и заработок по каждому из них.")
+                : t("Здесь появятся закрытые заказы, суммы и оценки перевозчиков.")
             }
             action={
               <Button
@@ -364,11 +368,11 @@ export function HistoryScreen() {
               >
                 {role === "carrier" ? (
                   <>
-                    <Truck className="size-5" /> К грузам
+                    <Truck className="size-5" /> {t("К грузам")}
                   </>
                 ) : (
                   <>
-                    <Plus className="size-5" /> Создать заказ
+                    <Plus className="size-5" /> {t("Создать заказ")}
                   </>
                 )}
               </Button>
@@ -377,8 +381,8 @@ export function HistoryScreen() {
         ) : list.length === 0 ? (
           <EmptyState
             icon={Package}
-            title="В этом фильтре пусто"
-            hint="Смените фильтр выше, чтобы увидеть другие записи истории."
+            title={t("В этом фильтре пусто")}
+            hint={t("Смените фильтр выше, чтобы увидеть другие записи истории.")}
           />
         ) : (
           <div className="space-y-2.5">
@@ -410,6 +414,7 @@ function MetaPill({ icon: Icon, children }: { icon: typeof Truck; children: Reac
 // Плотная карточка истории: аватар второй стороны + рейтинг, кольцевой маршрут,
 // мета-пиллы и КРУПНАЯ итоговая цена — строка заполнена 6+ атомами данных, не пустует.
 function HistoryRow({ order, carrier, onClick }: { order: Order; carrier: boolean; onClick: () => void }) {
+  const { t } = useCnKz()
   const other = carrier ? order.shipper : order.deal!.carrier
   const priceUsd = order.deal!.agreedPriceUsd
   return (
@@ -427,7 +432,7 @@ function HistoryRow({ order, carrier, onClick }: { order: Order; carrier: boolea
               <Star className="size-3.5 shrink-0 fill-[var(--star)] text-[var(--star)]" />
               <span className="font-mono-tech text-foreground">{other.rating.toFixed(1)}</span>
               <span aria-hidden>·</span>
-              <span className="truncate">{carrier ? "Заказчик" : "Перевозчик"}</span>
+              <span className="truncate">{carrier ? t("Заказчик") : t("Перевозчик")}</span>
             </p>
           </div>
         </div>
@@ -450,14 +455,14 @@ function HistoryRow({ order, carrier, onClick }: { order: Order; carrier: boolea
       {/* Мета-пиллы: кузов · вес · дата */}
       <div className="mt-3 flex flex-wrap gap-2">
         <MetaPill icon={Truck}>{order.truckType}</MetaPill>
-        <MetaPill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} кг</MetaPill>
+        <MetaPill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} {t("кг")}</MetaPill>
         <MetaPill icon={Calendar}>{order.completedAt ?? order.readyDate}</MetaPill>
       </div>
 
       {/* Итоговая цена — самый громкий элемент строки, якорит правый низ */}
       <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-secondary px-4 py-3">
         <div className="min-w-0 leading-none">
-          <p className="t-eyebrow">{order.deal!.status === "completed" ? "Оплачено" : "Сумма сделки"}</p>
+          <p className="t-eyebrow">{order.deal!.status === "completed" ? t("Оплачено") : t("Сумма сделки")}</p>
           <p className="font-mono-tech mt-1.5 text-2xl font-bold tracking-tight tabular-nums">
             {money(priceUsd)}
           </p>

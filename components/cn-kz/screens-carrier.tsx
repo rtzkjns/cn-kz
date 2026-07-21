@@ -31,19 +31,20 @@ const pickTruckFor = (o: { truckType: string; weightKg: number; volumeM3: number
 
 // Realtime identity made tangible — a pulsing green dot reinforces the live feed (MVP §4).
 function LiveBadge() {
+  const { t } = useCnKz()
   return (
     <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-sm font-medium tracking-wide text-muted-foreground">
       <span className="relative flex size-1.5">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-70" />
         <span className="relative inline-flex size-1.5 rounded-full bg-brand" />
       </span>
-      В эфире
+      {t("В эфире")}
     </span>
   )
 }
 
 export function CarrierFeedScreen() {
-  const { feedOrders, push, setTab, toggleFavorite, isFavorite, tripDraft, isInTrip, addToTrip, filters, setFilters, openFilters, isSkipped, makeOffer } =
+  const { feedOrders, push, setTab, toggleFavorite, isFavorite, tripDraft, isInTrip, addToTrip, filters, setFilters, openFilters, isSkipped, makeOffer, t } =
     useCnKz()
   // Сборный рейс: докидывать можно только грузы в тот же город назначения (решение — same destination).
   const tripDest = feedOrders.find((o) => o.id === tripDraft[0])?.destination
@@ -58,12 +59,12 @@ export function CarrierFeedScreen() {
   }, [loading])
   const refresh = () => setLoading(true)
 
-  const toggleBody = (t: string) =>
+  const toggleBody = (bt: string) =>
     setFilters({
       ...filters,
-      bodyTypes: filters.bodyTypes.includes(t)
-        ? filters.bodyTypes.filter((x) => x !== t)
-        : [...filters.bodyTypes, t],
+      bodyTypes: filters.bodyTypes.includes(bt)
+        ? filters.bodyTypes.filter((x) => x !== bt)
+        : [...filters.bodyTypes, bt],
     })
 
   const byType = useMemo(() => {
@@ -99,13 +100,13 @@ export function CarrierFeedScreen() {
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader
-        title="Главная"
-        subtitle="Все грузы · по всей СНГ"
+        title={t("Главная")}
+        subtitle={t("Все грузы · по всей СНГ")}
         action={
           <div className="flex items-center gap-1.5">
             <button
               onClick={refresh}
-              aria-label="Обновить ленту"
+              aria-label={t("Обновить ленту")}
               className="flex size-11 items-center justify-center -mr-1.5 rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <RefreshCw className={"size-5 " + (loading ? "animate-spin" : "")} />
@@ -119,19 +120,19 @@ export function CarrierFeedScreen() {
         items={[
           {
             value: available,
-            label: "Подходящих грузов",
+            label: t("Подходящих грузов"),
             icon: Boxes,
           },
           {
             value: myOffers,
-            label: "Мои отклики",
+            label: t("Мои отклики"),
             icon: Tag,
             accent: true,
             onClick: () => setTab("deals"),
           },
           {
             value: activeDeals,
-            label: "Сделки в пути",
+            label: t("Сделки в пути"),
             icon: Truck,
             onClick: () => setTab("deals"),
           },
@@ -140,9 +141,9 @@ export function CarrierFeedScreen() {
 
       {/* Тип кузова — основной способ подбора (чипы 44px). Поиск — вспомогательный, приглушён. */}
       <div className="flex flex-wrap items-center gap-2 px-4 pb-2">
-        {POPULAR_BODY_TYPES.map((t) => (
-          <Chip key={t} active={filters.bodyTypes.includes(t)} onClick={() => toggleBody(t)}>
-            {t}
+        {POPULAR_BODY_TYPES.map((bt) => (
+          <Chip key={bt} active={filters.bodyTypes.includes(bt)} onClick={() => toggleBody(bt)}>
+            {bt}
           </Chip>
         ))}
         <button
@@ -150,7 +151,7 @@ export function CarrierFeedScreen() {
           className="inline-flex h-11 items-center gap-1.5 rounded-md bg-secondary px-4 text-[15px] font-medium text-muted-foreground transition-[color,transform] duration-150 hover:text-foreground active:scale-[0.97]"
         >
           <SlidersHorizontal className="size-4" />
-          Все фильтры{countActive(filters) > 0 ? ` · ${countActive(filters)}` : ""}
+          {t("Все фильтры")}{countActive(filters) > 0 ? ` · ${countActive(filters)}` : ""}
         </button>
       </div>
 
@@ -160,7 +161,7 @@ export function CarrierFeedScreen() {
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Поиск: город, груз или #тег"
+            placeholder={t("Поиск: город, груз или #тег")}
             className="h-12 rounded-lg border-transparent bg-secondary pl-11 text-base placeholder:text-muted-foreground"
           />
         </div>
@@ -173,8 +174,8 @@ export function CarrierFeedScreen() {
         >
           <Boxes className="size-4 text-brand" />
           {showOverCap
-            ? "Скрыть неподходящие"
-            : `Не помещаются: ${hiddenCount} — показать всё`}
+            ? t("Скрыть неподходящие")
+            : `${t("Не помещаются:")} ${hiddenCount} ${t("— показать всё")}`}
         </button>
       )}
 
@@ -190,11 +191,11 @@ export function CarrierFeedScreen() {
         {!loading && list.length === 0 && (
           <EmptyState
             icon={Boxes}
-            title="Под ваши фильтры грузов нет"
-            hint="Смягчите фильтры или загляните позже — лента обновляется в реальном времени."
+            title={t("Под ваши фильтры грузов нет")}
+            hint={t("Смягчите фильтры или загляните позже — лента обновляется в реальном времени.")}
             action={
               <Button variant="secondary" size="lg" onClick={() => setFilters(EMPTY_FILTERS)}>
-                Сбросить фильтры
+                {t("Сбросить фильтры")}
               </Button>
             }
           />
@@ -237,7 +238,7 @@ export function CarrierFeedScreen() {
 
 // Док-панель собираемого рейса (над нижней навигацией).
 function TripTray() {
-  const { tripDraft, feedOrders, push } = useCnKz()
+  const { tripDraft, feedOrders, push, t } = useCnKz()
   if (tripDraft.length === 0) return null
   const orders = feedOrders.filter((o) => tripDraft.includes(o.id))
   const w = orders.reduce((s, o) => s + o.weightKg, 0)
@@ -251,10 +252,10 @@ function TripTray() {
     >
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium tabular-nums">
-          Рейс · {orders.length} {plural(orders.length, "груз", "груза", "грузов")} → {dest}
+          {t("Рейс")} · {orders.length} {plural(orders.length, "груз", "груза", "грузов")} → {dest}
         </span>
         <span className="inline-flex items-center gap-1 text-sm font-medium text-brand tabular-nums">
-          {pct}% фуры <ChevronRight className="size-4" />
+          {pct}% {t("фуры")} <ChevronRight className="size-4" />
         </span>
       </div>
       <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -295,7 +296,7 @@ function SpecCell({ label, value }: { label: string; value: React.ReactNode }) {
 
 // «Сборный рейс» — вместимость фуры + грузы + «ещё по пути» + взять рейс.
 export function TripBuilderScreen() {
-  const { tripDraft, feedOrders, addToTrip, removeFromTrip, clearTrip, submitTrip, pop } = useCnKz()
+  const { tripDraft, feedOrders, addToTrip, removeFromTrip, clearTrip, submitTrip, pop, t } = useCnKz()
   const orders = feedOrders.filter((o) => tripDraft.includes(o.id))
   const w = orders.reduce((s, o) => s + o.weightKg, 0)
   const v = orders.reduce((s, o) => s + o.volumeM3, 0)
@@ -316,8 +317,8 @@ export function TripBuilderScreen() {
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader
-        title="Сборный рейс"
-        subtitle={dest ? `Разные точки → ${dest}` : "Добавьте грузы"}
+        title={t("Сборный рейс")}
+        subtitle={dest ? `${t("Разные точки")} → ${dest}` : t("Добавьте грузы")}
         onBack={pop}
       />
       <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-0">
@@ -326,28 +327,28 @@ export function TripBuilderScreen() {
             {/* Заработок-герой + счётчик грузов заполняют шапку (anti-empty) */}
             <div className="flex items-end justify-between">
               <div className="min-w-0">
-                <p className="t-eyebrow">Заработок за рейс</p>
+                <p className="t-eyebrow">{t("Заработок за рейс")}</p>
                 <p className="t-display mt-1 tabular-nums">{money(total)}</p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="t-eyebrow">Грузов</p>
+                <p className="t-eyebrow">{t("Грузов")}</p>
                 <p className="font-mono-tech mt-1 text-[22px] leading-none font-bold tabular-nums">
                   {orders.length}
                 </p>
               </div>
             </div>
             <div className="h-px bg-border" />
-            <CapBar label="Вес" used={w} max={FLEET_MAX_WEIGHT} pct={Math.min(100, Math.round((w / FLEET_MAX_WEIGHT) * 100))} unit="кг" />
-            <CapBar label="Объём" used={v} max={FLEET_MAX_VOLUME} pct={Math.min(100, Math.round((v / FLEET_MAX_VOLUME) * 100))} unit="м³" />
+            <CapBar label={t("Вес")} used={w} max={FLEET_MAX_WEIGHT} pct={Math.min(100, Math.round((w / FLEET_MAX_WEIGHT) * 100))} unit="кг" />
+            <CapBar label={t("Объём")} used={v} max={FLEET_MAX_VOLUME} pct={Math.min(100, Math.round((v / FLEET_MAX_VOLUME) * 100))} unit="м³" />
           </CardContent>
         </Card>
 
-        <Section title={`Грузы в рейсе · ${orders.length}`}>
+        <Section title={`${t("Грузы в рейсе")} · ${orders.length}`}>
           {orders.length === 0 && (
             <EmptyState
               icon={Truck}
-              title="Пока пусто"
-              hint="В ленте нажимайте «Добавить в рейс» на грузах в один город — соберите несколько в одну фуру."
+              title={t("Пока пусто")}
+              hint={t("В ленте нажимайте «Добавить в рейс» на грузах в один город — соберите несколько в одну фуру.")}
             />
           )}
           <div className="space-y-2">
@@ -363,7 +364,7 @@ export function TripBuilderScreen() {
                   <span className="font-mono-tech text-[15px] font-semibold tabular-nums">{money(o.priceUsd)}</span>
                   <button
                     onClick={() => removeFromTrip(o.id)}
-                    aria-label="Убрать"
+                    aria-label={t("Убрать")}
                     className="flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive active:scale-[0.96]"
                   >
                     <X className="size-5" />
@@ -375,7 +376,7 @@ export function TripBuilderScreen() {
         </Section>
 
         {suggestions.length > 0 && (
-          <Section title="Ещё по пути">
+          <Section title={t("Ещё по пути")}>
             <div className="space-y-2">
               {suggestions.map((o) => (
                 <Card
@@ -406,8 +407,8 @@ export function TripBuilderScreen() {
           <div className="surface-inset flex items-start gap-2.5 rounded-2xl px-4 py-3">
             <Boxes className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
             <p className="text-[15px] leading-snug text-muted-foreground">
-              Попутных грузов{dest ? ` в ${dest}` : ""} под остаток фуры в ленте пока нет. Добавляйте
-              грузы в один город прямо из ленты — они появятся здесь.
+              {t("Попутных грузов")}{dest ? ` в ${dest}` : ""}{" "}
+              {t("под остаток фуры в ленте пока нет. Добавляйте грузы в один город прямо из ленты — они появятся здесь.")}
             </p>
           </div>
         )}
@@ -415,16 +416,16 @@ export function TripBuilderScreen() {
         {orders.length > 0 && (
           <StickyCTA>
             <div className="flex items-center justify-between text-[15px]">
-              <span className="text-muted-foreground">Заработок за рейс</span>
+              <span className="text-muted-foreground">{t("Заработок за рейс")}</span>
               <span className="font-mono-tech text-lg font-bold tabular-nums">{money(total)}</span>
             </div>
             {overCapacity && (
               <p className="text-sm text-warn">
-                Рейс превышает вместимость фуры — уберите груз, чтобы взять рейс
+                {t("Рейс превышает вместимость фуры — уберите груз, чтобы взять рейс")}
               </p>
             )}
             <Button size="xl" className="w-full" disabled={overCapacity} onClick={submitTrip}>
-              Взять рейс · {orders.length} {plural(orders.length, "груз", "груза", "грузов")}
+              {t("Взять рейс")} · {orders.length} {plural(orders.length, "груз", "груза", "грузов")}
             </Button>
             <button
               onClick={() => {
@@ -433,7 +434,7 @@ export function TripBuilderScreen() {
               }}
               className="flex h-11 w-full items-center justify-center text-sm text-muted-foreground hover:text-foreground"
             >
-              Очистить рейс
+              {t("Очистить рейс")}
             </button>
           </StickyCTA>
         )}
@@ -444,24 +445,24 @@ export function TripBuilderScreen() {
 
 // «Избранное» — грузы, которые перевозчик лайкнул в ленте, чтобы вернуться позже.
 export function FavoritesScreen() {
-  const { feedOrders, push, toggleFavorite, isFavorite, favorites, makeOffer, setTab } = useCnKz()
+  const { feedOrders, push, toggleFavorite, isFavorite, favorites, makeOffer, setTab, t } = useCnKz()
   const list = feedOrders.filter((o) => favorites.includes(o.id) && !o.deal)
 
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader
-        title="Избранное"
-        subtitle={`${list.length} ${plural(list.length, "груз", "груза", "грузов")} сохранено`}
+        title={t("Избранное")}
+        subtitle={`${list.length} ${plural(list.length, "груз", "груза", "грузов")} ${t("сохранено")}`}
       />
       <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-24">
         {list.length === 0 && (
           <EmptyState
             icon={Heart}
-            title="Пока пусто"
-            hint="Нажимайте ♥ на грузах в ленте — они появятся здесь, чтобы вернуться позже."
+            title={t("Пока пусто")}
+            hint={t("Нажимайте ♥ на грузах в ленте — они появятся здесь, чтобы вернуться позже.")}
             action={
               <Button size="lg" onClick={() => setTab("feed")}>
-                <Boxes className="size-4" /> Смотреть ленту
+                <Boxes className="size-4" /> {t("Смотреть ленту")}
               </Button>
             }
           />
@@ -488,7 +489,7 @@ export function FavoritesScreen() {
 }
 
 export function CargoDetailScreen({ orderId }: { orderId: string }) {
-  const { getOrder, pop, push, setTab, makeOffer, skipOrder, confirmCounter, declineMyOffer, clearMyOffer, showToast } =
+  const { getOrder, pop, push, setTab, makeOffer, skipOrder, confirmCounter, declineMyOffer, clearMyOffer, showToast, t } =
     useCnKz()
   const order = getOrder(orderId)
   const [counter, setCounter] = useState("")
@@ -511,7 +512,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
       <ScreenHeader
         title={
           <>
-            Груз{" "}
+            {t("Груз")}{" "}
             <span className="font-mono-tech">{order.id.replace("ord-", "#")}</span>
           </>
         }
@@ -543,48 +544,47 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                   {money(order.priceUsd)}
                 </div>
                 <div className="mt-1 text-sm text-muted-foreground tabular-nums">
-                  {kzt(order.priceUsd)} · оплата в USD
+                  {kzt(order.priceUsd)} · {t("оплата в USD")}
                 </div>
               </div>
             </div>
             <p className="text-[15px] text-muted-foreground">{order.cargo}</p>
             {/* 2-колоночная спец-таблица — плотная сводка вместо пустоты (anti-empty) */}
             <div className="grid grid-cols-2 gap-2 pt-1">
-              <SpecCell label="Вес" value={`${order.weightKg.toLocaleString("ru-RU")} кг`} />
-              <SpecCell label="Объём" value={`${order.volumeM3} м³`} />
-              <SpecCell label="Тип авто" value={order.truckType} />
-              <SpecCell label="Готов к погрузке" value={order.readyDate} />
+              <SpecCell label={t("Вес")} value={`${order.weightKg.toLocaleString("ru-RU")} кг`} />
+              <SpecCell label={t("Объём")} value={`${order.volumeM3} м³`} />
+              <SpecCell label={t("Тип авто")} value={order.truckType} />
+              <SpecCell label={t("Готов к погрузке")} value={order.readyDate} />
             </div>
             {order.pickupPoint && (
-              <DetailRow label="Точка погрузки" value={order.pickupPoint} />
+              <DetailRow label={t("Точка погрузки")} value={order.pickupPoint} />
             )}
             {order.pickupPhone && (
               <DetailRow
-                label="Контакт погрузки"
+                label={t("Контакт погрузки")}
                 value={
                   contactUnlocked({ offerStatus: order.myOfferStatus, hasDeal: !!order.deal })
                     ? order.pickupPhone
-                    : "откроется после отклика"
+                    : t("откроется после отклика")
                 }
               />
             )}
-            <DetailRow label="Адрес доставки" value={order.address} />
+            <DetailRow label={t("Адрес доставки")} value={order.address} />
             <DetailRow
-              label="Оплата"
-              value={order.payment === "cash" ? "Наличными" : "Безналичный расчёт"}
+              label={t("Оплата")}
+              value={order.payment === "cash" ? t("Наличными") : t("Безналичный расчёт")}
             />
-            {order.notes && <DetailRow label="Примечание" value={order.notes} />}
+            {order.notes && <DetailRow label={t("Примечание")} value={order.notes} />}
             {order.safePay !== false && (
               <div className="surface-inset mt-1 flex items-start gap-1.5 rounded-xl px-2.5 py-2 text-sm text-foreground">
-                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand" /> Безопасная сделка:
-                заказчик проверен по БИН, переписка и фото сохраняются. Берите аванс на счёт компании
-                по БИН, не на личную карту.
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand" />{" "}
+                {t("Безопасная сделка: заказчик проверен по БИН, переписка и фото сохраняются. Берите аванс на счёт компании по БИН, не на личную карту.")}
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Section title="Заказчик">
+        <Section title={t("Заказчик")}>
           <Card size="sm">
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2">
@@ -611,11 +611,11 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                   onClick={() =>
                     showToast(
                       order.deal
-                        ? "Открываю чат…"
-                        : "Чат откроется после создания сделки"
+                        ? t("Открываю чат…")
+                        : t("Чат откроется после создания сделки")
                     )
                   }
-                  aria-label="Чат"
+                  aria-label={t("Чат")}
                 >
                   <MessageCircle />
                 </Button>
@@ -625,7 +625,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                 <CallButton phone={order.shipper.phone} className="w-full" />
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Номер заказчика откроется после отклика.
+                  {t("Номер заказчика откроется после отклика.")}
                 </p>
               )}
             </CardContent>
@@ -639,31 +639,31 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
           >
             <CardContent className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[15px] text-muted-foreground">Ваш отклик</span>
+                <span className="text-[15px] text-muted-foreground">{t("Ваш отклик")}</span>
                 <OfferStatusBadge status={order.myOfferStatus} />
               </div>
 
               {order.myOfferStatus === "pending" && (
                 <>
                   <DetailRow
-                    label="Ваша цена"
+                    label={t("Ваша цена")}
                     value={money(order.myOfferPriceUsd ?? order.priceUsd)}
                   />
                   {order.myOfferTruck && (
                     <DetailRow
-                      label="Ваша фура"
+                      label={t("Ваша фура")}
                       value={`${order.myOfferTruck.type} · ${order.myOfferTruck.plate}`}
                     />
                   )}
-                  <p className="text-sm text-muted-foreground">Ждём ответа заказчика…</p>
+                  <p className="text-sm text-muted-foreground">{t("Ждём ответа заказчика…")}</p>
                 </>
               )}
 
               {order.myOfferStatus === "countered" && (
                 <>
-                  <DetailRow label="Ваша цена" value={money(order.myOfferPriceUsd ?? 0)} />
+                  <DetailRow label={t("Ваша цена")} value={money(order.myOfferPriceUsd ?? 0)} />
                   <DetailRow
-                    label="Встречная заказчика"
+                    label={t("Встречная заказчика")}
                     value={money(order.myCounterPriceUsd ?? 0)}
                   />
                   <div className="flex gap-2 pt-1">
@@ -672,7 +672,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                       className="flex-1 bg-[var(--success)] text-white hover:bg-[var(--success-strong)]"
                       onClick={() => confirmCounter(order.id)}
                     >
-                      <Check className="size-4" /> Согласиться {money(order.myCounterPriceUsd ?? 0)}
+                      <Check className="size-4" /> {t("Согласиться")} {money(order.myCounterPriceUsd ?? 0)}
                     </Button>
                     <Button
                       size="lg"
@@ -687,7 +687,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                         }
                       }}
                     >
-                      {declineConfirm ? "Точно?" : "Отклонить"}
+                      {declineConfirm ? t("Точно?") : t("Отклонить")}
                     </Button>
                   </div>
                 </>
@@ -698,8 +698,8 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                 <>
                   <p className="text-sm text-muted-foreground">
                     {order.myOfferStatus === "rejected"
-                      ? "Отклик снят или отклонён."
-                      : "Срок отклика истёк."}
+                      ? t("Отклик снят или отклонён.")
+                      : t("Срок отклика истёк.")}
                   </p>
                   {/* Повторный отклик: сбрасываем статус — снова появляется панель ставки (§7) */}
                   <Button
@@ -708,7 +708,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                     className="w-full"
                     onClick={() => clearMyOffer(order.id)}
                   >
-                    <RotateCcw className="size-4" /> Откликнуться заново
+                    <RotateCcw className="size-4" /> {t("Откликнуться заново")}
                   </Button>
                 </>
               )}
@@ -726,7 +726,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                 push({ type: "deal", orderId: order.id })
               }}
             >
-              <Truck className="size-5" /> Открыть сделку
+              <Truck className="size-5" /> {t("Открыть сделку")}
             </Button>
           </StickyCTA>
         )}
@@ -734,17 +734,17 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
         {!alreadyOffered && (
           <StickyCTA>
             <div className="space-y-1.5">
-              <p className="text-sm text-muted-foreground">Фура из парка</p>
+              <p className="text-sm text-muted-foreground">{t("Фура из парка")}</p>
               <ChipRow>
-                {MY_FLEET.map((t) => (
-                  <Chip key={t.id} active={truckId === t.id} onClick={() => setTruckId(t.id)}>
-                    {t.type} · {t.plate}
+                {MY_FLEET.map((truck) => (
+                  <Chip key={truck.id} active={truckId === truck.id} onClick={() => setTruckId(truck.id)}>
+                    {truck.type} · {truck.plate}
                   </Chip>
                 ))}
               </ChipRow>
               {overCapacity && (
                 <p className="text-sm text-warn">
-                  Груз превышает вместимость этой фуры — выберите другую
+                  {t("Груз превышает вместимость этой фуры — выберите другую")}
                 </p>
               )}
             </div>
@@ -754,11 +754,11 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
               disabled={overCapacity}
               onClick={() => makeOffer(order.id, "accept", order.priceUsd, truckId)}
             >
-              <Check className="size-5" /> Принять цену {money(order.priceUsd)}
+              <Check className="size-5" /> {t("Принять цену")} {money(order.priceUsd)}
             </Button>
             {/* Своя цена — быстрые лаймовые шаги (inDrive-встречная) + ручной ввод */}
             <div className="space-y-2">
-              <p className="t-eyebrow">Своя цена</p>
+              <p className="t-eyebrow">{t("Своя цена")}</p>
               <div className="grid grid-cols-3 gap-2">
                 {quickSteps.map((s) => (
                   <button
@@ -779,7 +779,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                   inputMode="numeric"
                   value={counter}
                   onChange={(e) => setCounter(e.target.value)}
-                  placeholder="Ввести свою, $"
+                  placeholder={t("Ввести свою, $")}
                   className="h-12 rounded-lg bg-secondary text-base tabular-nums"
                 />
                 <Button
@@ -789,7 +789,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
                   disabled={!counter || Number(counter) <= 0 || overCapacity}
                   onClick={() => makeOffer(order.id, "counter", Number(counter), truckId)}
                 >
-                  Назвать цену
+                  {t("Назвать цену")}
                 </Button>
               </div>
             </div>
@@ -799,7 +799,7 @@ export function CargoDetailScreen({ orderId }: { orderId: string }) {
               className="w-full"
               onClick={() => { skipOrder(order.id); pop() }}
             >
-              Пропустить груз
+              {t("Пропустить груз")}
             </Button>
           </StickyCTA>
         )}

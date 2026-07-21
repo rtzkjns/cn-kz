@@ -15,20 +15,21 @@ import { Chip, EmptyState, Section, StatStrip, StickyCTA } from "./ui-bits"
 import { useCnKz } from "./store"
 
 function LiveBadge() {
+  const { t } = useCnKz()
   return (
     <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-xs font-medium tracking-wide text-muted-foreground">
       <span className="relative flex size-1.5">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-70" />
         <span className="relative inline-flex size-1.5 rounded-full bg-brand" />
       </span>
-      В эфире
+      {t("В эфире")}
     </span>
   )
 }
 
 // «Главная» — весь маркетплейс грузов (все открытые заказы), как на kolesa/OLX.
 export function MarketFeedScreen() {
-  const { feedOrders, push, filters, setFilters, openFilters, authed, role } = useCnKz()
+  const { feedOrders, push, filters, setFilters, openFilters, authed, role, t } = useCnKz()
   // Для авторизованного заказчика эта вкладка = «Рынок» (исследование цен); для гостя/перевозчика — домашняя «Главная».
   const isMarketTab = authed && role === "shipper"
   const [q, setQ] = useState("")
@@ -64,13 +65,13 @@ export function MarketFeedScreen() {
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader
-        title={isMarketTab ? "Рынок" : "Главная"}
-        subtitle={`Рынок цен и маршрутов · ${list.length} ${plural(list.length, "открытый груз", "открытых груза", "открытых грузов")} по СНГ`}
+        title={isMarketTab ? t("Рынок") : t("Главная")}
+        subtitle={`${t("Рынок цен и маршрутов")} · ${list.length} ${plural(list.length, "открытый груз", "открытых груза", "открытых грузов")} ${t("по СНГ")}`}
         action={
           <div className="flex items-center gap-1.5">
             <button
               onClick={refresh}
-              aria-label="Обновить ленту"
+              aria-label={t("Обновить ленту")}
               className="-mr-1.5 flex size-11 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
             >
               <RefreshCw className={"size-5 " + (loading ? "animate-spin" : "")} />
@@ -82,9 +83,9 @@ export function MarketFeedScreen() {
 
       <StatStrip
         items={[
-          { value: list.length, label: "Открытых грузов", icon: Box },
-          { value: uniqueRoutes, label: "Направлений", icon: MapPin },
-          { value: uniqueShippers, label: "Заказчиков", icon: Building2 },
+          { value: list.length, label: t("Открытых грузов"), icon: Box },
+          { value: uniqueRoutes, label: t("Направлений"), icon: MapPin },
+          { value: uniqueShippers, label: t("Заказчиков"), icon: Building2 },
         ]}
       />
 
@@ -100,7 +101,7 @@ export function MarketFeedScreen() {
           className="inline-flex h-11 items-center gap-1.5 rounded-full border border-border px-4 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           <SlidersHorizontal className="size-4" />
-          Все фильтры{countActive(filters) > 0 ? ` · ${countActive(filters)}` : ""}
+          {t("Все фильтры")}{countActive(filters) > 0 ? ` · ${countActive(filters)}` : ""}
         </button>
       </div>
 
@@ -110,7 +111,7 @@ export function MarketFeedScreen() {
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Город, груз или #тег…  #алматы #тент"
+            placeholder={t("Город, груз или #тег…  #алматы #тент")}
             className="h-11 border-transparent bg-muted/40 pl-9 text-base"
           />
         </div>
@@ -128,8 +129,8 @@ export function MarketFeedScreen() {
         {!loading && list.length === 0 && (
           <EmptyState
             icon={Search}
-            title="Ничего не найдено"
-            hint="Попробуйте другой город или сбросьте фильтры."
+            title={t("Ничего не найдено")}
+            hint={t("Попробуйте другой город или сбросьте фильтры.")}
             action={
               <Button
                 variant="secondary"
@@ -139,7 +140,7 @@ export function MarketFeedScreen() {
                   setFilters(EMPTY_FILTERS)
                 }}
               >
-                Сбросить фильтры
+                {t("Сбросить фильтры")}
               </Button>
             }
           />
@@ -186,6 +187,7 @@ function SpecCell({
 
 // Компактная строка «похожего груза» — заполняет низ экрана реальными данными рынка (anti-empty).
 function SimilarRow({ order, onOpen }: { order: Order; onOpen: () => void }) {
+  const { t } = useCnKz()
   return (
     <button
       onClick={onOpen}
@@ -205,7 +207,7 @@ function SimilarRow({ order, onOpen }: { order: Order; onOpen: () => void }) {
       <div className="shrink-0 text-right">
         <p className="font-mono-tech text-[17px] font-bold tabular-nums">{money(order.priceUsd)}</p>
         <p className="mt-0.5 text-sm text-muted-foreground tabular-nums">
-          {order.weightKg.toLocaleString("ru-RU")} кг
+          {order.weightKg.toLocaleString("ru-RU")} {t("кг")}
         </p>
       </div>
     </button>
@@ -214,7 +216,7 @@ function SimilarRow({ order, onOpen }: { order: Order; onOpen: () => void }) {
 
 // Read-only market listing (a load posted by another заказчик) — for browsing / rate research.
 export function MarketOrderScreen({ orderId }: { orderId: string }) {
-  const { getOrder, pop, push, authed, role, openAuth, feedOrders } = useCnKz()
+  const { getOrder, pop, push, authed, role, openAuth, feedOrders, t } = useCnKz()
   const order = getOrder(orderId)
   if (!order) return null
 
@@ -235,7 +237,7 @@ export function MarketOrderScreen({ orderId }: { orderId: string }) {
       <ScreenHeader
         title={
           <>
-            Груз <span className="font-mono-tech">{order.id.replace("ord-", "#")}</span>
+            {t("Груз")} <span className="font-mono-tech">{order.id.replace("ord-", "#")}</span>
           </>
         }
         subtitle={`${order.origin} → ${order.destination}`}
@@ -262,31 +264,31 @@ export function MarketOrderScreen({ orderId }: { orderId: string }) {
 
           {/* Цена — суть этого экрана рыночных цен: hero-блок 32/800 + ориентир ≈₸ */}
           <div className="rounded-xl bg-secondary px-4 py-3">
-            <p className="t-eyebrow">Цена заказчика</p>
+            <p className="t-eyebrow">{t("Цена заказчика")}</p>
             <p className="t-display mt-1.5">{money(order.priceUsd)}</p>
             <p className="font-mono-tech mt-1.5 text-sm leading-none text-muted-foreground/80">
-              {kzt(order.priceUsd)} · курс ориентировочный
+              {kzt(order.priceUsd)} · {t("курс ориентировочный")}
             </p>
           </div>
         </div>
 
         {/* 2-колоночная спец-таблица — anti-empty: превращаем пустоту в сканируемые характеристики */}
         <div className="grid grid-cols-2 gap-2">
-          <SpecCell icon={Weight} label="Вес" value={`${order.weightKg.toLocaleString("ru-RU")} кг`} />
-          <SpecCell icon={Box} label="Объём" value={`${order.volumeM3} м³`} />
-          <SpecCell icon={Truck} label="Тип кузова" value={order.truckType} />
-          <SpecCell icon={Wallet} label="Оплата" value={paymentLabel(order.payment)} />
-          <SpecCell icon={Calendar} label="Готов к погрузке" value={order.readyDate} wide />
+          <SpecCell icon={Weight} label={t("Вес")} value={`${order.weightKg.toLocaleString("ru-RU")} ${t("кг")}`} />
+          <SpecCell icon={Box} label={t("Объём")} value={`${order.volumeM3} м³`} />
+          <SpecCell icon={Truck} label={t("Тип кузова")} value={order.truckType} />
+          <SpecCell icon={Wallet} label={t("Оплата")} value={t(paymentLabel(order.payment))} />
+          <SpecCell icon={Calendar} label={t("Готов к погрузке")} value={order.readyDate} wide />
         </div>
 
         {order.notes && (
           <div className="surface-inset rounded-xl px-4 py-3">
-            <p className="t-eyebrow">Примечание</p>
+            <p className="t-eyebrow">{t("Примечание")}</p>
             <p className="mt-1.5 text-[15px] text-foreground">{order.notes}</p>
           </div>
         )}
 
-        <Section title="Заказчик">
+        <Section title={t("Заказчик")}>
           <div className="surface-glass flex items-center gap-3 rounded-2xl p-4">
             <Avatar name={order.shipper.name} className="size-11 shrink-0 rounded-full text-[15px] font-bold" />
             <div className="min-w-0 flex-1">
@@ -302,14 +304,14 @@ export function MarketOrderScreen({ orderId }: { orderId: string }) {
             </div>
             {order.shipper.verified && (
               <StatusBadge tone="info" icon={ShieldCheck}>
-                Проверен
+                {t("Проверен")}
               </StatusBadge>
             )}
           </div>
         </Section>
 
         {similar.length > 0 && (
-          <Section title="Похожие грузы на рынке">
+          <Section title={t("Похожие грузы на рынке")}>
             <div className="space-y-2">
               {similar.map((o) => (
                 <SimilarRow
@@ -324,14 +326,14 @@ export function MarketOrderScreen({ orderId }: { orderId: string }) {
 
         <p className="px-1 text-center text-sm text-muted-foreground">
           {authed
-            ? "Заказ другого заказчика · только просмотр (рыночные цены и маршруты)"
-            : "Контакты и точный адрес скрыты — войдите, чтобы связаться и откликнуться"}
+            ? t("Заказ другого заказчика · только просмотр (рыночные цены и маршруты)")
+            : t("Контакты и точный адрес скрыты — войдите, чтобы связаться и откликнуться")}
         </p>
 
         {!authed ? (
           <StickyCTA>
             <Button size="xl" className="w-full" onClick={openAuth}>
-              Войти, чтобы откликнуться
+              {t("Войти, чтобы откликнуться")}
             </Button>
           </StickyCTA>
         ) : canClone ? (
@@ -341,7 +343,7 @@ export function MarketOrderScreen({ orderId }: { orderId: string }) {
               className="w-full"
               onClick={() => push({ type: "createOrder", prefillFrom: order.id })}
             >
-              <Copy className="size-5" /> Создать похожий заказ
+              <Copy className="size-5" /> {t("Создать похожий заказ")}
             </Button>
           </StickyCTA>
         ) : null}

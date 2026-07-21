@@ -128,7 +128,7 @@ const FILTERS = [
 ] as const
 
 export function ShipperOrdersScreen() {
-  const { myOrders, push, togglePin, dealsNewOnly, setDealsNewOnly, isNew } = useCnKz()
+  const { myOrders, push, togglePin, dealsNewOnly, setDealsNewOnly, isNew, t } = useCnKz()
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("all")
   const [sort, setSort] = useState<"new" | "offers">("new")
   const [query, setQuery] = useState("")
@@ -192,17 +192,17 @@ export function ShipperOrdersScreen() {
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader
-        title="Мои заказы"
-        subtitle={`${activeCount} ${plural(activeCount, "активный заказ", "активных заказа", "активных заказов")} · по всей СНГ`}
+        title={t("Мои заказы")}
+        subtitle={`${activeCount} ${plural(activeCount, t("активный заказ"), t("активных заказа"), t("активных заказов"))} · ${t("по всей СНГ")}`}
       />
 
       <StatStrip
         items={[
-          { value: inBidding, label: "Не приняты", icon: Gavel, onClick: () => setFilter("open") },
-          { value: activeDeals, label: "В работе", icon: Truck, onClick: () => setFilter("accepted") },
+          { value: inBidding, label: t("Не приняты"), icon: Gavel, onClick: () => setFilter("open") },
+          { value: activeDeals, label: t("В работе"), icon: Truck, onClick: () => setFilter("accepted") },
           {
             value: newOffers,
-            label: "Новые отклики",
+            label: t("Новые отклики"),
             icon: Tag,
             accent: true,
             onClick: () => {
@@ -219,7 +219,7 @@ export function ShipperOrdersScreen() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Поиск по городу назначения, грузу…  #алматы #тент"
+            placeholder={t("Поиск по городу назначения, грузу…  #алматы #тент")}
             className="h-12 rounded-lg bg-secondary pl-10 text-base"
           />
         </div>
@@ -228,7 +228,7 @@ export function ShipperOrdersScreen() {
       <ChipRow className="px-4 pb-2">
         {dealsNewOnly && (
           <Chip active onClick={() => setDealsNewOnly(false)}>
-            Только новые ✕
+            {t("Только новые")} ✕
           </Chip>
         )}
         {FILTERS.map((f) => (
@@ -240,12 +240,12 @@ export function ShipperOrdersScreen() {
               setDealsNewOnly(false)
             }}
           >
-            {f.label}
+            {t(f.label)}
           </Chip>
         ))}
         <span className="mx-0.5 w-px shrink-0 self-stretch bg-border" />
-        <Chip active={sort === "new"} onClick={() => setSort("new")}>Новые</Chip>
-        <Chip active={sort === "offers"} onClick={() => setSort("offers")}>Больше откликов</Chip>
+        <Chip active={sort === "new"} onClick={() => setSort("new")}>{t("Новые")}</Chip>
+        <Chip active={sort === "offers"} onClick={() => setSort("offers")}>{t("Больше откликов")}</Chip>
       </ChipRow>
 
       <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-24">
@@ -253,22 +253,22 @@ export function ShipperOrdersScreen() {
           (anyOrders ? (
             <EmptyState
               icon={Search}
-              title="Ничего не найдено"
-              hint="Под этот фильтр или поиск заказов нет — они никуда не делись."
+              title={t("Ничего не найдено")}
+              hint={t("Под этот фильтр или поиск заказов нет — они никуда не делись.")}
               action={
                 <Button size="lg" variant="secondary" onClick={resetView}>
-                  Сбросить фильтры
+                  {t("Сбросить фильтры")}
                 </Button>
               }
             />
           ) : (
             <EmptyState
               icon={Package}
-              title="Здесь пока пусто"
-              hint="Опубликуйте заказ — перевозчики начнут откликаться в реальном времени."
+              title={t("Здесь пока пусто")}
+              hint={t("Опубликуйте заказ — перевозчики начнут откликаться в реальном времени.")}
               action={
                 <Button size="lg" onClick={() => push({ type: "createOrder" })}>
-                  Создать заказ
+                  {t("Создать заказ")}
                 </Button>
               }
             />
@@ -299,7 +299,7 @@ export function ShipperOrdersScreen() {
 }
 
 export function OrderDetailScreen({ orderId }: { orderId: string }) {
-  const { getOrder, pop, push, acceptOffer, pickCounterOffer, rejectOffer, counterOffer, republishOrder, deleteOrder, markSeen } = useCnKz()
+  const { getOrder, pop, push, acceptOffer, pickCounterOffer, rejectOffer, counterOffer, republishOrder, deleteOrder, markSeen, t } = useCnKz()
   const [counterFor, setCounterFor] = useState<string | null>(null)
   const [counterVal, setCounterVal] = useState("")
   const [rejectFor, setRejectFor] = useState<string | null>(null)
@@ -325,7 +325,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
       <ScreenHeader
         title={
           <>
-            Заказ{" "}
+            {t("Заказ")}{" "}
             <span className="font-mono-tech">{order.id.replace("ord-", "#")}</span>
           </>
         }
@@ -359,23 +359,23 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
           {/* price hero band + оплата (заполняет правую пустоту) */}
           <div className="flex items-end justify-between gap-3 rounded-xl bg-secondary px-4 py-3">
             <div className="min-w-0">
-              <p className="t-eyebrow">Цена заказчика</p>
+              <p className="t-eyebrow">{t("Цена заказчика")}</p>
               <p className="t-display mt-1">{money(order.priceUsd)}</p>
             </div>
             <div className="shrink-0 text-right">
-              <p className="t-eyebrow">Оплата</p>
+              <p className="t-eyebrow">{t("Оплата")}</p>
               <p className="mt-1 text-[15px] font-semibold">
-                {order.payment === "cash" ? "Наличные" : "Перевод"}
+                {order.payment === "cash" ? t("Наличные") : t("Перевод")}
               </p>
             </div>
           </div>
 
           {/* 2-col spec grid — скан-таблица вместо пустоты */}
           <div className="grid grid-cols-2 gap-2">
-            <SpecCell icon={Weight} label="Вес" value={`${order.weightKg.toLocaleString("ru-RU")} кг`} />
-            <SpecCell icon={Box} label="Объём" value={`${order.volumeM3} м³`} />
-            <SpecCell icon={Truck} label="Тип кузова" value={order.truckType} />
-            <SpecCell icon={Calendar} label="Готов к погрузке" value={order.readyDate} />
+            <SpecCell icon={Weight} label={t("Вес")} value={`${order.weightKg.toLocaleString("ru-RU")} ${t("кг")}`} />
+            <SpecCell icon={Box} label={t("Объём")} value={`${order.volumeM3} м³`} />
+            <SpecCell icon={Truck} label={t("Тип кузова")} value={order.truckType} />
+            <SpecCell icon={Calendar} label={t("Готов к погрузке")} value={order.readyDate} />
           </div>
 
           {/* адрес / контакты / примечание — в серой inset-полосе (gutter вместо бордеров) */}
@@ -386,49 +386,49 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
             order.recipientPhone ||
             order.notes) && (
             <div className="surface-inset space-y-2.5 rounded-xl p-4">
-              {order.pickupPoint && <DetailRow label="Точка погрузки" value={order.pickupPoint} />}
-              {order.pickupPhone && <DetailRow label="Контакт погрузки" value={order.pickupPhone} />}
-              {order.address && <DetailRow label="Адрес доставки" value={order.address} />}
+              {order.pickupPoint && <DetailRow label={t("Точка погрузки")} value={order.pickupPoint} />}
+              {order.pickupPhone && <DetailRow label={t("Контакт погрузки")} value={order.pickupPhone} />}
+              {order.address && <DetailRow label={t("Адрес доставки")} value={order.address} />}
               {(order.recipientName || order.recipientPhone) && (
                 <DetailRow
-                  label="Получатель"
+                  label={t("Получатель")}
                   value={[order.recipientName, order.recipientPhone].filter(Boolean).join(" · ")}
                 />
               )}
-              {order.notes && <DetailRow label="Примечание" value={order.notes} />}
+              {order.notes && <DetailRow label={t("Примечание")} value={order.notes} />}
             </div>
           )}
         </div>
 
         <Section
-          title="Отклики"
-          right={<span className="t-meta text-muted-foreground">{visible.length} активных</span>}
+          title={t("Отклики")}
+          right={<span className="t-meta text-muted-foreground">{visible.length} {t("активных")}</span>}
         >
           {visible.length === 0 ? (
             <EmptyState
               icon={Gavel}
               title={
                 order.deal
-                  ? "Сделка заключена"
+                  ? t("Сделка заключена")
                   : order.status === "archived"
-                    ? "Откликов не было"
-                    : "Пока нет откликов"
+                    ? t("Откликов не было")
+                    : t("Пока нет откликов")
               }
               hint={
                 order.deal
-                  ? "Остальные отклики отклонены — сделка уже в работе."
+                  ? t("Остальные отклики отклонены — сделка уже в работе.")
                   : order.status === "archived"
-                    ? "Заказ ушёл в архив без предложений. Можно перепубликовать."
-                    : "Пуш ушёл подходящим перевозчикам — первые ставки появятся здесь."
+                    ? t("Заказ ушёл в архив без предложений. Можно перепубликовать.")
+                    : t("Пуш ушёл подходящим перевозчикам — первые ставки появятся здесь.")
               }
             />
           ) : (
             <>
               {/* summary strip: сколько откликов · лучшая цена · топ-рейтинг */}
               <div className="surface-inset mb-3 flex items-stretch divide-x divide-border rounded-xl">
-                <SummarySeg value={String(visible.length)} label="откликов" />
-                <SummarySeg value={money(minPrice)} label="лучшая цена" />
-                <SummarySeg value={bestRating.toFixed(1)} label="топ-рейтинг" star />
+                <SummarySeg value={String(visible.length)} label={t("откликов")} />
+                <SummarySeg value={money(minPrice)} label={t("лучшая цена")} />
+                <SummarySeg value={bestRating.toFixed(1)} label={t("топ-рейтинг")} star />
               </div>
 
               <div className="space-y-3">
@@ -487,13 +487,13 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                         )}
                         {of.capacityKg && (
                           <span className="inline-flex items-center rounded-md bg-secondary px-2.5 py-1.5 text-[14px] font-medium text-muted-foreground tabular-nums">
-                            до {of.capacityKg.toLocaleString("ru-RU")} кг
+                            {t("до")} {of.capacityKg.toLocaleString("ru-RU")} {t("кг")}
                           </span>
                         )}
                         {of.kind === "accept" ? (
-                          <StatusBadge tone="success" icon={Check}>Готов сразу</StatusBadge>
+                          <StatusBadge tone="success" icon={Check}>{t("Готов сразу")}</StatusBadge>
                         ) : (
-                          <StatusBadge tone="info">Встречная</StatusBadge>
+                          <StatusBadge tone="info">{t("Встречная")}</StatusBadge>
                         )}
                       </div>
 
@@ -501,7 +501,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                         <div className="mt-3 space-y-2">
                           <div className="flex items-end justify-between gap-3 rounded-xl bg-secondary px-4 py-3">
                             <div className="min-w-0">
-                              <p className="t-eyebrow">Вы выбрали встречную</p>
+                              <p className="t-eyebrow">{t("Вы выбрали встречную")}</p>
                               <p className="t-display mt-1">{money(of.priceUsd)}</p>
                             </div>
                             <span className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[color-mix(in_srgb,var(--warn)_14%,transparent)] px-2.5 py-1.5 text-sm font-semibold text-[var(--warn)]">
@@ -509,7 +509,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                             </span>
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            Ждём подтверждения перевозчика.
+                            {t("Ждём подтверждения перевозчика.")}
                           </p>
                           {/* §5: отклик «живой» — можно позвонить перевозчику, пока ждём подтверждения. */}
                           <CallButton phone={of.carrier.phone} className="w-full" />
@@ -518,12 +518,12 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                         <div className="mt-3 space-y-2">
                           <div className="flex items-end justify-between gap-3 rounded-xl bg-secondary px-4 py-3">
                             <div className="min-w-0">
-                              <p className="t-eyebrow">Встречная отправлена</p>
+                              <p className="t-eyebrow">{t("Встречная отправлена")}</p>
                               <p className="t-display mt-1">
                                 {money(of.shipperCounterUsd ?? of.priceUsd)}
                               </p>
                             </div>
-                            <StatusBadge tone="brand">Ждём ответа</StatusBadge>
+                            <StatusBadge tone="brand">{t("Ждём ответа")}</StatusBadge>
                           </div>
                           {/* §5: контакт раскрыт, пока встречная на рассмотрении. */}
                           <CallButton phone={of.carrier.phone} className="w-full" />
@@ -533,7 +533,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                           {/* price hero + accept (green) — цена самый громкий элемент карточки */}
                           <div className="mt-3 flex items-end justify-between gap-3 rounded-xl bg-secondary px-4 py-3">
                             <div className="min-w-0">
-                              <p className="t-eyebrow">Ставка перевозчика</p>
+                              <p className="t-eyebrow">{t("Ставка перевозчика")}</p>
                               <p className="t-display mt-1">{money(of.priceUsd)}</p>
                             </div>
                             <Button
@@ -552,7 +552,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                               }}
                             >
                               <Check className="size-4" />
-                              {of.kind === "accept" ? "Выбрать" : "Выбрать встречную"}
+                              {of.kind === "accept" ? t("Выбрать") : t("Выбрать встречную")}
                             </Button>
                           </div>
 
@@ -568,7 +568,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                                 setCounterVal("")
                               }}
                             >
-                              <Tag className="size-4" /> Своя цена
+                              <Tag className="size-4" /> {t("Своя цена")}
                             </Button>
                             {/* §5: контакт раскрыт, пока отклик «живой». */}
                             {offerLive(of.status) && (
@@ -594,7 +594,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                             )}
                           >
                             <X className="size-4" />
-                            {rejectFor === of.id ? "Точно отклонить?" : "Отклонить отклик"}
+                            {rejectFor === of.id ? t("Точно отклонить?") : t("Отклонить отклик")}
                           </button>
 
                           {counterFor === of.id && (
@@ -608,7 +608,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                                   inputMode="numeric"
                                   value={counterVal}
                                   onChange={(e) => setCounterVal(e.target.value)}
-                                  placeholder={`Ваша цена (сейчас ${of.priceUsd})`}
+                                  placeholder={`${t("Ваша цена")} (${t("сейчас")} ${of.priceUsd})`}
                                   className="font-mono-tech h-12 pl-7 text-base tabular-nums"
                                 />
                               </div>
@@ -621,7 +621,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                                   setCounterFor(null)
                                 }}
                               >
-                                Отправить
+                                {t("Отправить")}
                               </Button>
                             </div>
                           )}
@@ -643,7 +643,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
               className="h-12 flex-1 text-[15px]"
               onClick={() => push({ type: "createOrder", editId: order.id })}
             >
-              <Pencil className="size-4" /> Редактировать
+              <Pencil className="size-4" /> {t("Редактировать")}
             </Button>
           )}
           <Button
@@ -652,7 +652,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
             className="h-12 flex-1 text-[15px]"
             onClick={() => push({ type: "createOrder", prefillFrom: order.id })}
           >
-            <Copy className="size-4" /> Создать копию
+            <Copy className="size-4" /> {t("Создать копию")}
           </Button>
         </div>
 
@@ -666,7 +666,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                 push({ type: "deal", orderId: order.id })
               }}
             >
-              <Truck className="size-5" /> Открыть сделку · {money(order.deal.agreedPriceUsd)}
+              <Truck className="size-5" /> {t("Открыть сделку")} · {money(order.deal.agreedPriceUsd)}
             </Button>
           </StickyCTA>
         )}
@@ -681,7 +681,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
               pop()
             }}
           >
-            <RefreshCw className="size-4" /> Перепубликовать заказ
+            <RefreshCw className="size-4" /> {t("Перепубликовать заказ")}
           </Button>
         )}
 
@@ -693,7 +693,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
               confirmDelete ? "bg-destructive/10 text-destructive" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Trash2 className="size-4" /> {confirmDelete ? "Точно удалить заказ?" : "Удалить заказ"}
+            <Trash2 className="size-4" /> {confirmDelete ? t("Точно удалить заказ?") : t("Удалить заказ")}
           </button>
         )}
       </div>
@@ -782,7 +782,7 @@ export function CreateOrderScreen({
   prefillFrom?: string
   editId?: string
 }) {
-  const { publishOrder, saveOrderEdit, getOrder, pop, setTab } = useCnKz()
+  const { publishOrder, saveOrderEdit, getOrder, pop, setTab, t } = useCnKz()
   const srcOrder = (editId ?? prefillFrom) ? getOrder((editId ?? prefillFrom)!) : undefined
   const isEdit = !!editId
   const [d, setD] = useState<NewOrderDraft>(() =>
@@ -807,15 +807,15 @@ export function CreateOrderScreen({
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader
-        title={isEdit ? "Редактировать заказ" : prefillFrom ? "Копия заказа" : "Новый заказ"}
-        subtitle={isEdit ? "Изменение условий обновит заказ" : "Опишите груз и маршрут"}
+        title={isEdit ? t("Редактировать заказ") : prefillFrom ? t("Копия заказа") : t("Новый заказ")}
+        subtitle={isEdit ? t("Изменение условий обновит заказ") : t("Опишите груз и маршрут")}
         onBack={pop}
       />
 
       <div className="flex-1 space-y-6 overflow-y-auto px-4 pb-6">
         {/* ===== Маршрут — A/B route inputs по route-ring паттерну ===== */}
         <div className="space-y-2">
-          <GroupLabel>Маршрут</GroupLabel>
+          <GroupLabel>{t("Маршрут")}</GroupLabel>
           <div className="surface-glass rounded-2xl p-4">
             <div className="flex gap-3">
               <RouteRail className="py-5" />
@@ -823,12 +823,12 @@ export function CreateOrderScreen({
                 <CityPicker
                   value={d.origin}
                   onChange={(c) => set("origin", c)}
-                  placeholder="Откуда — город отправления"
+                  placeholder={t("Откуда — город отправления")}
                 />
                 <CityPicker
                   value={d.destination}
                   onChange={(c) => set("destination", c)}
-                  placeholder="Куда — город назначения"
+                  placeholder={t("Куда — город назначения")}
                 />
               </div>
             </div>
@@ -839,7 +839,7 @@ export function CreateOrderScreen({
                 }
                 className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-secondary text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                ⇅ Поменять откуда / куда
+                ⇅ {t("Поменять откуда / куда")}
               </button>
             )}
           </div>
@@ -847,17 +847,17 @@ export function CreateOrderScreen({
 
         {/* ===== Погрузка ===== */}
         <div className="space-y-3">
-          <GroupLabel>Погрузка</GroupLabel>
-          <Field label="Точка погрузки">
+          <GroupLabel>{t("Погрузка")}</GroupLabel>
+          <Field label={t("Точка погрузки")}>
             <Input
               value={d.pickupPoint}
               onChange={(e) => set("pickupPoint", e.target.value)}
-              placeholder="Склад / терминал / адрес"
+              placeholder={t("Склад / терминал / адрес")}
               className="h-14 text-base"
             />
           </Field>
 
-          <Field label="Контакт на погрузке (тел.)">
+          <Field label={t("Контакт на погрузке (тел.)")}>
             <Input
               value={d.pickupPhone}
               onChange={(e) => set("pickupPhone", e.target.value)}
@@ -870,18 +870,18 @@ export function CreateOrderScreen({
 
         {/* ===== О грузе ===== */}
         <div className="space-y-3">
-          <GroupLabel>О грузе</GroupLabel>
-          <Field label="Описание груза">
+          <GroupLabel>{t("О грузе")}</GroupLabel>
+          <Field label={t("Описание груза")}>
             <Textarea
               value={d.cargo}
               onChange={(e) => set("cargo", e.target.value)}
-              placeholder="Что везём, сколько мест…"
+              placeholder={t("Что везём, сколько мест…")}
               className="min-h-20 text-base"
             />
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Вес, кг">
+            <Field label={t("Вес, кг")}>
               <Input
                 type="number"
                 inputMode="numeric"
@@ -890,7 +890,7 @@ export function CreateOrderScreen({
                 className="h-14 text-base"
               />
             </Field>
-            <Field label="Объём, м³">
+            <Field label={t("Объём, м³")}>
               <Input
                 type="number"
                 inputMode="numeric"
@@ -901,7 +901,7 @@ export function CreateOrderScreen({
             </Field>
           </div>
 
-          <Field label="Тип авто">
+          <Field label={t("Тип авто")}>
             <div className="flex flex-wrap gap-1.5">
               {TRUCK_TYPES.map((t) => (
                 <Chip
@@ -916,7 +916,7 @@ export function CreateOrderScreen({
           </Field>
 
           {/* LARGE price field — цена самый крупный ввод формы */}
-          <Field label="Ваша цена, $">
+          <Field label={t("Ваша цена, $")}>
             <div className="relative">
               <span className="absolute top-1/2 left-4 -translate-y-1/2 text-xl font-bold text-muted-foreground">
                 $
@@ -924,19 +924,18 @@ export function CreateOrderScreen({
               <Input
                 type="number"
                 inputMode="numeric"
-                placeholder="напр. 1500"
+                placeholder={t("напр. 1500")}
                 value={d.priceUsd || ""}
                 onChange={(e) => set("priceUsd", Number(e.target.value))}
                 className="font-mono-tech h-14 pl-9 text-xl font-bold tabular-nums"
               />
             </div>
             <p className="text-sm text-muted-foreground">
-              Ориентир по похожим маршрутам. Слишком низкая ставка = меньше откликов, а подозрительно
-              дешёвые заказы перевозчики обходят как приманку.
+              {t("Ориентир по похожим маршрутам. Слишком низкая ставка = меньше откликов, а подозрительно дешёвые заказы перевозчики обходят как приманку.")}
             </p>
           </Field>
 
-          <Field label="Дата готовности к погрузке">
+          <Field label={t("Дата готовности к погрузке")}>
             <Input
               type="date"
               value={readyIso}
@@ -951,25 +950,25 @@ export function CreateOrderScreen({
 
         {/* ===== Доставка ===== */}
         <div className="space-y-3">
-          <GroupLabel>Доставка</GroupLabel>
-          <Field label="Адрес доставки">
+          <GroupLabel>{t("Доставка")}</GroupLabel>
+          <Field label={t("Адрес доставки")}>
             <Input
               value={d.address}
               onChange={(e) => set("address", e.target.value)}
-              placeholder="Город, улица, дом"
+              placeholder={t("Город, улица, дом")}
               className="h-14 text-base"
             />
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Получатель">
+            <Field label={t("Получатель")}>
               <Input
                 value={d.recipientName}
                 onChange={(e) => set("recipientName", e.target.value)}
                 className="h-14 text-base"
               />
             </Field>
-            <Field label="Телефон">
+            <Field label={t("Телефон")}>
               <Input
                 value={d.recipientPhone}
                 onChange={(e) => set("recipientPhone", e.target.value)}
@@ -983,17 +982,17 @@ export function CreateOrderScreen({
 
         {/* ===== Оплата и безопасность ===== */}
         <div className="space-y-3">
-          <GroupLabel>Оплата и безопасность</GroupLabel>
-          <Field label="Тип оплаты (договорная)">
+          <GroupLabel>{t("Оплата и безопасность")}</GroupLabel>
+          <Field label={t("Тип оплаты (договорная)")}>
             <ChipRow>
               <Chip active={d.payment === "cash"} onClick={() => set("payment", "cash")}>
-                Наличные
+                {t("Наличные")}
               </Chip>
               <Chip
                 active={d.payment === "transfer"}
                 onClick={() => set("payment", "transfer")}
               >
-                Перевод
+                {t("Перевод")}
               </Chip>
             </ChipRow>
           </Field>
@@ -1002,10 +1001,11 @@ export function CreateOrderScreen({
           <div className="surface-inset flex w-full items-start gap-3 rounded-xl p-4">
             <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand" />
             <div className="min-w-0">
-              <span className="block text-[15px] font-semibold">Безопасная сделка</span>
+              <span className="block text-[15px] font-semibold">{t("Безопасная сделка")}</span>
               <span className="mt-0.5 block text-sm text-muted-foreground">
-                Перевозчик проверяется по БИН, переписка и фото сохраняются — это ваша защита при споре.
-                Оплата напрямую: платите на счёт компании (по БИН), <span className="font-medium text-foreground">не на личную карту</span>. Площадка деньги не держит.
+                {t("Перевозчик проверяется по БИН, переписка и фото сохраняются — это ваша защита при споре. Оплата напрямую: платите на счёт компании (по БИН),")}{" "}
+                <span className="font-medium text-foreground">{t("не на личную карту")}</span>
+                {t(". Площадка деньги не держит.")}
               </span>
             </div>
           </div>
@@ -1013,12 +1013,12 @@ export function CreateOrderScreen({
 
         {/* ===== Примечание + декларация ===== */}
         <div className="space-y-3">
-          <GroupLabel>Примечание</GroupLabel>
-          <Field label="Ограничения и требования">
+          <GroupLabel>{t("Примечание")}</GroupLabel>
+          <Field label={t("Ограничения и требования")}>
             <Textarea
               value={d.notes}
               onChange={(e) => set("notes", e.target.value)}
-              placeholder="Растаможка, пропуск, хрупкое, простой…"
+              placeholder={t("Растаможка, пропуск, хрупкое, простой…")}
               className="min-h-20 text-base"
             />
           </Field>
@@ -1027,8 +1027,7 @@ export function CreateOrderScreen({
           {RU_CITIES.has(d.destination) && (
             <div className="flex items-start gap-2 rounded-xl bg-warn/10 px-3 py-2.5 text-sm text-warn dark:text-warn">
               <ShieldCheck className="mt-0.5 size-4 shrink-0" />
-              Груз в РФ: убедитесь, что это не санкционный товар двойного назначения (электроника, чипы,
-              дроны, станки, подшипники). Иначе застрянет на границе, а ответственность — на вас.
+              {t("Груз в РФ: убедитесь, что это не санкционный товар двойного назначения (электроника, чипы, дроны, станки, подшипники). Иначе застрянет на границе, а ответственность — на вас.")}
             </div>
           )}
 
@@ -1047,17 +1046,16 @@ export function CreateOrderScreen({
               {attested && <Check className="size-3.5" />}
             </span>
             <span className="text-sm text-muted-foreground">
-              Подтверждаю: груз <span className="font-medium text-foreground">не запрещён и не под
-              санкциями</span> — без оружия, наркотиков, контрабанды и товаров двойного назначения в РФ.
-              Указанные вес и документы — верные.
+              {t("Подтверждаю: груз")}{" "}
+              <span className="font-medium text-foreground">{t("не запрещён и не под санкциями")}</span>
+              {" "}{t("— без оружия, наркотиков, контрабанды и товаров двойного назначения в РФ. Указанные вес и документы — верные.")}
             </span>
           </button>
         </div>
 
         <StickyCTA>
           <p className="text-center text-sm leading-snug text-muted-foreground">
-            CN-KZ — площадка для поиска, а не перевозчик и не гарант доставки. Проверяйте контрагента и
-            груз сами.
+            {t("CN-KZ — площадка для поиска, а не перевозчик и не гарант доставки. Проверяйте контрагента и груз сами.")}
           </p>
           <Button
             size="xl"
@@ -1070,7 +1068,7 @@ export function CreateOrderScreen({
               setTab("myorders") // покажем заказ в «Мои заказы», а не в общей ленте
             }}
           >
-            {isEdit ? "Сохранить изменения" : "Опубликовать"}
+            {isEdit ? t("Сохранить изменения") : t("Опубликовать")}
           </Button>
         </StickyCTA>
       </div>

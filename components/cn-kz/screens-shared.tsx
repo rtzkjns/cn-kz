@@ -124,7 +124,7 @@ function Spec({
 // ---------- Deals dashboard ----------
 
 export function DealsScreen() {
-  const { myOrders, feedOrders, push, role, dealsNewOnly, setDealsNewOnly, isNew, tripDraft, setTab } = useCnKz()
+  const { myOrders, feedOrders, push, role, dealsNewOnly, setDealsNewOnly, isNew, tripDraft, setTab, t } = useCnKz()
   // Заказчик видит сделки по своим заказам; перевозчик — по выигранным грузам из ленты.
   const source = role === "carrier" ? feedOrders : myOrders
   const deals = source.filter((o) => o.deal)
@@ -150,13 +150,13 @@ export function DealsScreen() {
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader
-        title={role === "carrier" ? "Мои рейсы" : "Сделки"}
-        subtitle={role === "shipper" ? "Ваши грузы в пути" : "Отклики и рейсы"}
+        title={role === "carrier" ? t("Мои рейсы") : t("Сделки")}
+        subtitle={role === "shipper" ? t("Ваши грузы в пути") : t("Отклики и рейсы")}
       />
       {dealsNewOnly && (
         <ChipRow className="px-4 pb-2">
           <Chip active onClick={() => setDealsNewOnly(false)}>
-            Только новые ✕
+            {t("Только новые")} ✕
           </Chip>
         </ChipRow>
       )}
@@ -165,14 +165,14 @@ export function DealsScreen() {
           items={
             role === "carrier"
               ? [
-                  { value: activeTotal, label: "Активные рейсы", icon: Truck, accent: true },
-                  { value: myOffers.length, label: "Отклики в ожидании", icon: Clock },
-                  { value: completedTotal, label: "Завершено", icon: CheckCheck },
+                  { value: activeTotal, label: t("Активные рейсы"), icon: Truck, accent: true },
+                  { value: myOffers.length, label: t("Отклики в ожидании"), icon: Clock },
+                  { value: completedTotal, label: t("Завершено"), icon: CheckCheck },
                 ]
               : [
-                  { value: activeTotal, label: "Активные сделки", icon: Truck, accent: true },
-                  { value: completedTotal, label: "Завершено", icon: CheckCheck },
-                  { value: deals.length, label: "Всего сделок", icon: Handshake },
+                  { value: activeTotal, label: t("Активные сделки"), icon: Truck, accent: true },
+                  { value: completedTotal, label: t("Завершено"), icon: CheckCheck },
+                  { value: deals.length, label: t("Всего сделок"), icon: Handshake },
                 ]
           }
         />
@@ -189,11 +189,11 @@ export function DealsScreen() {
                 <Truck className="size-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-base font-semibold">Сборный рейс</p>
+                <p className="text-base font-semibold">{t("Сборный рейс")}</p>
                 <p className="text-sm text-muted-foreground">
                   {tripDraft.length > 0
-                    ? `${tripDraft.length} ${tripDraft.length === 1 ? "груз" : "груза"} в сборке`
-                    : "Соберите несколько грузов в одну фуру"}
+                    ? `${tripDraft.length} ${tripDraft.length === 1 ? t("груз") : t("груза")} ${t("в сборке")}`
+                    : t("Соберите несколько грузов в одну фуру")}
                 </p>
               </div>
               <ChevronRight className="size-5 text-muted-foreground" />
@@ -201,7 +201,7 @@ export function DealsScreen() {
           </Card>
         )}
         {myOffers.length > 0 && (
-          <Section title="Отклики · ожидают ответа">
+          <Section title={t("Отклики · ожидают ответа")}>
             <div className="space-y-2">
               {myOffers.map((o) => (
                 <OfferRow
@@ -213,27 +213,27 @@ export function DealsScreen() {
             </div>
           </Section>
         )}
-        <Section title="Активные">
+        <Section title={t("Активные")}>
           {active.length === 0 && (
             <EmptyState
               icon={Truck}
-              title={dealsNewOnly ? "Нет сделок с новыми событиями" : "Пока нет активных сделок"}
+              title={dealsNewOnly ? t("Нет сделок с новыми событиями") : t("Пока нет активных сделок")}
               hint={
                 dealsNewOnly
-                  ? "Новые отклики и сообщения появятся здесь."
+                  ? t("Новые отклики и сообщения появятся здесь.")
                   : role === "carrier"
-                    ? "Откликнитесь на груз в ленте — принятый заказ появится здесь как рейс."
-                    : "Опубликуйте заказ и выберите перевозчика — сделка появится здесь."
+                    ? t("Откликнитесь на груз в ленте — принятый заказ появится здесь как рейс.")
+                    : t("Опубликуйте заказ и выберите перевозчика — сделка появится здесь.")
               }
               action={
                 dealsNewOnly ? (
                   <Button variant="secondary" className="h-12" onClick={() => setDealsNewOnly(false)}>
-                    Показать все сделки
+                    {t("Показать все сделки")}
                   </Button>
                 ) : (
                   <Button size="xl" onClick={() => setTab(role === "carrier" ? "feed" : "myorders")}>
                     <Search className="size-5" />
-                    {role === "carrier" ? "Смотреть грузы" : "Мои заказы"}
+                    {role === "carrier" ? t("Смотреть грузы") : t("Мои заказы")}
                   </Button>
                 )
               }
@@ -247,7 +247,7 @@ export function DealsScreen() {
         </Section>
 
         {settledOffers.length > 0 && (
-          <Section title="История откликов">
+          <Section title={t("История откликов")}>
             <div className="space-y-2">
               {settledOffers.map((o) => (
                 <OfferRow
@@ -273,7 +273,7 @@ function DealRow({
   isNew: boolean
   onClick: () => void
 }) {
-  const { role } = useCnKz()
+  const { role, t } = useCnKz()
   // Показываем ВТОРУЮ сторону: перевозчику — заказчика, заказчику — перевозчика.
   const other = role === "carrier" ? order.shipper : order.deal!.carrier
   const unread = order.deal!.chat.filter((m) => !m.fromMe).length
@@ -292,7 +292,7 @@ function DealRow({
               {other.verified && <BadgeCheck className="size-4 shrink-0 text-brand" />}
             </p>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              <Rating value={other.rating} /> · {role === "carrier" ? "заказчик" : "перевозчик"}
+              <Rating value={other.rating} /> · {role === "carrier" ? t("заказчик") : t("перевозчик")}
             </p>
           </div>
         </div>
@@ -300,10 +300,10 @@ function DealRow({
           <DealStatusBadge status={order.deal!.status} />
           <div className="flex flex-wrap items-center justify-end gap-1">
             {order.overdue && order.deal!.status === "accepted" && (
-              <StatusBadge tone="warn">Опаздывает</StatusBadge>
+              <StatusBadge tone="warn">{t("Опаздывает")}</StatusBadge>
             )}
-            {order.deal!.tripId && <Badge variant="outline">Рейс</Badge>}
-            {isNew && <Badge variant="brand">новое</Badge>}
+            {order.deal!.tripId && <Badge variant="outline">{t("Рейс")}</Badge>}
+            {isNew && <Badge variant="brand">{t("новое")}</Badge>}
           </div>
         </div>
       </div>
@@ -319,19 +319,19 @@ function DealRow({
       {/* Meta pills — вес/кузов/объём */}
       <div className="mt-3 flex flex-wrap gap-2">
         <Pill icon={Truck}>{order.truckType}</Pill>
-        <Pill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} кг</Pill>
-        <Pill icon={Box}>{order.volumeM3} м³</Pill>
+        <Pill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} {t("кг")}</Pill>
+        <Pill icon={Box}>{order.volumeM3} {t("м³")}</Pill>
       </div>
 
       {/* Price footer — согласованная цена-герой + вход в сделку */}
       <PriceFooter
-        eyebrow="Согласовано"
+        eyebrow={t("Согласовано")}
         usd={order.deal!.agreedPriceUsd}
         showKzt={role === "carrier"}
         action={
           <span className="mb-0.5 inline-flex h-11 shrink-0 items-center gap-1.5 rounded-md px-3 text-[15px] font-semibold text-foreground">
             {unread > 0 && <MessageCircle className="size-4 text-brand" />}
-            Открыть
+            {t("Открыть")}
             <ChevronRight className="size-4" />
           </span>
         }
@@ -342,6 +342,7 @@ function DealRow({
 
 // Плотная карточка отклика перевозчика (ставка) — свёрнута в «Мои рейсы».
 function OfferRow({ order, onClick }: { order: Order; onClick: () => void }) {
+  const { t } = useCnKz()
   const countered = order.myOfferStatus === "countered"
   const priceUsd = order.myCounterPriceUsd ?? order.myOfferPriceUsd ?? order.priceUsd
   return (
@@ -359,7 +360,7 @@ function OfferRow({ order, onClick }: { order: Order; onClick: () => void }) {
               {order.shipper.verified && <BadgeCheck className="size-4 shrink-0 text-brand" />}
             </p>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              <Rating value={order.shipper.rating} /> · заказчик
+              <Rating value={order.shipper.rating} /> · {t("заказчик")}
             </p>
           </div>
         </div>
@@ -377,18 +378,18 @@ function OfferRow({ order, onClick }: { order: Order; onClick: () => void }) {
       {/* Meta pills */}
       <div className="mt-3 flex flex-wrap gap-2">
         <Pill icon={Truck}>{order.truckType}</Pill>
-        <Pill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} кг</Pill>
-        <Pill icon={Box}>{order.volumeM3} м³</Pill>
+        <Pill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} {t("кг")}</Pill>
+        <Pill icon={Box}>{order.volumeM3} {t("м³")}</Pill>
       </div>
 
       {/* Price footer — ваша ставка / встречная цена-герой */}
       <PriceFooter
-        eyebrow={countered ? "Встречная заказчика" : "Ваш отклик"}
+        eyebrow={countered ? t("Встречная заказчика") : t("Ваш отклик")}
         usd={priceUsd}
         showKzt
         action={
           <span className="mb-0.5 inline-flex h-11 shrink-0 items-center gap-1 rounded-md px-3 text-[15px] font-semibold text-foreground">
-            Открыть
+            {t("Открыть")}
             <ChevronRight className="size-4" />
           </span>
         }
@@ -437,6 +438,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
     submitRating,
     showToast,
     markSeen,
+    t,
   } = useCnKz()
   const order = getOrder(orderId)
   // Открыли сделку → события прочитаны (сбрасывает «новое» и счётчик колокольчика).
@@ -500,7 +502,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
   if (completed && !rated) {
     primary = (
       <Button size="xl" className="w-full" disabled={!canSubmitRating} onClick={submitRatingNow}>
-        Отправить оценку
+        {t("Отправить оценку")}
       </Button>
     )
   } else if (!completed && !cancelled) {
@@ -508,7 +510,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
       if (driverNext === "pickup") {
         primary = (
           <Button size="xl" className="w-full" style={confirmStyle} onClick={tapAdvance}>
-            <Check /> {confirmAdvance ? "Точно забрали груз?" : "Забрал груз"}
+            <Check /> {confirmAdvance ? t("Точно забрали груз?") : t("Забрал груз")}
           </Button>
         )
       } else if (driverNext === "deliver") {
@@ -522,7 +524,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
                   className="h-12 flex-1"
                   onClick={() => markAtBorder(order.id)}
                 >
-                  <Flag className="size-4" /> Прошёл границу
+                  <Flag className="size-4" /> {t("Прошёл границу")}
                 </Button>
               )}
               <Button
@@ -530,25 +532,25 @@ export function DealScreen({ orderId }: { orderId: string }) {
                 className="h-12 flex-1"
                 onClick={() => attachPod(order.id)}
               >
-                <Camera className="size-4" /> {deal.podPhoto ? "Фото добавлено ✓" : "Фото выгрузки"}
+                <Camera className="size-4" /> {deal.podPhoto ? t("Фото добавлено ✓") : t("Фото выгрузки")}
               </Button>
             </div>
             <Button size="xl" className="w-full" style={confirmStyle} onClick={tapAdvance}>
-              <Check /> {confirmAdvance ? "Точно доставили?" : "Доставил груз"}
+              <Check /> {confirmAdvance ? t("Точно доставили?") : t("Доставил груз")}
             </Button>
           </>
         )
       } else {
-        waiting = "Груз доставлен — ждём подтверждения получения заказчиком."
+        waiting = t("Груз доставлен — ждём подтверждения получения заказчиком.")
       }
     } else if (canConfirmDelivery) {
       primary = (
         <Button size="xl" className="w-full" onClick={() => confirmDelivery(order.id)}>
-          <Check /> Подтвердить получение
+          <Check /> {t("Подтвердить получение")}
         </Button>
       )
     } else {
-      waiting = "Перевозчик обновляет статус доставки — изменения появятся здесь."
+      waiting = t("Перевозчик обновляет статус доставки — изменения появятся здесь.")
     }
   }
 
@@ -557,7 +559,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
       <ScreenHeader
         title={
           <>
-            Сделка{" "}
+            {t("Сделка")}{" "}
             <span className="font-mono-tech">{order.id.replace("ord-", "#")}</span>
           </>
         }
@@ -570,11 +572,11 @@ export function DealScreen({ orderId }: { orderId: string }) {
         <Card size="sm">
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-base font-semibold">Статус доставки</span>
+              <span className="text-base font-semibold">{t("Статус доставки")}</span>
               <DealStatusBadge status={deal.status} />
             </div>
             {cancelled ? (
-              <p className="text-sm text-destructive">Сделка отменена</p>
+              <p className="text-sm text-destructive">{t("Сделка отменена")}</p>
             ) : (
               <>
                 <ol className="space-y-2.5">
@@ -598,20 +600,20 @@ export function DealScreen({ orderId }: { orderId: string }) {
                           {done ? <Check className="size-3.5" /> : i + 1}
                         </span>
                         <span className={done || current ? "font-medium text-foreground" : "text-muted-foreground"}>
-                          {DEAL_STATUS_LABEL[st]}
+                          {t(DEAL_STATUS_LABEL[st])}
                         </span>
                         {current && (
-                          <span className="ml-auto text-xs font-medium text-brand">сейчас</span>
+                          <span className="ml-auto text-xs font-medium text-brand">{t("сейчас")}</span>
                         )}
                         {isBorder && !done && !current && (
-                          <span className="ml-auto text-xs text-muted-foreground">необязательно</span>
+                          <span className="ml-auto text-xs text-muted-foreground">{t("необязательно")}</span>
                         )}
                       </li>
                     )
                   })}
                 </ol>
                 {deal.updatedAgo && (
-                  <p className="text-sm text-muted-foreground">Обновлено: {deal.updatedAgo}</p>
+                  <p className="text-sm text-muted-foreground">{t("Обновлено")}: {deal.updatedAgo}</p>
                 )}
               </>
             )}
@@ -637,7 +639,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
               </p>
               <p className="text-sm text-muted-foreground">
                 <Rating value={other.rating} /> ·{" "}
-                {role === "shipper" ? "перевозчик" : "заказчик"}
+                {role === "shipper" ? t("перевозчик") : t("заказчик")}
               </p>
             </div>
             <Button
@@ -647,7 +649,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
                 e.stopPropagation()
                 push({ type: "chat", orderId: order.id })
               }}
-              aria-label="Чат"
+              aria-label={t("Чат")}
             >
               <MessageCircle className="size-5" />
             </Button>
@@ -662,52 +664,52 @@ export function DealScreen({ orderId }: { orderId: string }) {
         <Card size="sm">
           <CardContent className="space-y-3">
             <div className="leading-none">
-              <p className="t-eyebrow">Согласованная цена</p>
+              <p className="t-eyebrow">{t("Согласованная цена")}</p>
               <p className="t-display mt-1.5">{money(deal.agreedPriceUsd)}</p>
               {role === "carrier" && (
                 <p className="font-mono-tech mt-1.5 text-sm leading-none text-muted-foreground/80">
-                  {kzt(deal.agreedPriceUsd)} · оплата в USD
+                  {kzt(deal.agreedPriceUsd)} · {t("оплата в USD")}
                 </p>
               )}
             </div>
             <p className="text-[15px] text-foreground">{order.cargo}</p>
             <div className="grid grid-cols-2 gap-2">
-              <Spec icon={Weight} label="Вес" value={`${order.weightKg.toLocaleString("ru-RU")} кг`} />
-              <Spec icon={Box} label="Объём" value={`${order.volumeM3} м³`} />
-              <Spec icon={Truck} label="Кузов" value={order.truckType} />
-              <Spec icon={Wallet} label="Оплата" value={order.payment === "cash" ? "Наличные" : "Перевод"} />
+              <Spec icon={Weight} label={t("Вес")} value={`${order.weightKg.toLocaleString("ru-RU")} ${t("кг")}`} />
+              <Spec icon={Box} label={t("Объём")} value={`${order.volumeM3} ${t("м³")}`} />
+              <Spec icon={Truck} label={t("Кузов")} value={order.truckType} />
+              <Spec icon={Wallet} label={t("Оплата")} value={order.payment === "cash" ? t("Наличные") : t("Перевод")} />
             </div>
             <div className="space-y-1.5">
-              <DetailRow label="Готов к погрузке" value={order.readyDate} />
-              {order.deliverBy && <DetailRow label="Срок доставки" value={order.deliverBy} />}
-              <DetailRow label="Адрес доставки" value={order.address} />
+              <DetailRow label={t("Готов к погрузке")} value={order.readyDate} />
+              {order.deliverBy && <DetailRow label={t("Срок доставки")} value={order.deliverBy} />}
+              <DetailRow label={t("Адрес доставки")} value={order.address} />
             </div>
           </CardContent>
         </Card>
 
         {order.overdue && !completed && !cancelled && (
           <div className="flex items-center gap-2 rounded-md bg-warn/10 px-3 py-2.5 text-sm text-warn dark:text-warn">
-            <ShieldAlert className="size-4 shrink-0" /> Перевозчик опаздывает к сроку доставки. Напишите в чат или согласуйте новый срок.
+            <ShieldAlert className="size-4 shrink-0" /> {t("Перевозчик опаздывает к сроку доставки. Напишите в чат или согласуйте новый срок.")}
           </div>
         )}
         <div className="flex items-start gap-2 rounded-md bg-brand/10 px-3 py-2.5 text-sm text-foreground">
           <Lock className="mt-0.5 size-4 shrink-0 text-brand" />
           <span>
-            <span className="font-medium">Безопасная сделка. </span>
+            <span className="font-medium">{t("Безопасная сделка.")} </span>
             {cancelled
-              ? "Сделка отменена — оплата не проводится."
+              ? t("Сделка отменена — оплата не проводится.")
               : completed
-                ? `Доставка подтверждена — можно провести оплату ${money(deal.agreedPriceUsd)}.`
-                : `Стороны проверены, переписка и фото сохранены. Оплату ${money(deal.agreedPriceUsd)} проводите после подтверждения доставки — на счёт компании по БИН, не на личную карту. Площадка деньги не держит.`}
+                ? `${t("Доставка подтверждена — можно провести оплату")} ${money(deal.agreedPriceUsd)}.`
+                : `${t("Стороны проверены, переписка и фото сохранены. Оплату")} ${money(deal.agreedPriceUsd)} ${t("проводите после подтверждения доставки — на счёт компании по БИН, не на личную карту. Площадка деньги не держит.")}`}
           </span>
         </div>
         {!cancelled && !completed && (
           <div className="flex items-start gap-2 rounded-md bg-warn/10 px-3 py-2.5 text-sm text-warn dark:text-warn">
             <ShieldAlert className="mt-0.5 size-4 shrink-0" />
             <span>
-              Аванс на топливо — обычное дело. Проводите его через приложение проверенному
-              перевозчику (по БИН), <span className="font-medium">не на личную карту и не по просьбе
-              вне сделки</span> — задаток на карту незнакомцу до сделки берут мошенники.
+              {t("Аванс на топливо — обычное дело. Проводите его через приложение проверенному перевозчику (по БИН),")}{" "}
+              <span className="font-medium">{t("не на личную карту и не по просьбе вне сделки")}</span>{" "}
+              {t("— задаток на карту незнакомцу до сделки берут мошенники.")}
             </span>
           </div>
         )}
@@ -718,8 +720,8 @@ export function DealScreen({ orderId }: { orderId: string }) {
           className="h-12 w-full justify-start text-[15px]"
           onClick={() => push({ type: "chat", orderId: order.id })}
         >
-          <MessageCircle className="size-5" /> Чат с{" "}
-          {role === "shipper" ? "перевозчиком" : "заказчиком"}
+          <MessageCircle className="size-5" /> {t("Чат с")}{" "}
+          {role === "shipper" ? t("перевозчиком") : t("заказчиком")}
           {deal.chat.length > 0 && (
             <Badge variant="muted" className="ml-auto">
               {deal.chat.length}
@@ -732,7 +734,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
           <Card size="sm" className="surface-glass-brand">
             <CardContent className="space-y-3">
               <p className="text-base font-semibold">
-                Оцените {role === "shipper" ? "перевозчика" : "заказчика"}
+                {t("Оцените")} {role === "shipper" ? t("перевозчика") : t("заказчика")}
               </p>
               <div className="flex justify-center gap-2 text-4xl">
                 {[1, 2, 3, 4, 5].map((n) => (
@@ -761,7 +763,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
                           : "border-border text-muted-foreground hover:text-foreground")
                       }
                     >
-                      {c}
+                      {t(c)}
                     </button>
                   ))}
                 </div>
@@ -771,8 +773,8 @@ export function DealScreen({ orderId }: { orderId: string }) {
                 onChange={(e) => setComment(e.target.value)}
                 placeholder={
                   commentRequired
-                    ? "Комментарий обязателен при оценке 1–2★"
-                    : "Комментарий (необязательно)"
+                    ? t("Комментарий обязателен при оценке 1–2★")
+                    : t("Комментарий (необязательно)")
                 }
                 className={
                   "min-h-16 text-base " + (commentRequired && !comment.trim() ? "border-destructive" : "")
@@ -785,16 +787,16 @@ export function DealScreen({ orderId }: { orderId: string }) {
           <Card size="sm">
             <CardContent className="space-y-1.5 text-[15px]">
               <p className="text-foreground">
-                <Check className="inline size-4" /> Ваша оценка {other.name.split(" ")[0]}: {order.ratedStars}★
+                <Check className="inline size-4" /> {t("Ваша оценка")} {other.name.split(" ")[0]}: {order.ratedStars}★
               </p>
               {order.counterpartRating == null ? (
                 <p className="text-sm text-muted-foreground">
-                  Оценка {role === "shipper" ? "перевозчика" : "заказчика"} появится, когда он тоже оценит вас (взаимно и вслепую).
+                  {t("Оценка")} {role === "shipper" ? t("перевозчика") : t("заказчика")} {t("появится, когда он тоже оценит вас (взаимно и вслепую).")}
                 </p>
               ) : (
                 <p className="text-foreground">
                   <Rating value={order.counterpartRating} />{" "}
-                  <span className="text-muted-foreground">— {role === "shipper" ? "перевозчик" : "заказчик"} оценил вас</span>
+                  <span className="text-muted-foreground">— {role === "shipper" ? t("перевозчик") : t("заказчик")} {t("оценил вас")}</span>
                 </p>
               )}
             </CardContent>
@@ -805,7 +807,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
         {!cancelled && (
           <div className="space-y-2">
             {/* Анти-переуступка (двойной брокеридж) — кто реально везёт закреплён за сделкой. */}
-            <Collapse title="Кто выполняет рейс" icon={Truck}>
+            <Collapse title={t("Кто выполняет рейс")} icon={Truck}>
               <p className="text-sm font-medium text-foreground">
                 {deal.carrier.name}
                 {boundPlate && (
@@ -813,27 +815,27 @@ export function DealScreen({ orderId }: { orderId: string }) {
                 )}
               </p>
               <p className="text-sm text-muted-foreground">
-                {boundTruckType} · переуступка груза запрещена.{" "}
+                {boundTruckType} · {t("переуступка груза запрещена.")}{" "}
                 {role === "shipper"
-                  ? "Сверьте гос.номер и водителя при погрузке — везти должна эта машина."
-                  : "Везти должны вы на этой машине, передавать заказ нельзя."}
+                  ? t("Сверьте гос.номер и водителя при погрузке — везти должна эта машина.")
+                  : t("Везти должны вы на этой машине, передавать заказ нельзя.")}
               </p>
             </Collapse>
 
             {/* Отметки рейса — таймстампы прибытия/простоя (защита перевозчика на детеншене). */}
-            <Collapse title="Отметки рейса" icon={Clock}>
+            <Collapse title={t("Отметки рейса")} icon={Clock}>
               {deal.log && deal.log.length > 0 ? (
                 <div className="space-y-1">
                   {deal.log.map((e, i) => (
                     <div key={i} className="flex items-center justify-between text-sm">
-                      <span className="text-foreground">{e.label}</span>
+                      <span className="text-foreground">{t(e.label)}</span>
                       <span className="font-mono-tech text-muted-foreground">{e.time}</span>
                     </div>
                   ))}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Отмечайте прибытие и простой — фиксируется со временем и защищает вас при споре.
+                  {t("Отмечайте прибытие и простой — фиксируется со временем и защищает вас при споре.")}
                 </p>
               )}
               {role === "carrier" && !completed && (
@@ -844,14 +846,14 @@ export function DealScreen({ orderId }: { orderId: string }) {
                       onClick={() => logDealEvent(order.id, l)}
                       className="min-h-11 rounded-md border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                     >
-                      {l}
+                      {t(l)}
                     </button>
                   ))}
                   <button
                     onClick={() => logDealEvent(order.id, "Простой / срыв погрузки")}
                     className="min-h-11 rounded-md border border-warn/40 px-3 py-2 text-sm font-medium text-warn dark:text-warn"
                   >
-                    Зафиксировать простой
+                    {t("Зафиксировать простой")}
                   </button>
                 </div>
               )}
@@ -862,22 +864,21 @@ export function DealScreen({ orderId }: { orderId: string }) {
               <div className="flex items-start gap-2 rounded-md border border-warn/40 bg-warn/10 px-3 py-2.5 text-sm text-warn dark:text-warn">
                 <ShieldAlert className="mt-0.5 size-4 shrink-0" />
                 <span>
-                  <span className="font-medium">Поддержка разбирается: {deal.claim.reason}.</span>{" "}
-                  Переписку и фото приложили как доказательства — поможем с посредничеством. Оплату до
-                  решения лучше придержать.
+                  <span className="font-medium">{t("Поддержка разбирается")}: {t(deal.claim.reason)}.</span>{" "}
+                  {t("Переписку и фото приложили как доказательства — поможем с посредничеством. Оплату до решения лучше придержать.")}
                 </span>
               </div>
             ) : (
-              <Collapse title="Что-то не так со сделкой?" icon={ShieldAlert}>
+              <Collapse title={t("Что-то не так со сделкой?")} icon={ShieldAlert}>
                 <p className="text-sm text-muted-foreground">
-                  Опишите проблему — поможем с доказательствами и посредничеством.
+                  {t("Опишите проблему — поможем с доказательствами и посредничеством.")}
                 </p>
                 <Button
                   variant="outline"
                   className="h-12 w-full"
                   onClick={() => setShowClaim(true)}
                 >
-                  <ShieldAlert className="size-4" /> Открыть претензию
+                  <ShieldAlert className="size-4" /> {t("Открыть претензию")}
                 </Button>
               </Collapse>
             )}
@@ -891,7 +892,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
             className="h-12 w-full"
             onClick={() => setShowCancel(true)}
           >
-            Отменить сделку
+            {t("Отменить сделку")}
           </Button>
         )}
 
@@ -916,14 +917,14 @@ export function DealScreen({ orderId }: { orderId: string }) {
             className="animate-in slide-in-from-bottom w-full space-y-3 rounded-t-3xl border-t border-border bg-card p-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-base font-semibold">Отменить сделку?</p>
+            <p className="text-base font-semibold">{t("Отменить сделку?")}</p>
             <p className="text-sm text-muted-foreground">
               {role === "carrier"
-                ? "Отмена принятого заказа снизит вашу надёжность на −10 и может ограничить доступ к премиум-грузам."
-                : "Отмена оставит перевозчика без груза и повлияет на ваш рейтинг заказчика."}
+                ? t("Отмена принятого заказа снизит вашу надёжность на −10 и может ограничить доступ к премиум-грузам.")
+                : t("Отмена оставит перевозчика без груза и повлияет на ваш рейтинг заказчика.")}
             </p>
             <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2.5 text-sm text-muted-foreground">
-              <ShieldAlert className="size-4 shrink-0 text-warn" /> Форс-мажор (поломка, граница)? Отмена без штрафа — приложите фото.
+              <ShieldAlert className="size-4 shrink-0 text-warn" /> {t("Форс-мажор (поломка, граница)? Отмена без штрафа — приложите фото.")}
             </div>
             <div className="space-y-2">
               <Button
@@ -934,23 +935,23 @@ export function DealScreen({ orderId }: { orderId: string }) {
                   setShowCancel(false)
                 }}
               >
-                {role === "carrier" ? "Отменить (−10 к надёжности)" : "Отменить сделку"}
+                {role === "carrier" ? t("Отменить (−10 к надёжности)") : t("Отменить сделку")}
               </Button>
               <Button
                 variant="outline"
                 className="h-12 w-full"
                 onClick={() => {
                   setShowCancel(false)
-                  showToast("Заявка о форс-мажоре отправлена на проверку")
+                  showToast(t("Заявка о форс-мажоре отправлена на проверку"))
                 }}
               >
-                <ShieldAlert className="size-4" /> Это форс-мажор
+                <ShieldAlert className="size-4" /> {t("Это форс-мажор")}
               </Button>
               <button
                 onClick={() => setShowCancel(false)}
                 className="min-h-11 w-full py-2 text-[15px] font-medium text-muted-foreground hover:text-foreground"
               >
-                Оставить сделку
+                {t("Оставить сделку")}
               </button>
             </div>
           </div>
@@ -967,10 +968,9 @@ export function DealScreen({ orderId }: { orderId: string }) {
             className="animate-in slide-in-from-bottom w-full space-y-3 rounded-t-3xl border-t border-border bg-card p-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-base font-semibold">Что случилось?</p>
+            <p className="text-base font-semibold">{t("Что случилось?")}</p>
             <p className="-mt-1 text-sm text-muted-foreground">
-              Опишите проблему — поможем с доказательствами и посредничеством. Площадка деньги не
-              держит, поэтому оплату до решения придержите сами.
+              {t("Опишите проблему — поможем с доказательствами и посредничеством. Площадка деньги не держит, поэтому оплату до решения придержите сами.")}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {["Не оплатили", "Груз повреждён", "Срыв погрузки", "Вес не совпал", "Другое"].map(
@@ -985,7 +985,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
                         : "border-border text-muted-foreground hover:text-foreground")
                     }
                   >
-                    {r}
+                    {t(r)}
                   </button>
                 )
               )}
@@ -993,12 +993,11 @@ export function DealScreen({ orderId }: { orderId: string }) {
             <Textarea
               value={claimNote}
               onChange={(e) => setClaimNote(e.target.value)}
-              placeholder="Опишите, что произошло…"
+              placeholder={t("Опишите, что произошло…")}
               className="min-h-16 text-base"
             />
             <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2.5 text-sm text-muted-foreground">
-              <Camera className="size-4 shrink-0 text-brand" /> Чат и фото выгрузки приложатся
-              автоматически как доказательства.
+              <Camera className="size-4 shrink-0 text-brand" /> {t("Чат и фото выгрузки приложатся автоматически как доказательства.")}
             </div>
             <Button
               size="xl"
@@ -1011,13 +1010,13 @@ export function DealScreen({ orderId }: { orderId: string }) {
                 setClaimNote("")
               }}
             >
-              Отправить в поддержку
+              {t("Отправить в поддержку")}
             </Button>
             <button
               onClick={() => setShowClaim(false)}
               className="min-h-11 w-full py-1 text-center text-[15px] font-medium text-muted-foreground hover:text-foreground"
             >
-              Отмена
+              {t("Отмена")}
             </button>
           </div>
         </div>
@@ -1029,7 +1028,7 @@ export function DealScreen({ orderId }: { orderId: string }) {
 // ---------- Chat ----------
 
 export function ChatScreen({ orderId }: { orderId: string }) {
-  const { getOrder, pop, sendMessage, role } = useCnKz()
+  const { getOrder, pop, sendMessage, role, t } = useCnKz()
   const order = getOrder(orderId)
   const [text, setText] = useState("")
   if (!order?.deal) return null
@@ -1043,7 +1042,7 @@ export function ChatScreen({ orderId }: { orderId: string }) {
 
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title={other.name} subtitle="Чат сделки" onBack={pop} />
+      <ScreenHeader title={other.name} subtitle={t("Чат сделки")} onBack={pop} />
 
       {/* Контекст сделки — чтобы чат не «висел в пустоте»: маршрут + груз + согласованная цена. */}
       <div className="surface-glass mx-4 mt-2 flex shrink-0 items-center gap-3 rounded-2xl px-3.5 py-3">
@@ -1061,7 +1060,7 @@ export function ChatScreen({ orderId }: { orderId: string }) {
             {money(order.deal.agreedPriceUsd)}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {DEAL_STATUS_LABEL[order.deal.status]}
+            {t(DEAL_STATUS_LABEL[order.deal.status])}
           </p>
         </div>
       </div>
@@ -1070,8 +1069,8 @@ export function ChatScreen({ orderId }: { orderId: string }) {
         {order.deal.chat.length === 0 && (
           <EmptyState
             icon={MessageCircle}
-            title="Сообщений пока нет"
-            hint="Уточните детали груза, время погрузки и место встречи."
+            title={t("Сообщений пока нет")}
+            hint={t("Уточните детали груза, время погрузки и место встречи.")}
           />
         )}
         {order.deal.chat.map((m) => (
@@ -1106,7 +1105,7 @@ export function ChatScreen({ orderId }: { orderId: string }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Сообщение…"
+          placeholder={t("Сообщение…")}
           className="h-14 rounded-lg bg-secondary text-base"
         />
         <Button className="size-14 shrink-0 rounded-lg" onClick={send} disabled={!text.trim()}>
@@ -1120,7 +1119,7 @@ export function ChatScreen({ orderId }: { orderId: string }) {
 // ---------- Profile ----------
 
 export function ProfileScreen() {
-  const { role, me, myOrders, resetOnboarding, setTab, showToast, reliability, cancelCount } = useCnKz()
+  const { role, me, myOrders, resetOnboarding, setTab, showToast, reliability, cancelCount, t } = useCnKz()
   const reliable = reliability >= 90
   const [quiet, setQuiet] = useState(true)
   // Заказы «в работе» заказчика (не архив, не завершено/отменено) — для сводки статистики.
@@ -1130,7 +1129,7 @@ export function ProfileScreen() {
 
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title="Профиль" />
+      <ScreenHeader title={t("Профиль")} />
       <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-24">
         <Card size="sm">
           <CardContent className="flex items-center gap-3">
@@ -1144,27 +1143,27 @@ export function ProfileScreen() {
                 <Rating value={me.rating} /> · {deals(me.dealsCount)}
               </p>
             </div>
-            <Badge variant="brand">{role === "shipper" ? "Заказчик" : "Перевозчик"}</Badge>
+            <Badge variant="brand">{role === "shipper" ? t("Заказчик") : t("Перевозчик")}</Badge>
           </CardContent>
         </Card>
 
         {/* Заказчик: сводка статистики — заполняет верх профиля (анти-пустота). */}
         {role === "shipper" && (
-          <Section title="Моя статистика">
+          <Section title={t("Моя статистика")}>
             <Card size="sm">
               <CardContent>
                 <div className="flex items-center justify-around text-center">
                   <div>
                     <div className="font-mono-tech text-xl font-bold">{me.dealsCount}</div>
-                    <div className="text-sm text-muted-foreground">сделок</div>
+                    <div className="text-sm text-muted-foreground">{t("сделок")}</div>
                   </div>
                   <div>
                     <div className="font-mono-tech text-xl font-bold">{me.rating.toFixed(1)}</div>
-                    <div className="text-sm text-muted-foreground">рейтинг</div>
+                    <div className="text-sm text-muted-foreground">{t("рейтинг")}</div>
                   </div>
                   <div>
                     <div className="font-mono-tech text-xl font-bold text-brand">{activeOrders}</div>
-                    <div className="text-sm text-muted-foreground">в работе</div>
+                    <div className="text-sm text-muted-foreground">{t("в работе")}</div>
                   </div>
                 </div>
               </CardContent>
@@ -1177,67 +1176,65 @@ export function ProfileScreen() {
           <CardContent className="divide-y divide-border">
             <button onClick={() => setTab("history")} className="flex min-h-12 w-full items-center gap-3 py-2.5 text-left text-base">
               <Clock className="size-5 text-muted-foreground" />
-              <span className="flex-1">{role === "carrier" ? "История рейсов" : "История заказов"}</span>
+              <span className="flex-1">{role === "carrier" ? t("История рейсов") : t("История заказов")}</span>
               <ChevronRight className="size-5 text-muted-foreground" />
             </button>
             <button onClick={() => setTab("settings")} className="flex min-h-12 w-full items-center gap-3 py-2.5 text-left text-base">
               <SettingsIcon className="size-5 text-muted-foreground" />
-              <span className="flex-1">Настройки</span>
+              <span className="flex-1">{t("Настройки")}</span>
               <ChevronRight className="size-5 text-muted-foreground" />
             </button>
           </CardContent>
         </Card>
 
         {/* Честная проверка — без госбаз: телефон, фото, сверка селфи с документом, отзывы */}
-        <Section title="Проверка профиля">
+        <Section title={t("Проверка профиля")}>
           <Card size="sm">
             <CardContent className="space-y-2.5 text-sm">
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-2">
-                  <ShieldCheck className="size-4 text-brand" /> Телефон подтверждён
+                  <ShieldCheck className="size-4 text-brand" /> {t("Телефон подтверждён")}
                 </span>
-                <StatusBadge tone="success">Да</StatusBadge>
+                <StatusBadge tone="success">{t("Да")}</StatusBadge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-2">
-                  <ShieldCheck className="size-4 text-brand" /> БИН/ИНН сверен с реестром юрлиц
+                  <ShieldCheck className="size-4 text-brand" /> {t("БИН/ИНН сверен с реестром юрлиц")}
                 </span>
-                <StatusBadge tone="success">Проверен</StatusBadge>
+                <StatusBadge tone="success">{t("Проверен")}</StatusBadge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-2">
-                  <BadgeCheck className="size-4 text-brand" /> Профиль с фото (селфи)
+                  <BadgeCheck className="size-4 text-brand" /> {t("Профиль с фото (селфи)")}
                 </span>
-                <StatusBadge tone="success">Есть</StatusBadge>
+                <StatusBadge tone="success">{t("Есть")}</StatusBadge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-2">
-                  <BadgeCheck className="size-4 text-brand" /> Селфи сверено с документом
+                  <BadgeCheck className="size-4 text-brand" /> {t("Селфи сверено с документом")}
                 </span>
-                <StatusBadge tone="success">Совпало</StatusBadge>
+                <StatusBadge tone="success">{t("Совпало")}</StatusBadge>
               </div>
               {role === "carrier" && (
                 <button
-                  onClick={() => showToast("Загрузка фото фуры с гос. номером")}
+                  onClick={() => showToast(t("Загрузка фото фуры с гос. номером"))}
                   className="flex w-full items-center justify-between"
                 >
                   <span className="inline-flex items-center gap-2 text-foreground">
-                    <Camera className="size-4 text-muted-foreground" /> Транспорт · фото с гос. номером
+                    <Camera className="size-4 text-muted-foreground" /> {t("Транспорт · фото с гос. номером")}
                   </span>
-                  <StatusBadge tone="success">На файле</StatusBadge>
+                  <StatusBadge tone="success">{t("На файле")}</StatusBadge>
                 </button>
               )}
               <p className="pt-1 text-sm leading-snug text-muted-foreground">
-                Значок «Бизнес проверен» = БИН/ИНН найден в реестре юрлиц и селфи совпало с
-                удостоверением. Базы МВД/розыска подключаем поэтапно — проверка снижает риск, но не
-                даёт 100% гарантии.
+                {t("Значок «Бизнес проверен» = БИН/ИНН найден в реестре юрлиц и селфи совпало с удостоверением. Базы МВД/розыска подключаем поэтапно — проверка снижает риск, но не даёт 100% гарантии.")}
               </p>
             </CardContent>
           </Card>
         </Section>
 
         {role === "shipper" && (
-          <Section title="Аналитика">
+          <Section title={t("Аналитика")}>
             <Card
               size="sm"
               onClick={() => setTab("analytics")}
@@ -1248,8 +1245,8 @@ export function ProfileScreen() {
                   <BarChart3 className="size-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-base font-medium">Аналитика заказов</p>
-                  <p className="text-sm text-muted-foreground">Расходы, топ маршрутов, качество откликов</p>
+                  <p className="text-base font-medium">{t("Аналитика заказов")}</p>
+                  <p className="text-sm text-muted-foreground">{t("Расходы, топ маршрутов, качество откликов")}</p>
                 </div>
                 <ChevronRight className="size-5 text-muted-foreground" />
               </CardContent>
@@ -1259,13 +1256,13 @@ export function ProfileScreen() {
 
         {role === "carrier" && (
           <>
-            <Section title="Надёжность">
+            <Section title={t("Надёжность")}>
               <Card size="sm">
                 <CardContent className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-mono-tech text-lg font-bold">{reliability} / 100</span>
                     <StatusBadge tone={reliable ? "success" : "warn"}>
-                      {reliable ? "Надёжный ✓" : "Снижена"}
+                      {reliable ? t("Надёжный ✓") : t("Снижена")}
                     </StatusBadge>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -1275,29 +1272,29 @@ export function ProfileScreen() {
                     />
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    За последние 20 заказов · {cancelCount}{" "}
-                    {cancelCount === 1 ? "отмена" : cancelCount >= 2 && cancelCount <= 4 ? "отмены" : "отмен"}.
-                    Каждая отмена принятого заказа: −10. Высокая надёжность = приоритет в ленте и доступ к премиум-грузам.
+                    {t("За последние 20 заказов ·")} {cancelCount}{" "}
+                    {cancelCount === 1 ? t("отмена") : cancelCount >= 2 && cancelCount <= 4 ? t("отмены") : t("отмен")}.{" "}
+                    {t("Каждая отмена принятого заказа: −10. Высокая надёжность = приоритет в ленте и доступ к премиум-грузам.")}
                   </p>
                 </CardContent>
               </Card>
             </Section>
 
-            <Section title="Моя статистика">
+            <Section title={t("Моя статистика")}>
               <Card size="sm">
                 <CardContent>
                   <div className="flex items-center justify-around text-center">
                     <div>
                       <div className="font-mono-tech text-xl font-bold">{me.dealsCount}</div>
-                      <div className="text-sm text-muted-foreground">рейсов</div>
+                      <div className="text-sm text-muted-foreground">{t("рейсов")}</div>
                     </div>
                     <div>
                       <div className="font-mono-tech text-xl font-bold">{me.rating.toFixed(1)}</div>
-                      <div className="text-sm text-muted-foreground">рейтинг</div>
+                      <div className="text-sm text-muted-foreground">{t("рейтинг")}</div>
                     </div>
                     <div>
                       <div className="font-mono-tech text-xl font-bold text-brand">{reliability}</div>
-                      <div className="text-sm text-muted-foreground">надёжность</div>
+                      <div className="text-sm text-muted-foreground">{t("надёжность")}</div>
                     </div>
                   </div>
                 </CardContent>
@@ -1305,16 +1302,16 @@ export function ProfileScreen() {
             </Section>
 
 
-            <Section title="Мой парк">
+            <Section title={t("Мой парк")}>
               <div className="space-y-2">
-                {MY_FLEET.map((t) => (
-                  <Card key={t.id} size="sm">
+                {MY_FLEET.map((truck) => (
+                  <Card key={truck.id} size="sm">
                     <CardContent className="flex items-center gap-2">
                       <Truck className="size-5 text-brand" />
                       <div className="flex-1">
-                        <p className="text-base font-medium capitalize">{t.type}</p>
+                        <p className="text-base font-medium capitalize">{truck.type}</p>
                         <p className="text-sm text-muted-foreground">
-                          {t.maxWeightKg.toLocaleString("ru-RU")} кг · {t.maxVolumeM3} м³ · {t.plate}
+                          {truck.maxWeightKg.toLocaleString("ru-RU")} {t("кг")} · {truck.maxVolumeM3} {t("м³")} · {truck.plate}
                         </p>
                       </div>
                       <BadgeCheck className="size-5 text-brand" />
@@ -1322,15 +1319,15 @@ export function ProfileScreen() {
                   </Card>
                 ))}
                 <button
-                  onClick={() => showToast("Авто добавлено · на проверке")}
+                  onClick={() => showToast(t("Авто добавлено · на проверке"))}
                   className="flex min-h-12 w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-border py-2.5 text-base font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  <Plus className="size-4" /> Добавить авто
+                  <Plus className="size-4" /> {t("Добавить авто")}
                 </button>
               </div>
             </Section>
 
-            <Section title="Интересующие маршруты">
+            <Section title={t("Интересующие маршруты")}>
               <div className="flex flex-wrap gap-1.5">
                 {WATCHED_ROUTES.map((r) => (
                   <Badge key={r} variant="outline">
@@ -1342,7 +1339,7 @@ export function ProfileScreen() {
           </>
         )}
 
-        <Section title="Настройки">
+        <Section title={t("Настройки")}>
           <Card size="sm">
             <CardContent className="space-y-3">
               <button
@@ -1350,7 +1347,7 @@ export function ProfileScreen() {
                 className="flex min-h-11 w-full items-center justify-between text-base"
               >
                 <span className="inline-flex items-center gap-2">
-                  <Moon className="size-5 text-muted-foreground" /> Тихий режим 22:00–8:00
+                  <Moon className="size-5 text-muted-foreground" /> {t("Тихий режим 22:00–8:00")}
                 </span>
                 <span
                   className={
@@ -1368,9 +1365,9 @@ export function ProfileScreen() {
               </button>
               <div className="flex min-h-11 items-center justify-between text-base">
                 <span className="inline-flex items-center gap-2">
-                  <Bell className="size-5 text-muted-foreground" /> Push-уведомления
+                  <Bell className="size-5 text-muted-foreground" /> {t("Push-уведомления")}
                 </span>
-                <StatusBadge tone="success">Вкл</StatusBadge>
+                <StatusBadge tone="success">{t("Вкл")}</StatusBadge>
               </div>
             </CardContent>
           </Card>
@@ -1381,11 +1378,11 @@ export function ProfileScreen() {
           className="h-12 w-full"
           onClick={resetOnboarding}
         >
-          <LogOut className="size-5" /> Выйти
+          <LogOut className="size-5" /> {t("Выйти")}
         </Button>
 
         <p className="pb-4 text-center text-sm text-muted-foreground">
-          CN-KZ · Грузоперевозки по СНГ
+          CN-KZ · {t("Грузоперевозки по СНГ")}
         </p>
       </div>
     </div>

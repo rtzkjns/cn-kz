@@ -33,7 +33,7 @@ export function CarrierProfileScreen({
   orderId?: string
   offerId?: string
 }) {
-  const { getCarrier, getOrder, pop, push, acceptOffer, pickCounterOffer, showToast } = useCnKz()
+  const { getCarrier, getOrder, pop, push, acceptOffer, pickCounterOffer, showToast, t } = useCnKz()
   const [showReport, setShowReport] = useState(false)
   const [reportReason, setReportReason] = useState<string | null>(null)
   const c = getCarrier(carrierId)
@@ -49,7 +49,7 @@ export function CarrierProfileScreen({
 
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title="Профиль перевозчика" onBack={pop} />
+      <ScreenHeader title={t("Профиль перевозчика")} onBack={pop} />
 
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pb-44">
         {/* Identity — name, gold rating, trust badges */}
@@ -72,14 +72,14 @@ export function CarrierProfileScreen({
           <div className="flex flex-wrap items-center gap-2">
             {c.verified ? (
               <StatusBadge tone="success" icon={ShieldCheck}>
-                Бизнес проверен · БИН
+                {t("Бизнес проверен · БИН")}
               </StatusBadge>
             ) : (
-              <StatusBadge tone="warn">Новичок · без БИН</StatusBadge>
+              <StatusBadge tone="warn">{t("Новичок · без БИН")}</StatusBadge>
             )}
             {c.insured && (
               <StatusBadge tone="info" icon={ShieldCheck}>
-                Страховка · CMR
+                {t("Страховка · CMR")}
               </StatusBadge>
             )}
           </div>
@@ -87,16 +87,16 @@ export function CarrierProfileScreen({
 
         {/* Trust stat strip — вовремя / парк / стаж (kills the empty band under the name) */}
         <div className="surface-glass flex items-stretch divide-x divide-border rounded-2xl">
-          <StatCell icon={Clock} value={c.onTimeRate != null ? `${c.onTimeRate}%` : "—"} label="Вовремя" />
-          <StatCell icon={Truck} value={c.trucks?.length ?? 0} label="Парк" />
-          <StatCell icon={CalendarDays} value={c.memberSince ?? "—"} label="На платформе" />
+          <StatCell icon={Clock} value={c.onTimeRate != null ? `${c.onTimeRate}%` : "—"} label={t("Вовремя")} />
+          <StatCell icon={Truck} value={c.trucks?.length ?? 0} label={t("Парк")} />
+          <StatCell icon={CalendarDays} value={c.memberSince ?? "—"} label={t("На платформе")} />
         </div>
 
         {/* Bid summary — that carrier's live offer on your cargo (the reason you're here) */}
         {offer && order && (
           <div className="surface-glass space-y-3 rounded-2xl p-4">
             <div className="flex items-center justify-between gap-2">
-              <p className="t-eyebrow">Отклик на ваш заказ</p>
+              <p className="t-eyebrow">{t("Отклик на ваш заказ")}</p>
               <OfferStatusBadge status={offer.status} />
             </div>
             {/* route: blue origin → connector → lime destination */}
@@ -114,7 +114,7 @@ export function CarrierProfileScreen({
             <p className="line-clamp-1 text-[15px] text-muted-foreground">{order.cargo}</p>
             <div className="flex items-end justify-between gap-3 rounded-xl bg-secondary px-4 py-3">
               <div className="min-w-0 leading-none">
-                <p className="t-eyebrow">{offer.kind === "accept" ? "Готов за вашу цену" : "Своя цена"}</p>
+                <p className="t-eyebrow">{offer.kind === "accept" ? t("Готов за вашу цену") : t("Своя цена")}</p>
                 <p className="t-display mt-1.5">{money(offer.priceUsd)}</p>
               </div>
               <span className="font-mono-tech shrink-0 text-[14px] font-medium text-muted-foreground">
@@ -123,52 +123,50 @@ export function CarrierProfileScreen({
             </div>
             <div className="flex flex-wrap gap-2">
               <MetaPill icon={Truck}>{offer.truck}</MetaPill>
-              <MetaPill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} кг</MetaPill>
-              <MetaPill icon={Box}>{order.volumeM3} м³</MetaPill>
+              <MetaPill icon={Weight}>{order.weightKg.toLocaleString("ru-RU")} {t("кг")}</MetaPill>
+              <MetaPill icon={Box}>{order.volumeM3} {t("м³")}</MetaPill>
             </div>
             {(offer.plate || offer.capacityKg != null) && (
               <p className="t-meta text-muted-foreground">
-                Авто{offer.plate ? ` · ${offer.plate}` : ""}
-                {offer.capacityKg != null ? ` · до ${offer.capacityKg.toLocaleString("ru-RU")} кг` : ""}
+                {t("Авто")}{offer.plate ? ` · ${offer.plate}` : ""}
+                {offer.capacityKg != null ? ` · ${t("до")} ${offer.capacityKg.toLocaleString("ru-RU")} ${t("кг")}` : ""}
               </p>
             )}
           </div>
         )}
 
         {/* Проверка: БИН/ИНН сверяется с реестром юрлиц; личность — селфи + удостоверение. */}
-        <Section title="Проверка профиля">
+        <Section title={t("Проверка профиля")}>
           <div className="surface-glass space-y-2 rounded-2xl p-4 text-sm">
-            <VerifyRow ok label="Телефон подтверждён" />
-            <VerifyRow ok={!!c.verified} label="БИН/ИНН сверен с реестром юрлиц" />
-            <VerifyRow ok={!!c.verified} label="Селфи сверено с удостоверением" />
-            <VerifyRow ok label="Профиль с фото (селфи)" />
-            <VerifyRow ok={!!(c.trucks && c.trucks.length)} label="Транспорт · фото на файле" />
+            <VerifyRow ok label={t("Телефон подтверждён")} />
+            <VerifyRow ok={!!c.verified} label={t("БИН/ИНН сверен с реестром юрлиц")} />
+            <VerifyRow ok={!!c.verified} label={t("Селфи сверено с удостоверением")} />
+            <VerifyRow ok label={t("Профиль с фото (селфи)")} />
+            <VerifyRow ok={!!(c.trucks && c.trucks.length)} label={t("Транспорт · фото на файле")} />
             <p className="pt-1 text-sm leading-snug text-muted-foreground">
-              Значок «Бизнес проверен» = БИН/ИНН найден в реестре юрлиц и селфи совпало с
-              удостоверением. Доступ к базам МВД/розыска подключаем поэтапно — проверка снижает
-              риск, но не гарантия.
+              {t("Значок «Бизнес проверен» = БИН/ИНН найден в реестре юрлиц и селфи совпало с удостоверением. Доступ к базам МВД/розыска подключаем поэтапно — проверка снижает риск, но не гарантия.")}
             </p>
           </div>
         </Section>
 
         {/* fleet */}
         {c.trucks && c.trucks.length > 0 && (
-          <Section title="Парк">
+          <Section title={t("Парк")}>
             <div className="space-y-2">
-              {c.trucks.map((t) => (
-                <div key={t.id} className="surface-glass flex items-center gap-3 rounded-2xl p-4">
+              {c.trucks.map((truck) => (
+                <div key={truck.id} className="surface-glass flex items-center gap-3 rounded-2xl p-4">
                   <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-secondary text-foreground">
                     <Truck className="size-5" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="t-h3 capitalize">{t.type}</p>
+                    <p className="t-h3 capitalize">{truck.type}</p>
                     <div className="mt-1.5 flex flex-wrap gap-2">
-                      <MetaPill icon={Weight}>{t.maxWeightKg.toLocaleString("ru-RU")} кг</MetaPill>
-                      <MetaPill icon={Box}>{t.maxVolumeM3} м³</MetaPill>
+                      <MetaPill icon={Weight}>{truck.maxWeightKg.toLocaleString("ru-RU")} {t("кг")}</MetaPill>
+                      <MetaPill icon={Box}>{truck.maxVolumeM3} {t("м³")}</MetaPill>
                     </div>
                   </div>
                   <span className="font-mono-tech shrink-0 rounded-md bg-muted px-2 py-1 text-[14px] font-semibold text-foreground">
-                    {t.plate}
+                    {truck.plate}
                   </span>
                 </div>
               ))}
@@ -178,7 +176,7 @@ export function CarrierProfileScreen({
 
         {/* reviews */}
         {c.reviews && c.reviews.length > 0 && (
-          <Section title={`Отзывы (${c.reviews.length})`}>
+          <Section title={`${t("Отзывы")} (${c.reviews.length})`}>
             <div className="space-y-2">
               {c.reviews.map((r) => (
                 <div key={r.id} className="surface-glass space-y-1.5 rounded-2xl p-4">
@@ -205,11 +203,11 @@ export function CarrierProfileScreen({
       <div className="absolute inset-x-0 bottom-0 space-y-2 bg-card px-3 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_rgba(20,17,14,0.12)]">
         {offer && order && offer.awaitingConfirm && offer.confirmDeadline ? (
           <div className="rounded-lg border border-warn/35 bg-warn/12 px-3 py-2 text-center text-sm font-medium text-warn">
-            Встречная выбрана — ждём подтверждения перевозчика · <Countdown deadline={offer.confirmDeadline} />
+            {t("Встречная выбрана — ждём подтверждения перевозчика")} · <Countdown deadline={offer.confirmDeadline} />
           </div>
         ) : offer && order && offer.status === "countered" ? (
           <div className="rounded-lg border border-brand/35 bg-brand/12 px-3 py-2 text-center text-sm font-medium text-brand">
-            Встречная отправлена: {money(offer.shipperCounterUsd ?? offer.priceUsd)} · ждём ответа перевозчика
+            {t("Встречная отправлена:")} {money(offer.shipperCounterUsd ?? offer.priceUsd)} · {t("ждём ответа перевозчика")}
           </div>
         ) : offer && order ? (
           <Button
@@ -228,8 +226,8 @@ export function CarrierProfileScreen({
             }}
           >
             {offer.kind === "accept"
-              ? `Принять отклик ${money(offer.priceUsd)}`
-              : `Выбрать ${money(offer.priceUsd)}`}
+              ? `${t("Принять отклик")} ${money(offer.priceUsd)}`
+              : `${t("Выбрать")} ${money(offer.priceUsd)}`}
           </Button>
         ) : null}
         {showAccept ? (
@@ -241,10 +239,10 @@ export function CarrierProfileScreen({
               className="h-12 flex-1"
               onClick={() => {
                 if (order?.deal) push({ type: "chat", orderId: order.id })
-                else showToast("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»")
+                else showToast(t("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»"))
               }}
             >
-              <MessageCircle className="size-5" /> Чат
+              <MessageCircle className="size-5" /> {t("Чат")}
             </Button>
             {unlocked ? (
               <CallButton phone={c.phone} className="flex-1" />
@@ -254,10 +252,10 @@ export function CarrierProfileScreen({
                 size="lg"
                 className="h-12 flex-1"
                 onClick={() =>
-                  showToast("Номер откроется, когда перевозчик откликнется или начнётся сделка")
+                  showToast(t("Номер откроется, когда перевозчик откликнется или начнётся сделка"))
                 }
               >
-                <Phone className="size-5" /> Номер скрыт
+                <Phone className="size-5" /> {t("Номер скрыт")}
               </Button>
             )}
           </div>
@@ -271,10 +269,10 @@ export function CarrierProfileScreen({
                 variant="secondary"
                 className="h-12 w-full"
                 onClick={() =>
-                  showToast("Номер откроется, когда перевозчик откликнется или начнётся сделка")
+                  showToast(t("Номер откроется, когда перевозчик откликнется или начнётся сделка"))
                 }
               >
-                <Phone className="size-5" /> Номер скрыт
+                <Phone className="size-5" /> {t("Номер скрыт")}
               </Button>
             )}
             <Button
@@ -282,10 +280,10 @@ export function CarrierProfileScreen({
               className="h-12 w-full"
               onClick={() => {
                 if (order?.deal) push({ type: "chat", orderId: order.id })
-                else showToast("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»")
+                else showToast(t("Чат откроется после сделки · сейчас доступен вопрос «Уточнить»"))
               }}
             >
-              <MessageCircle className="size-5" /> Чат
+              <MessageCircle className="size-5" /> {t("Чат")}
             </Button>
           </>
         )}
@@ -293,7 +291,7 @@ export function CarrierProfileScreen({
           onClick={() => setShowReport(true)}
           className="flex w-full items-center justify-center gap-1.5 py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive"
         >
-          <ShieldAlert className="size-3.5" /> Пожаловаться на пользователя
+          <ShieldAlert className="size-3.5" /> {t("Пожаловаться на пользователя")}
         </button>
       </div>
 
@@ -307,12 +305,12 @@ export function CarrierProfileScreen({
             className="animate-in slide-in-from-bottom w-full space-y-2 rounded-t-3xl bg-card p-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="t-h3">Пожаловаться на {c.name}</p>
+            <p className="t-h3">{t("Пожаловаться на")} {c.name}</p>
             <div className="flex flex-wrap gap-1.5 pb-1">
               {["Мошенничество", "Не выходит на связь", "Обман по грузу", "Оскорбления", "Другое"].map(
                 (r) => (
                   <Chip key={r} active={reportReason === r} onClick={() => setReportReason(r)}>
-                    {r}
+                    {t(r)}
                   </Chip>
                 )
               )}
@@ -323,11 +321,11 @@ export function CarrierProfileScreen({
               disabled={!reportReason}
               onClick={() => {
                 setShowReport(false)
-                showToast(`Жалоба отправлена (${reportReason}) — модерация проверит профиль`)
+                showToast(`${t("Жалоба отправлена")} (${reportReason}) — ${t("модерация проверит профиль")}`)
                 setReportReason(null)
               }}
             >
-              <ShieldAlert className="size-4" /> Отправить жалобу
+              <ShieldAlert className="size-4" /> {t("Отправить жалобу")}
             </Button>
             <Button
               variant="destructive"
@@ -335,16 +333,16 @@ export function CarrierProfileScreen({
               className="w-full"
               onClick={() => {
                 setShowReport(false)
-                showToast(`${c.name} заблокирован — вы не увидите его грузы и отклики`)
+                showToast(`${c.name} ${t("заблокирован — вы не увидите его грузы и отклики")}`)
               }}
             >
-              <Ban className="size-4" /> Заблокировать пользователя
+              <Ban className="size-4" /> {t("Заблокировать пользователя")}
             </Button>
             <button
               onClick={() => setShowReport(false)}
               className="w-full py-3 text-center text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-              Отмена
+              {t("Отмена")}
             </button>
           </div>
         </div>

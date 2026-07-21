@@ -38,7 +38,7 @@ import { useCnKz, type Tab } from "./store"
 // Left slide-in drawer — account header + grouped items. Filters live on-screen
 // (keyword chips), so the drawer holds account/notifications/support/logout.
 function LogoMenu() {
-  const { showToast, openNotifications, setTab, resetOnboarding, newCount, role, me } = useCnKz()
+  const { showToast, openNotifications, setTab, resetOnboarding, newCount, role, me, t } = useCnKz()
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
   const go = (fn: () => void) => {
@@ -49,7 +49,7 @@ function LogoMenu() {
     <>
       <button
         onClick={() => setOpen(true)}
-        aria-label="Меню"
+        aria-label={t("Меню")}
         className="flex size-11 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted active:scale-95"
       >
         <Menu className="size-5" />
@@ -57,7 +57,7 @@ function LogoMenu() {
       {open && (
         <div className="absolute inset-0 z-40 flex">
           <button
-            aria-label="Закрыть меню"
+            aria-label={t("Закрыть меню")}
             onClick={close}
             className="animate-in fade-in absolute inset-0 bg-black/55 duration-200"
           />
@@ -70,28 +70,28 @@ function LogoMenu() {
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{me.name}</p>
                 <p className="truncate text-sm text-muted-foreground">
-                  {role === "shipper" ? "Заказчик" : "Перевозчик"} · открыть профиль
+                  {role === "shipper" ? t("Заказчик") : t("Перевозчик")} · {t("открыть профиль")}
                 </p>
               </div>
               <ChevronRight className="size-4 text-muted-foreground" />
             </button>
 
             <nav className="flex-1 space-y-0.5 p-2">
-              <MenuRow icon={Bell} label="Уведомления" badge={newCount} onClick={() => go(openNotifications)} />
+              <MenuRow icon={Bell} label={t("Уведомления")} badge={newCount} onClick={() => go(openNotifications)} />
               <MenuRow
                 icon={Clock}
-                label={role === "carrier" ? "История рейсов" : "История заказов"}
+                label={role === "carrier" ? t("История рейсов") : t("История заказов")}
                 onClick={() => go(() => setTab("history"))}
               />
               {role === "shipper" && (
-                <MenuRow icon={BarChart3} label="Аналитика" onClick={() => go(() => setTab("analytics"))} />
+                <MenuRow icon={BarChart3} label={t("Аналитика")} onClick={() => go(() => setTab("analytics"))} />
               )}
-              <MenuRow icon={Settings} label="Настройки" onClick={() => go(() => setTab("settings"))} />
-              <MenuRow icon={HelpCircle} label="Поддержка" onClick={() => go(() => showToast("Открываем чат поддержки"))} />
+              <MenuRow icon={Settings} label={t("Настройки")} onClick={() => go(() => setTab("settings"))} />
+              <MenuRow icon={HelpCircle} label={t("Поддержка")} onClick={() => go(() => showToast(t("Открываем чат поддержки")))} />
             </nav>
 
             <div className="border-t border-border p-2">
-              <MenuRow icon={LogOut} label="Выйти" danger onClick={() => go(resetOnboarding)} />
+              <MenuRow icon={LogOut} label={t("Выйти")} danger onClick={() => go(resetOnboarding)} />
             </div>
           </div>
         </div>
@@ -147,13 +147,13 @@ export function StatusBar() {
 // §10: колокольчик со счётчиком → выпадающая мини-панель уведомлений.
 // Тап по уведомлению → к нужному заказу/сделке; «Все» → дашборд сделок с фильтром «есть новые».
 function NotificationBell() {
-  const { newCount, notifications, push, openNotifications } = useCnKz()
+  const { newCount, notifications, push, openNotifications, t } = useCnKz()
   const [open, setOpen] = useState(false)
   return (
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        aria-label="Уведомления"
+        aria-label={t("Уведомления")}
         className="relative flex size-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         <Bell className="size-5" />
@@ -168,11 +168,11 @@ function NotificationBell() {
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
           <div className="absolute top-10 right-0 z-40 w-72 overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
             <div className="border-b border-border px-3 py-2 text-sm font-semibold">
-              Уведомления
+              {t("Уведомления")}
             </div>
             {notifications.length === 0 ? (
               <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-                Нет новых уведомлений
+                {t("Нет новых уведомлений")}
               </p>
             ) : (
               <div className="max-h-80 overflow-y-auto">
@@ -218,7 +218,7 @@ function NotificationBell() {
               }}
               className="flex w-full items-center justify-center gap-1 border-t border-border px-3 py-2 text-sm font-medium text-brand hover:bg-muted"
             >
-              Все сделки с новыми <ChevronRight className="size-3.5" />
+              {t("Все сделки с новыми")} <ChevronRight className="size-3.5" />
             </button>
           </div>
         </>
@@ -229,14 +229,14 @@ function NotificationBell() {
 
 // Язык — первичный контрол в шапке (не спрятан в настройках). FINAL-SPEC §8.
 function LangSelect() {
-  const { lang, setLang } = useCnKz()
+  const { lang, setLang, t } = useCnKz()
   const [open, setOpen] = useState(false)
   const cur = LANGS.find((l) => l.id === lang)
   return (
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        aria-label="Язык интерфейса"
+        aria-label={t("Язык интерфейса")}
         className="flex h-11 items-center gap-0.5 rounded-lg px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         {cur?.label}
@@ -310,7 +310,7 @@ function BottomNav() {
               key={item.id}
               onClick={() => push({ type: "createOrder" })}
               className="flex flex-1 flex-col items-center justify-center"
-              aria-label="Новый заказ"
+              aria-label={t("Новый заказ")}
             >
               <span className="shadow-key flex size-11 items-center justify-center rounded-full bg-brand text-brand-foreground transition-transform duration-150 active:scale-95">
                 <Icon className="size-5" />
@@ -351,7 +351,7 @@ function BottomNav() {
 }
 
 export function PhoneFrame({ children }: { children: React.ReactNode }) {
-  const { toast, authed, openAuth, role, setTab } = useCnKz()
+  const { toast, authed, openAuth, role, setTab, t } = useCnKz()
   return (
     <div className="flex min-h-dvh w-full items-center justify-center bg-foreground p-0 sm:p-6">
       <div className="relative flex h-dvh w-full flex-col overflow-hidden bg-background sm:h-[844px] sm:max-w-[390px] sm:rounded-[2rem] sm:border-[6px] sm:border-foreground sm:shadow-2xl">
@@ -374,7 +374,7 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
               {role === "carrier" && (
                 <button
                   onClick={() => setTab("favorites")}
-                  aria-label="Избранное"
+                  aria-label={t("Избранное")}
                   className="flex size-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   <Heart className="size-5" />
@@ -384,7 +384,7 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
             </div>
           ) : (
             <Button size="sm" onClick={openAuth}>
-              Войти
+              {t("Войти")}
             </Button>
           )}
         </header>
@@ -419,13 +419,14 @@ export function ScreenHeader({
   onBack?: () => void
   action?: React.ReactNode
 }) {
+  const { t } = useCnKz()
   return (
     <div className="flex items-center gap-2 px-4 pt-4 pb-2">
       {onBack && (
         <button
           onClick={onBack}
           className="-ml-2 flex size-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-          aria-label="Назад"
+          aria-label={t("Назад")}
         >
           <ChevronLeft className="size-6" />
         </button>

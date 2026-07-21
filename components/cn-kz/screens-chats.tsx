@@ -23,7 +23,7 @@ function RouteMini({ from, to }: { from: string; to: string }) {
 }
 
 export function ChatsListScreen() {
-  const { myOrders, feedOrders, role, push, setTab } = useCnKz()
+  const { myOrders, feedOrders, role, push, setTab, t } = useCnKz()
   const source = role === "carrier" ? feedOrders : myOrders
   const convos = source.filter((o) => o.deal)
 
@@ -38,21 +38,21 @@ export function ChatsListScreen() {
 
   return (
     <div className="flex h-full flex-col">
-      <ScreenHeader title="Чаты" subtitle="Переписка по сделкам" />
+      <ScreenHeader title={t("Чаты")} subtitle={t("Переписка по сделкам")} />
 
       <div className="flex-1 overflow-y-auto pb-24">
         {convos.length === 0 ? (
           <div className="px-4">
             <EmptyState
               icon={MessageCircle}
-              title="Чатов пока нет"
-              hint="Как только вы примете отклик или начнётся сделка — переписка появится здесь."
+              title={t("Чатов пока нет")}
+              hint={t("Как только вы примете отклик или начнётся сделка — переписка появится здесь.")}
               action={
                 <Button
                   size="lg"
                   onClick={() => setTab(role === "carrier" ? "feed" : "myorders")}
                 >
-                  {role === "carrier" ? "Смотреть грузы" : "Мои заказы"}
+                  {role === "carrier" ? t("Смотреть грузы") : t("Мои заказы")}
                 </Button>
               }
             />
@@ -61,9 +61,9 @@ export function ChatsListScreen() {
           <>
             <StatStrip
               items={[
-                { value: convos.length, label: "Диалоги", icon: MessagesSquare },
-                { value: unreadCount, label: "Новые", icon: Mail, accent: true },
-                { value: activeCount, label: "В работе", icon: Truck },
+                { value: convos.length, label: t("Диалоги"), icon: MessagesSquare },
+                { value: unreadCount, label: t("Новые"), icon: Mail, accent: true },
+                { value: activeCount, label: t("В работе"), icon: Truck },
               ]}
             />
 
@@ -109,7 +109,7 @@ export function ChatsListScreen() {
                           (unread ? "font-semibold text-foreground" : "text-muted-foreground")
                         }
                       >
-                        {last ? (last.fromMe ? "Вы: " : "") + last.text : "Нет сообщений"}
+                        {last ? (last.fromMe ? t("Вы: ") : "") + last.text : t("Нет сообщений")}
                       </p>
                     </div>
                   </button>
@@ -122,9 +122,9 @@ export function ChatsListScreen() {
                   <ShieldCheck className="size-5" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold">Контакты открыты внутри сделки</p>
+                  <p className="text-sm font-semibold">{t("Контакты открыты внутри сделки")}</p>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    Звонок и переписка доступны, пока отклик или сделка активны.
+                    {t("Звонок и переписка доступны, пока отклик или сделка активны.")}
                   </p>
                 </div>
               </div>
