@@ -4,7 +4,7 @@ import { useState } from "react"
 import { ChevronDown, ChevronLeft, Search, X } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
-import { ALL_CITIES, POPULAR_CITIES } from "@/lib/cn-kz/types"
+import { ALL_CITIES } from "@/lib/cn-kz/types"
 import { Chip, ChipRow } from "./ui-bits"
 
 // Нормализация: нижний регистр + ё→е, чтобы поиск был предсказуемым.
@@ -125,16 +125,6 @@ export function CityPicker({
                   <p className="text-sm font-medium text-muted-foreground">Недавние</p>
                   <div className="flex flex-wrap gap-2">
                     {["Алматы", "Астана"].map((c) => (
-                      <Chip key={c} onClick={() => pick(c)}>
-                        {c}
-                      </Chip>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">Популярные города</p>
-                  <div className="flex flex-wrap gap-2">
-                    {POPULAR_CITIES.map((c) => (
                       <Chip key={c} onClick={() => pick(c)}>
                         {c}
                       </Chip>

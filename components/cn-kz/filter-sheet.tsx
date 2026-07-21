@@ -5,6 +5,7 @@ import { RotateCcw, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { CityPicker } from "./city-picker"
 import {
   ADR_OPTIONS,
   ALL_BODY_TYPES,
@@ -13,7 +14,6 @@ import {
   LOADING_TYPES,
   matchesFilters,
   POPULAR_BODY_TYPES,
-  POPULAR_DEST_CITIES,
   TEMP_MODES,
   TONNAGE_TIERS,
   VOLUME_TIERS,
@@ -102,13 +102,22 @@ export function FilterSheet() {
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
-          <Group title="Куда (город назначения)">
-            {POPULAR_DEST_CITIES.map((c) => (
-              <Pill key={c} active={draft.destination === c} onClick={() => setOne("destination", c)}>
-                {c}
-              </Pill>
-            ))}
-          </Group>
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold">Куда (город назначения)</h3>
+            <CityPicker
+              value={draft.destination ?? undefined}
+              onChange={(c) => setOne("destination", c)}
+              placeholder="Любой город — начните вводить"
+            />
+            {draft.destination && (
+              <button
+                onClick={() => setOne("destination", "")}
+                className="text-sm font-medium text-muted-foreground"
+              >
+                Сбросить город
+              </button>
+            )}
+          </div>
 
           <Group title="Тип кузова">
             {(showAllTypes ? [] : POPULAR_BODY_TYPES).map((t) => (

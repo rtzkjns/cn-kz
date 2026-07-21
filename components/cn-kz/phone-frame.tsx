@@ -272,10 +272,10 @@ function LangSelect() {
 type NavItem = { id: string; labelKey?: string; icon: typeof Package; center?: boolean }
 
 const NAV: Record<"shipper" | "carrier", NavItem[]> = {
-  // Shipper home = Мои заказы (их работа); Рынок = просмотр рыночных цен (FINAL-SPEC §3).
+  // Рынок (общая биржа грузов) — ПЕРВЫМ (основной вход); затем Мои заказы. FAB = новый заказ.
   shipper: [
-    { id: "myorders", labelKey: "nav.myorders", icon: Package },
     { id: "feed", labelKey: "nav.market", icon: Store },
+    { id: "myorders", labelKey: "nav.myorders", icon: Package },
     { id: "add", icon: Plus, center: true },
     { id: "chats", labelKey: "nav.chats", icon: MessageCircle },
     { id: "profile", labelKey: "nav.profile", icon: User },
