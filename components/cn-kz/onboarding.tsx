@@ -82,7 +82,7 @@ export function OnboardingFlow() {
             </div>
             <div className="flex flex-wrap justify-center gap-1.5">
               <ValuePill icon={Zap} label={t("Realtime лента")} />
-              <ValuePill icon={Gavel} label={t("Торги · inDrive")} />
+              <ValuePill icon={Gavel} label={t("Торги · своя цена")} />
               <ValuePill icon={Star} label={t("Рейтинги сторон")} />
             </div>
           </div>
@@ -255,7 +255,7 @@ export function OnboardingFlow() {
             icon={Package}
             title={t("Заказчик")}
             desc={t("У меня есть груз — публикую заказы и выбираю перевозчика.")}
-            features={[t("Публикую заказы"), t("Выбираю фуру"), t("Торги · inDrive")]}
+            features={[t("Публикую заказы"), t("Выбираю фуру"), t("Торги · своя цена")]}
             onClick={() => pickRole("shipper")}
           />
           <RoleCard
@@ -270,7 +270,7 @@ export function OnboardingFlow() {
             <span className="t-eyebrow">{t("Почему CN-KZ")}</span>
             <div className="flex flex-wrap gap-1.5">
               <ValuePill icon={Zap} label={t("Realtime лента")} />
-              <ValuePill icon={Gavel} label={t("Торги · inDrive")} />
+              <ValuePill icon={Gavel} label={t("Торги · своя цена")} />
               <ValuePill icon={Star} label={t("Рейтинги сторон")} />
               <ValuePill icon={ShieldCheck} label={t("Проверка сторон")} />
             </div>
