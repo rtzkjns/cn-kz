@@ -320,9 +320,11 @@ export function TripBuilderScreen() {
 
         <Section title={`Грузы в рейсе · ${orders.length}`}>
           {orders.length === 0 && (
-            <p className="text-[15px] text-muted-foreground">
-              Пусто. В ленте нажимайте «Добавить в рейс» на грузах в один город.
-            </p>
+            <EmptyState
+              icon={Truck}
+              title="Пока пусто"
+              hint="В ленте нажимайте «Добавить в рейс» на грузах в один город — соберите несколько в одну фуру."
+            />
           )}
           <div className="space-y-2">
             {orders.map((o) => (
