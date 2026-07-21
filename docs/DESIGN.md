@@ -84,7 +84,7 @@ box-shadow:
 - **Success/accept:** the carrier quick-accept button uses a dedicated green token `--success` (#10b981) — the one green in the shipped system.
 - Surfaces are near-black (`#08090a` canvas, `#0f1011` cards) with `--border` separation.
 
-**Brand decision (2026-07-12): indigo/Linear is canonical.** The green/"Bolt" spec is retired to historical reference. **Build every component against the shipped `globals.css` tokens (indigo `--brand`, `--success` green only for accept).**
+**⚠️ SUPERSEDED (2026-07-21): the canonical theme is now «Тракт / Signal Dispatch» — see [docs/REDESIGN-SPEC.md](REDESIGN-SPEC.md).** Warm-paper LIGHT canvas `#FBF9F6`, white cards on soft warm shadows (NO 1px borders), signal-orange `#EA4E1B` accent, **Golos Text**, 14–24px radius scale, tabular-SANS numbers, `--success` green for accept only. The dark "Linear midnight" indigo/Inter theme below is RETIRED to historical reference. **Build every component against the shipped `app/globals.css` tokens.** The driver-first floors (type scale, 56px CTA, 44px taps, status = color+icon+word) carry over unchanged.
 
 ---
 
@@ -97,4 +97,4 @@ Our carrier is a low-tech long-haul truck driver on a phone in a cab (gloves, co
 
 **Semantic status:** one `Badge` = dot + icon + WORD on a 12%-tint bg (never full fill; danger = text+dot only; **never color alone**). Tokens: `--success #10b981` (done/accept), `--warn #f5b545` (in-progress/attention), `--info #5aa9f5` (neutral/published), `--brand` (agreed/deal), `--destructive` (cancel/claim, text+dot).
 
-**Radius stays 6px** (`--radius: 0.375rem`) — sharp Linear identity, do NOT oscillate. Contact reveals only inside an engaged order (see FINAL-SPEC §5). Full status→color map, per-screen primary-action table, and the language contract live in `docs/FINAL-SPEC.md`.
+**Radius (as of «Тракт» 2026-07-21): 14–24px scale** — cards rounded-2xl (20), inputs/buttons rounded-lg (14), badges rounded-md (12), pills & the primary CTA rounded-full, sheets rounded-t-3xl (24). (The old sharp 6px is retired.) Contact reveals only inside an engaged order (see FINAL-SPEC §5). Full status→color map, per-screen primary-action table, and the language contract live in `docs/FINAL-SPEC.md`.
