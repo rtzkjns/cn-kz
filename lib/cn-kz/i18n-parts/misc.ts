@@ -1,6 +1,9 @@
 // Auto-filled by i18n workflow. Keyed by the RUSSIAN string; ru is implicit (= the key).
 // KZ/ZH are standard freight/UI terms but NEED NATIVE REVIEW before real launch.
 export const part: Record<string, { kz: string; zh: string }> = {
+  // ── plural() singular forms (kz/zh don't decline after a number) ──
+  "сделка": { kz: "мәміле", zh: "笔交易" },
+  "открытый груз": { kz: "ашық жүк", zh: "个开放货单" },
   // ── Чаты (screens-chats.tsx) ──
   "Чаты": { kz: "Чаттар", zh: "聊天" },
   "Переписка по сделкам": { kz: "Мәмілелер бойынша хат алмасу", zh: "交易沟通" },
@@ -32,7 +35,8 @@ export const part: Record<string, { kz: string; zh: string }> = {
     zh: "请检查拼写或尝试邻近的大城市。",
   },
   "Недавние": { kz: "Жуырдағы", zh: "最近" },
-  "Популярные направления": { kz: "Танымал бағыттар", zh: "热门路线" },
+  "Из любой точки — в любую": { kz: "Кез келген нүктеден — кез келгенге", zh: "从任意地点到任意地点" },
+  "Китай → СНГ или внутри СНГ. Начните вводить город назначения.": { kz: "Қытай → ТМД немесе ТМД ішінде. Бару қаласын енгізіңіз.", zh: "中国→独联体 或 独联体内部。请输入目的城市。" },
   "Добавить город…": { kz: "Қала қосу…", zh: "添加城市…" },
 
   // ── Фильтры (filter-sheet.tsx) ──

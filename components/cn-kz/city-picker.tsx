@@ -11,19 +11,6 @@ import { Chip, ChipRow } from "./ui-bits"
 // Нормализация: нижний регистр + ё→е, чтобы поиск был предсказуемым.
 const norm = (s: string) => s.toLowerCase().replace(/ё/g, "е").trim()
 
-// Частые направления фрахта (существующие города из ALL_CITIES) — заполняют пустой
-// экран выбора до ввода: Китай-происхождение + узлы КЗ + основные точки СНГ.
-const POPULAR = [
-  "Алматы",
-  "Астана",
-  "Шымкент",
-  "Караганда",
-  "Хоргос",
-  "Урумчи",
-  "Москва",
-  "Ташкент",
-  "Бишкек",
-]
 
 function search(q: string, exclude: string[] = []) {
   const t = norm(q)
@@ -154,15 +141,16 @@ export function CityPicker({
                     ))}
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-sm font-semibold text-muted-foreground">
-                    {t("Популярные направления")}
+                <div className="flex flex-col items-center gap-2 pt-10 text-center">
+                  <span className="flex size-14 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                    <Search className="size-6" />
+                  </span>
+                  <p className="text-[15px] font-semibold text-foreground">
+                    {t("Из любой точки — в любую")}
                   </p>
-                  <div className="surface-glass divide-y divide-border overflow-hidden rounded-2xl">
-                    {POPULAR.map((c) => (
-                      <CityRow key={c} city={c} onPick={pick} />
-                    ))}
-                  </div>
+                  <p className="max-w-[16rem] text-sm text-muted-foreground">
+                    {t("Китай → СНГ или внутри СНГ. Начните вводить город назначения.")}
+                  </p>
                 </div>
               </>
             )}

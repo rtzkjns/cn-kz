@@ -66,3 +66,13 @@ export function translate(lang: Lang, key: string): string {
   if (!row) return key
   return row[lang] || row.ru
 }
+
+// Module-level "active language" — kept in sync by the store's provider so pure helpers that
+// aren't React components (e.g. plural()/deals() in shared.tsx) can translate the current language.
+let _active: Lang = "ru"
+export function setActiveLang(l: Lang) {
+  _active = l
+}
+export function activeLang(): Lang {
+  return _active
+}

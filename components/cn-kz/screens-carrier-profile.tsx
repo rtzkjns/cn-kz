@@ -129,7 +129,7 @@ export function CarrierProfileScreen({
             {(offer.plate || offer.capacityKg != null) && (
               <p className="t-meta text-muted-foreground">
                 {t("Авто")}{offer.plate ? ` · ${offer.plate}` : ""}
-                {offer.capacityKg != null ? ` · ${t("до")} ${offer.capacityKg.toLocaleString("ru-RU")} ${t("кг")}` : ""}
+                {offer.capacityKg != null ? ` · ${t("макс.")} ${offer.capacityKg.toLocaleString("ru-RU")} ${t("кг")}` : ""}
               </p>
             )}
           </div>

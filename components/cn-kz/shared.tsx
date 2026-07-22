@@ -25,6 +25,7 @@ import {
   type OfferStatus,
   type OrderStatus,
 } from "@/lib/cn-kz/types"
+import { activeLang, translate } from "@/lib/cn-kz/i18n"
 import { useCnKz } from "./store"
 
 export function money(usd: number) {
@@ -73,6 +74,10 @@ export function StatusBadge({
 
 // Русское склонение: plural(4, "заказ", "заказа", "заказов") → "заказа".
 export function plural(n: number, one: string, few: string, many: string) {
+  // KZ/ZH don't decline the noun after a number → use the (translated) singular form.
+  // RU keeps the 3-form declension. (activeLang synced by the store provider.)
+  const lang = activeLang()
+  if (lang !== "ru") return translate(lang, one)
   const m10 = n % 10
   const m100 = n % 100
   if (m10 === 1 && m100 !== 11) return one

@@ -19,7 +19,7 @@ import {
   type User,
 } from "@/lib/cn-kz/types"
 import { plural } from "./shared"
-import { type Lang, translate } from "@/lib/cn-kz/i18n"
+import { type Lang, setActiveLang, translate } from "@/lib/cn-kz/i18n"
 import { EMPTY_FILTERS, type FilterState } from "@/lib/cn-kz/filters"
 
 // A pushed detail screen sits on top of the active tab.
@@ -200,6 +200,9 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
   const [role, setRoleRaw] = useState<Role>("shipper")
   const [tab, setTabRaw] = useState<Tab>("feed")
   const [lang, setLang] = useState<Lang>("ru") // язык интерфейса (FINAL-SPEC §8)
+  // Синхронизируем модульный «активный язык» для чистых хелперов (plural/deals в shared.tsx),
+  // которые не являются React-компонентами. Выполняется в рендере до детей.
+  setActiveLang(lang)
   const [dealsNewOnly, setDealsNewOnly] = useState(false)
   const [seen, setSeen] = useState<string[]>([]) // id заказов с просмотренными событиями
   const [stack, setStack] = useState<Screen[]>([])

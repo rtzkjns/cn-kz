@@ -23,7 +23,7 @@ export const part: Record<string, { kz: string; zh: string }> = {
 
   // TripTray
   "Рейс": { kz: "Рейс", zh: "行程" },
-  "фуры": { kz: "фура", zh: "货车满载" },
+  "фуры": { kz: "жүктеме", zh: "载重" },
 
   // TripBuilderScreen
   "Сборный рейс": { kz: "Жинақталған рейс", zh: "拼车运输" },
