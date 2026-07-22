@@ -736,14 +736,15 @@ export function DealScreen({ orderId }: { orderId: string }) {
               <p className="text-base font-semibold">
                 {t("Оцените")} {role === "shipper" ? t("перевозчика") : t("заказчика")}
               </p>
-              <div className="flex justify-center gap-2 text-4xl">
+              <div className="flex justify-center gap-1 text-4xl">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <button
                     key={n}
                     onClick={() => setStars(n)}
+                    aria-label={`${n}★`}
                     className={
-                      "transition-transform hover:scale-110 " +
-                      (n <= stars ? "text-foreground" : "text-muted-foreground/40")
+                      "flex min-h-11 min-w-11 items-center justify-center transition-transform hover:scale-110 " +
+                      (n <= stars ? "text-[var(--star)]" : "text-muted-foreground/40")
                     }
                   >
                     ★
