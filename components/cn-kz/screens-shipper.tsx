@@ -615,7 +615,7 @@ export function OrderDetailScreen({ orderId }: { orderId: string }) {
                               <Button
                                 size="lg"
                                 className="h-12 text-[15px]"
-                                disabled={!counterVal}
+                                disabled={!counterVal || Number(counterVal) <= 0}
                                 onClick={() => {
                                   counterOffer(order.id, of.id, Number(counterVal))
                                   setCounterFor(null)
@@ -798,6 +798,7 @@ export function CreateOrderScreen({
   const valid =
     d.origin.trim() &&
     d.destination.trim() &&
+    d.origin.trim() !== d.destination.trim() &&
     d.cargo.trim() &&
     d.weightKg > 0 &&
     d.priceUsd > 0 &&

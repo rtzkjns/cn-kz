@@ -82,14 +82,8 @@ export function CarrierFeedScreen() {
     ? byType
     : byType.filter((o) => fitsFleet(o.weightKg, o.volumeM3))
 
-  // Сводка сверху ленты.
-  const available = feedOrders.filter(
-    (o) =>
-      !o.deal &&
-      !isSkipped(o.id) &&
-      fitsFleet(o.weightKg, o.volumeM3) &&
-      matchesFilters(o, filters)
-  ).length
+  // Сводка сверху ленты — «Подходящих» = то, что реально в списке (учитывает и поиск q, и парк).
+  const available = byType.filter((o) => fitsFleet(o.weightKg, o.volumeM3)).length
   const myOffers = feedOrders.filter(
     (o) => o.myOfferStatus === "pending" || o.myOfferStatus === "countered"
   ).length

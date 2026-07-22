@@ -209,7 +209,7 @@ export function CarrierProfileScreen({
           <div className="rounded-lg border border-brand/35 bg-brand/12 px-3 py-2 text-center text-sm font-medium text-brand">
             {t("Встречная отправлена:")} {money(offer.shipperCounterUsd ?? offer.priceUsd)} · {t("ждём ответа перевозчика")}
           </div>
-        ) : offer && order ? (
+        ) : offer && order && !order.deal && offer.status === "pending" ? (
           <Button
             size="xl"
             className="w-full bg-[var(--success)] text-white shadow-none hover:bg-[var(--success-strong)] active:bg-[var(--success-strong)]"

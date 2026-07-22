@@ -19,7 +19,7 @@ import {
   type User,
 } from "@/lib/cn-kz/types"
 import { plural } from "./shared"
-import { type Lang, setActiveLang, translate } from "@/lib/cn-kz/i18n"
+import { type Lang, activeLang, setActiveLang, translate } from "@/lib/cn-kz/i18n"
 import { EMPTY_FILTERS, type FilterState } from "@/lib/cn-kz/filters"
 
 // A pushed detail screen sits on top of the active tab.
@@ -261,8 +261,11 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
 
   const store = useMemo<CnKzStore>(() => {
     function showToast(m: string) {
-      setToast(m)
-      setTimeout(() => setToast((cur) => (cur === m ? null : cur)), 2600)
+      // Тосты приходят как русские литералы; переводим на активный язык (ключ = русский текст,
+      // фолбэк на русский, если перевода нет — например для строк с подстановкой ${...}).
+      const msg = translate(activeLang(), m)
+      setToast(msg)
+      setTimeout(() => setToast((cur) => (cur === msg ? null : cur)), 2600)
     }
 
     function setRole(r: Role) {
@@ -405,7 +408,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
         id: `ord-${++ORDER_SEQ}`,
         ...draftToFields(d),
         status: "published",
-        shipper: ME_SHIPPER,
+        shipper: me,
         createdAgo: "только что",
         offers: [],
       }
@@ -424,6 +427,7 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
           ...draftToFields(d),
           offers: hadOffers ? [] : o.offers,
           status: "published",
+          createdAgo: "только что",
         }
       })
       showToast("Заказ обновлён")
@@ -450,7 +454,9 @@ export function CnKzProvider({ children }: { children: React.ReactNode }) {
     function acceptOffer(orderId: string, offerId: string) {
       updateMy(orderId, (o) => {
         const chosen = o.offers.find((of) => of.id === offerId)
-        if (!chosen) return o
+        // Не пересобираем сделку, если она уже есть или отклик не активен (защита от гонки:
+        // stale-кнопка «Принять отклик» на уже отклонённом оффере не должна затирать живую сделку).
+        if (!chosen || o.deal || chosen.status !== "pending") return o
         return {
           ...o,
           status: "deal",
